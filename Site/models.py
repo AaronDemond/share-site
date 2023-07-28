@@ -68,7 +68,16 @@ class AuthorizedShares(models.Model):
     class Meta:
         verbose_name_plural = "AuthorizedShares"
 
+class CompanyParticipant(models.Model):
+    Date = models.DateTimeField()
+    CompanyReference = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "CompanyReference")
+    Person = models.ForeignKey(Person, null=True, blank=True, on_delete=models.CASCADE,
+            related_name = "LinkedPerson")
+    Company = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "LinkedCompany")
 
+    
 class Transfer(models.Model):
     FromCompany = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
             related_name = "FromCompanyTransfer")
