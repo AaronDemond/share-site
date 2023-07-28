@@ -1,0 +1,115 @@
+from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+
+class Person(models.Model):
+    Name = models.CharField(max_length=500)
+    Address = models.CharField(max_length=500)
+
+    def __str__(self):
+        return self.Name
+    
+class Company(models.Model):
+    Name = models.CharField(max_length=500)
+
+    def save(self, *args, **kwargs):
+        if self.Name == "":
+            raise Exception("Can't be a blank name")
+        else:
+            super(Company, self).save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.Name
+
+
+class Manager(models.Model):
+
+    titles = [
+            ("Officer", "Officer"),
+            ("President", "President"), 
+            ("Secretary", "Secretary"),
+            ("VP", "VP"),
+            ("Other", "Other")
+            ]
+    Person = models.ForeignKey(Person, on_delete=models.CASCADE, unique = False,
+            related_name = "Manager")
+    Title = models.CharField(max_length=200, choices=titles)
+    Company = models.ForeignKey(Company, on_delete=models.CASCADE, unique = False,
+            related_name = "Manager")
+
+    def __str__(self):
+        return str(self.Person) + " " + str(self.Title) + " at " + str(self.Company)
+
+class ShareClass(models.Model):
+    Name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return str(self.Name)
+    class Meta:
+        verbose_name_plural = "ShareClasses"
+
+class AuthorizedShares(models.Model):
+    Company = models.ForeignKey(Company, on_delete=models.CASCADE,
+            related_name = "AuthorizedShares")
+    Ammount = models.IntegerField()
+    ShareClass = models.ForeignKey(ShareClass, on_delete=models.CASCADE,
+            related_name="AuthorizedShares")
+    Date = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if int(self.Ammount) < 0:
+            raise Exception("Must be above zero")
+        else:
+            super(AuthorizedShares, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.Ammount) + " of " + str(self.ShareClass) + " for " + str(self.Company)
+
+    class Meta:
+        verbose_name_plural = "AuthorizedShares"
+
+
+class Transfer(models.Model):
+    FromCompany = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "FromCompanyTransfer")
+    FromPerson = models.ForeignKey(Person, null = True, blank = True, on_delete = models.CASCADE,
+            related_name = "FromPersonTransfer")
+    ToCompany = models.ForeignKey(Company, null=True, blank=True, on_delete = models.CASCADE,
+            related_name = "ToCompanyTransfer")
+    ToPerson = models.ForeignKey(Person, null = True, blank = True, on_delete = models.CASCADE,
+            related_name = "ToPersonTransfer")
+    Company = models.ForeignKey(Company, on_delete = models.CASCADE, related_name = "Transfer")
+    Date = models.DateTimeField()
+    Ammount = models.IntegerField()
+    ShareClass = models.ForeignKey(ShareClass, on_delete =models.CASCADE)
+    Price = models.FloatField()
+
+    def __str__(self):
+        #return "TEST"
+        if self.FromCompany:
+            return str(self.Ammount) + " " + str(self.ShareClass) + " from " + \
+                    str(self.FromCompany) + " to " + str(self.ToPerson)
+
+        elif self.FromPerson:
+            if self.ToPerson:
+                return str(self.Ammount) + " " + str(self.ShareClass) + " from " + \
+                    str(self.FromPerson) + " to " + str(self.ToPerson)
+
+            elif self.ToCompany:
+                return str(self.Ammount) + " " + str(self.ShareClass) + " from " + \
+                    str(self.FromPerson) + " to " + str(self.ToCompany)
+            
+
+
+    
+
+
+
+
+
+
+
+
+
+
+

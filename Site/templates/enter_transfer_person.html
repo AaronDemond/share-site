@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block main %}
+<h1>Enter a Transfer for {{person}}</h1>
+
+       <a href="/" >Home</a> / <a href="/people" >People</a> / Enter Transfer
+<div class="row">
+            <form method="POST" id="form">
+                <div class="row">
+                   <div class="col-sm-12" style="padding-top: 20px;">
+                    <h3>Select a company</h3> 
+                   </div> 
+                </div>
+<div id="companyHolder" class="row">
+
+                                    <div class="input-group" style="padding-bottom: 20px;">
+					<input type="text" class="form-control" name = "query" id = "companySearchString" value="" placeholder="Search for..">
+                                        <span class="input-group-btn">
+                                        <button class="btn btn-success" onclick="searchCompany()">Go!</button>
+                                        </span>
+                                    </div>
+
+    {% for company in companies %}
+    <div class="row">
+        
+        <div class="col-sm-3">
+            {{company}} 
+        </div>
+        <div class="col-sm-9" style="padding-bottom: 20px">
+            <button class="btn btn-primary"  onclick="selectCompany({{company.id}}, '{{company}}')">select</button> 
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+                {% csrf_token %}
+                <hr>
+                    <h3>Is this person receiving or sending shares?</h3>
+                    <div class="col-sm-12" id="q1">
+                       <button class="btn btn-primary" id="receiving">Receiving</button> 
+                       <button class="btn btn-primary" id="sending">Sending</button> 
+                    </div>
+                    <hr>
+                    <div class="col-sm-12" id="q2">
+
+                        
+                    </div>
+                    <div class="col-sm-12" id="q3">
+
+                        
+                    </div>
+                    <div class="row">
+                        
+                        <div class="col-sm-4" style="padding-top: 20px;">
+                            
+                            <div class="input-group">
+                                <span class="input-group-text">Date</span> 
+                                <input type="date" class="form-control" value="" name="date" id=""/> 
+                                <input type="time" class="form-control" value="" name="time" id=""/> 
+                            </div>
+                        </div>
+                        <div class="col-sm-8">
+                            
+                            <div class="input-group mb-3" style="padding-top: 20px;">
+                                <span class="input-group-text">Ammount</span>
+                                <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
+            
+                            </div>
+                        </div>
+
+
+                    </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Price</span>
+                            <input type="text" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
+        
+                        </div>
+                        
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Share class</span>
+                           <select name="shareClass" id="some_name">
+                               {% for share_class in share_classes %}
+                               <option value="{{share_class.id}}">
+                               {{share_class}}
+                               </option>
+                               {% endfor %}
+                               
+                           </select> 
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        
+                                        <button class="btn btn-success browse-btn-fix" onclick="submitForm()" >Submit</button>
+                    </div>
+                    
+                </div>
+            </form>
+            
+
+        </div>
+{% endblock main %}
+{% block scripts %}
+<script type = "text/javascript">
+    //$("#form").submit(function (evt) {
+        //return false
+    //});
+    let person = "{{person}}";
+    var direction = "";
+    var shareDirection = "";
+    $("#receiving").click(function(){
+        let q1_text = `<input type="hidden"  name="toPerson"
+        value={{person.pk}}><p>{{person}} Receiving</p>`;
+        $("#q1").html(q1_text);
+        let q2_text = `<h3> Is this person receiving 
+        from a person or a company? </h3>
+        <button class="btn btn-primary" id="person">Person</button> 
+        <button class="btn btn-primary" id="company">Company</button>`;
+        $("#q2").html(q2_text);
+        direction = "From";
+        shareDirection = "receiving";
+        return false
+    });
+    $(document).on( 'click', '#person', function () {
+        let q3_text = `<h3> Select a person </h3>`
+        $("#q3").html(q3_text);
+        $("#q2").hide()
+        $.ajax({url: "/ajax/personSearch/?direction="+direction, async:false, 
+            success: function(result){
+            $("#q3").html(result);
+        }});    
+        return false
+    });
+
+    $("#sending").click(function(){
+        let q1_text = `<input type="hidden" name="fromPerson"
+        value={{person.pk}}><p>{{person}} Sending</p>` 
+        $("#q1").html(q1_text);
+        let q2_text = `<h3> Is this person sending 
+        to a person or a company?</h3>
+        <button class="btn btn-primary" id="person">Person</button> 
+        <button class="btn btn-primary" id="company">Company</button>`;
+        $("#q2").html(q2_text);
+        direction = "To"
+        shareDirection = "sending";
+        return false
+    
+    });
+
+    $(document).on( 'click', '#company', function () {
+        if (shareDirection == "receiving") { 
+            console.log("receiving")
+            console.log(window.company_id);
+            console.log(window.company_name);
+
+        $("#q3").html('<input type="hidden" name="fromCompany", value='+company_id+'> <p>'+direction+' '+company_name+'</p>');
+        $("#q2").hide();
+        return false
+        } else if (shareDirection == "sending") {
+            console.log("sending")
+            console.log(window.company_id);
+            console.log(window.company_name);
+            $("#q3").html('<input type="hidden" name="toCompany", value='+company_id+'> <p>'+direction+' '+company_name+'</p>');
+            $("#q2").hide();
+            return false;
+        } else {
+        let q3_text = `<h3> Select a company </h3>`
+        $("#q3").html(q3_text);
+        $("#q2").hide();
+        $.ajax({url: "/ajax/fromCompany/?direction="+direction,
+            async:false, 
+            success: function(result){
+            $("#q3").html(result);
+        }});    
+        return false
+        }
+    });
+    //$("#receiving").click(function(){
+        //$.ajax({url: "/ajax/companies/", async:false, success: function(result){
+            //$("#companySelector").html(result);
+        //}});
+    //});
+function searchCompany() {
+    console.log("TEST");
+    //$("#form").submit(function (evt) {
+       // return false
+   // });
+
+        var search_string = $("#companySearchString").val()
+        $.ajax({url: "/ajax/fromCompany/?type=company&query="+search_string, async:false, success: function(result){
+            $("#companyHolder").html(result);
+            return false;
+        }});
+        return false;
+
+    return false;
+}
+    function submitForm() {
+    $("#form").submit(function (evt) {
+        return true;
+    });
+
+    }
+    function selectCompany(company_id, company_name) {
+        window.company_id=company_id;
+        window.company_name = company_name;
+        //$("#fromHolder").html('<input type="text" class = "form-control" name = "FromCompany" value = '+company_id+'>');
+        $("#companyHolder").html('<input type="hidden" name="company", value='+company_id+'> <p>'+company_name+' selected</p>');
+        return false;
+    }
+  </script>
+  {% endblock scripts %}
