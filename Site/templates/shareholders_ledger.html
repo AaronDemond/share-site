@@ -9,7 +9,7 @@
             / {{company}}
         </div>
     </div>
-<div id="peopleHolder" class="row">
+<div id="participantHolder" class="row">
 
                                     <div class="input-group" style="padding-bottom: 20px">
 					<input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
@@ -18,24 +18,36 @@
                                         </span>
                                     </div>
 
-    {% for person in people %}
-        {% for sdl in shareDictList %} 
-        {% if sdl ==  person.id %}
-        {% for sc in shareDictList|get_item:sdl %}
+    {% for person in peopleClassList %}
+    {% for class in person.shareTypes %}
     <div class="row personRow">
 
         <div class="col-sm-3">
-            {{person}} {{sc}}
+            {{person.person}} {{class}}
         </div>
         <div class="col-sm-9" style="padding-bottom: 20px;">
 
-            <a class="btn btn-primary" role="button" href="{{person.id}}/{{sc.id}}">View Ledger</a>
+            <a class="btn btn-primary" role="button" href="?type=person&id={{person.person.id}}&shareClass={{class.id}}">View Ledger</a>
             <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
         </div>
     </div>
-    {% endfor %}
-    {% endif %}
-    {% endfor %}
+        {% endfor %}
+        {% endfor %}
+
+    {% for c in companyClassList %}
+    {% for class in c.shareTypes %}
+    <div class="row personRow">
+
+        <div class="col-sm-3">
+            {{c.company}} {{class}}
+        </div>
+        <div class="col-sm-9" style="padding-bottom: 20px;">
+
+            <a class="btn btn-primary" role="button" href="?type=company&id={{c.company.id}}&shareClass={{class.id}}">View Ledger</a>
+            <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
+        </div>
+    </div>
+        {% endfor %}
         {% endfor %}
 </div>
 <script type = "text/javascript">
@@ -50,8 +62,8 @@
     }
     function search() {
         var search_string = $("#search_string").val()
-        $.ajax({url: '/ajax/personSearch/?type=ledger&company_id={{company.id}}&query='+search_string, async:false, success: function(result){
-            $("#peopleHolder").html(result);
+        $.ajax({url: '?query='+search_string, async:false, success: function(result){
+            $("#participantHolder").html(result);
             return false;
         }});
         return false;

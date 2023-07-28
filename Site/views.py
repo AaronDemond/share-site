@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.db.models import Q
 import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
@@ -420,11 +421,121 @@ def personSearch(request):
         context['shareDictList']=shareDictList
         return render(request, 'people_ajax_ledger.html', context)
     return render(request, 'people_ajax.html', context)
+def shareholders_ledger_new(request, company_id=None):
+    context = {}
+    if company_id:
+        company = Company.objects.get(pk=company_id)
+        context['company'] = company
+
+    transfers = Transfer.objects.filter(Company = company)
+    people_ids = []
+    for tran in transfers:
+        if tran.FromPerson:
+            people_ids.append(tran.FromPerson.id)
+        if tran.ToPerson:
+            people_ids.append(tran.ToPerson.id)
+    people = Person.objects.filter(id__in=people_ids)
+    peopleClassList = []
+    for person in people:
+        sharetypes=set()
+        for t in transfers:
+            if t.FromPerson == person or t.ToPerson == person:
+                sharetypes.add(t.ShareClass)
+        d = {'person':person,
+                'shareTypes':sharetypes}
+        peopleClassList.append(d)
+    company_ids = []
+    for tran in transfers:
+        if tran.FromCompany:
+            if tran.FromCompany != company:
+                company_ids.append(tran.FromCompany.id)
+        if tran.ToCompany:
+            if tran.FromCompany != company:
+                company_ids.append(tran.ToCompany.id)
+    companies = Company.objects.filter(id__in=company_ids)
+    companyClassList = []
+    for c in companies:
+        sharetypes=set()
+        for t in transfers:
+            if t.FromCompany == c or t.ToCompany == c:
+                sharetypes.add(t.ShareClass)
+        d = {'company':c,
+                'shareTypes':sharetypes}
+        companyClassList.append(d)
+    context['peopleClassList']=peopleClassList
+    context['companyClassList']=companyClassList
+    if request.GET.get('query'):
+        search_string = request.GET.get('query')
+        search_string = search_string.lower()
+        for p in context['peopleClassList']:
+            if search_string not in p['person'].Name.lower():
+                context['peopleClassList'].remove(p)
+        for p in context['companyClassList']:
+            if search_string not in p['company'].Name.lower():
+                context['companyClassList'].remove(p)
+        return render(request, 'ledger_ajax.html', context)
+    if request.GET.get('type'):
+        ledgerType = request.GET.get('type')
+        context['ledgerType']=ledgerType
+        shareClass = request.GET.get('shareClass')
+        shareClass = ShareClass.objects.get(pk=shareClass)
+        context['shareClass']=shareClass
+        if ledgerType == "person":
+            p = request.GET.get("id")
+            p = Person.objects.get(pk=p)
+            context['owner'] = p
+            transfers = Transfer.objects.filter(Q(FromPerson \
+                = p, ShareClass=shareClass) | Q(ToPerson = p, \
+                ShareClass=shareClass)).order_by('Date')
+        if ledgerType == "company":
+            c = request.GET.get("id")
+            c = Company.objects.get(pk=c)
+            context['owner'] = c
+            transfers = Transfer.objects.filter(Q(FromCompany \
+                = c, ShareClass=shareClass) | Q(ToCompany = c, \
+                ShareClass=shareClass)).order_by('Date')
+        context['t']=[]
+        total = 0
+        for t in transfers:
+            tt={'total':total}
+            if t.FromCompany == context['owner'] or t.FromPerson == context['owner']:
+                if t.ToCompany:
+                    if t.ToCompany == company:
+                        tt['toOrFrom'] = "To - Treasury"
+                    else:
+                        tt['toOrFrom'] = "To - " + t.ToCompany.__str__()
+                else:
+                    tt['toOrFrom'] = "To - " + t.ToPerson.__str__()
+            else:
+                if t.FromCompany:
+                    if t.FromCompany == company:
+                        tt['toOrFrom'] = "From - Treasury"
+                    else:
+                        tt['toOrFrom'] = "From - " + t.FromCompany.__str__()
+                else:
+                    tt['toOrFrom'] = "From - " + t.FromPerson.__str__()
+
+            if t.FromPerson != context['owner'] and t.FromCompany != context['owner']:
+                total += t.Ammount
+                tt['total'] += t.Ammount
+                tt['acquired'] = t.Ammount
+            else:
+                total -= t.Ammount
+                tt['total'] -= t.Ammount
+                tt['transferred'] = t.Ammount
+            tt['transfer']=t
+            context['t'].append(tt)
+
+
+
+
+
+        return render(request, 'ledger.html', context)
+    return render(request, 'shareholders_ledger.html', context)
 
 def shareholders_ledger(request, company_id=None, 
         person_id=None,share_class_id=None):
     print(share_class_id)
-    from django.db.models import Q
     context = {}
     company = Company.objects.get(pk=company_id)
     if share_class_id:

@@ -1,0 +1,39 @@
+
+                                    <div class="input-group" style="padding-bottom: 20px">
+					<input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                                        <span class="input-group-btn">
+                                        <button class="btn btn-success" onclick="search()">Go!</button>
+                                        </span>
+                                    </div>
+
+    {% for person in peopleClassList %}
+    {% for class in person.shareTypes %}
+    <div class="row personRow">
+
+        <div class="col-sm-3">
+            {{person.person}} {{class}}
+        </div>
+        <div class="col-sm-9" style="padding-bottom: 20px;">
+
+            <a class="btn btn-primary" role="button" href="?type=person&id={{person.id}}&shareClass={{class.id}}">View Ledger</a>
+            <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
+        </div>
+    </div>
+        {% endfor %}
+        {% endfor %}
+
+    {% for c in companyClassList %}
+    {% for class in c.shareTypes %}
+    <div class="row personRow">
+
+        <div class="col-sm-3">
+            {{c.company}} {{class}}
+        </div>
+        <div class="col-sm-9" style="padding-bottom: 20px;">
+
+            <a class="btn btn-primary" role="button" href="?type=person&id={{c.id}}&shareClass={{class.id}}">View Ledger</a>
+            <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
+        </div>
+    </div>
+        {% endfor %}
+        {% endfor %}

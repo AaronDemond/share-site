@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block main %}
+<div id="container">
+    
+    <div class="row">
+        
+    <div class="col-sm-12" style = "padding-bottom: 20px">
+        <a href="/" >Home</a> / <a href="/companies">Companies</a>
+        / <a href="/companies/{{company.id}}/shareholdersLedger/">{{company}}</a> / {{owner}} <hr /></div>
+    </div>
+    <div class="row">
+       <div class="col-sm-12"style="text-align: center;">
+           <h2>{{company}}</h2> 
+           <p>Shareholder's Ledger</p>
+       </div> 
+    </div>
+    <div class="row">
+       <div class="col-sm-3">
+          Name: 
+       </div> 
+       <div class="col-sm-9">
+            {{owner}} 
+       </div> 
+       <div class="col-sm-3">
+          Address: 
+       </div> 
+       <div class="col-sm-9">
+           {% if ledgerType == 'person' %}
+            {{owner.Address}} 
+            {% endif %}
+       </div> 
+
+       <div class="col-sm-3">
+          Class of shares: 
+       </div> 
+       <div class="col-sm-9">
+            {{shareClass}} 
+       </div> 
+    </div>
+<div class="row">
+    <div class="col-sm-12"> 
+        <table class="table">
+          <col>
+          <colgroup span="3"></colgroup>
+          <tr>
+            <th scope="col" rowspan ="2" style="vertical-align: middle;">Date</th>
+            <th scope="col" rowspan="2" style="vertical-align: middle;">Cert no.</th>
+            <th scope="col" rowspan="2" style="vertical-align: middle;">Trans no.</th>
+            <th scope="col" rowspan="2" style="vertical-align: middle;">To or From whom</th>
+            <th colspan="4" scope="colgroup" style="text-align: center;" >Shares</th>
+          </tr>
+          <tr>
+            <th scope="col">Acquired</th>
+            <th scope="col">Transferred</th>
+            <th scope="col">Balance Held</th>
+          </tr>
+        {% for tr in t %}
+          <tr>
+              <td>{{tr.transfer.Date}}</td>
+            <td>na</td>
+            <td>na</td>
+            <td>{{tr.toOrFrom}}</td>
+            <td>{{tr.acquired}}</td>
+            <td>{{tr.transferred}}</td>
+            <td>{{tr.total}}</td>
+          </tr>
+        {% endfor %}
+        </table>
+    </div>
+</div>
+<input  type="button" value="Convert HTML to PDF"               
+                onclick="convertHTMLtoPDF()">
+
+   <script src=
+ "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
+    </script>
+    <script src=
+"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+ <script src=
+ "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+<script type="text/javascript">
+        function convertHTMLtoPDF() {
+            const { jsPDF } = window.jspdf;
+ 
+            let doc = new jsPDF('l', 'mm', [1800, 1400]);
+            let pdfjs = document.querySelector('#container');
+ 
+            doc.html(pdfjs, {
+                callback: function(doc) {
+                    doc.save("newpdf.pdf");
+                },
+                x: 12,
+                y: 12
+            });               
+        }           
+    </script>     
+{% endblock main %}
