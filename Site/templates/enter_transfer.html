@@ -19,7 +19,7 @@
                     <div class="input-group" style="padding-bottom: 20px;">
 					    <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
                         <span class="input-group-btn">
-                            <button class="btn btn-success" onclick="search('#fromHolder')" type="button">Go!</button>
+                            <button class="btn btn-success" onclick="search('fromHolder','From')" type="button">Go!</button>
                         </span>
                     </div>
                     {% for participant in participants %}
@@ -31,7 +31,7 @@
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-9">
+                        <div class="col-sm-9" style="padding-bottom: 20px">
                         {% if participant.LinkedPerson %}
                             <button class="btn btn-primary"  
                             onclick="selectFrom({{participant.LinkedPerson.id}},
@@ -49,9 +49,9 @@
                     <h3 id="q2title" style="display: none">Select where the shares are going</h3>
                     <div id="toHolder" style="display: none">
                     <div class="input-group" style="padding-bottom: 20px;">
-					    <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
+					    <input type="text" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
                         <span class="input-group-btn">
-                            <button class="btn btn-success" onclick="search('#toHolder')" type="button">Go!</button>
+                            <button class="btn btn-success" onclick="search('toHolder','To')" type="button">Go!</button>
                         </span>
                     </div>
                     {% for participant in participants %}
@@ -63,7 +63,7 @@
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-9">
+                        <div class="col-sm-9" style="padding-bottom: 20px;">
                         {% if participant.LinkedPerson %}
                             <button class="btn btn-primary"  
                             onclick="selectTo({{participant.LinkedPerson.id}},
@@ -153,12 +153,18 @@
 
         }
 
-        function search(target_div){
-            var search_string = $("#participantSearchString").val();
+        function search(target_div,direction){
 
-            $.ajax({url: "/companies/{{company.id}}/enterTransfer/?type=search&query="+search_string, async:false, success: function(result){
-            $(target_div).html(result);
-                console.log("TEST");
+            if (direction == "From") {
+            var search_string = $("#participantSearchString").val();
+            } else {
+            
+            var search_string = $("#participantSearchString2").val();
+            }
+            url = "/companies/{{company.id}}/enterTransfer/?type=search&targetDiv="+target_div+"&direction="+direction+"&query="+search_string;
+            t_div = '#' + target_div;
+            $.ajax({url: url, async:false, success: function(result){
+            $(t_div).html(result);
             }});
         }
     </script>
