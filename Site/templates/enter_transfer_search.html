@@ -1,0 +1,28 @@
+                    <div class="input-group" style="padding-bottom: 20px;">
+					    <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
+                        <span class="input-group-btn">
+                            <button class="btn btn-success" onclick="search()" type="button">Go!</button>
+                        </span>
+                    </div>
+                    {% for participant in participants %}
+                    <div class="row">
+                        <div class="col-sm-3">
+                            {% if participant.LinkedPerson %}
+                                {{participant.LinkedPerson}}
+                            {% else %}
+                                {{participant.LinkedCompany}}
+                            {% endif %}
+                        </div>    
+                        <div class="col-sm-9">
+                        {% if participant.LinkedPerson %}
+                            <button class="btn btn-primary"  
+                            onclick="selectFrom({{participant.LinkedPerson.id}},
+                            '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                        {% else %}
+                            <button class="btn btn-primary"  
+                            onclick="selectFrom({{participant.LinkedCompany.id}}, 
+                            '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
+                        {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}

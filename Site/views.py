@@ -2,7 +2,7 @@ from django.http import HttpResponse
 import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
-from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer
+from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant
 from django.urls import resolve
 
 
@@ -116,7 +116,127 @@ def create_company(request):
 
 def enter_transfer(request, company_id=None):
     company = Company.objects.get(pk=int(company_id))
-    return render(request, 'enter_transfer.html', {})
+    participants = company.Participant.all()
+    share_classes = ShareClass.objects.all()
+    context = {}
+    context['company']=company
+    context['share_classes']=share_classes
+    context['participants']=participants
+    if request.GET.get('type') == 'search':
+        context['participants'] = []
+        query = request.GET.get('query')
+        for p in participants:
+            if p.LinkedPerson:
+                if query in p.LinkedPerson.Name.lower():
+                    context['participants'].append(p)
+            elif p.LinkedCompany:
+                if query in p.LinkedCompany.Name.lower():
+                    context['participants'].append(p)
+        return render(request, 'enter_transfer_search.html', context)
+    if request.method=="POST":
+
+        date = request.POST.get("date")
+        time = request.POST.get("time")
+        dt = date + " " + time
+        date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+        price = request.POST.get("price")
+        ammount = request.POST.get("ammount")
+        shareClass = request.POST.get("shareClass")
+        shareClass = ShareClass.objects.get(pk=shareClass)
+
+        transfer = Transfer(Date=date,Price=price,Ammount=ammount,
+                Company=company,ShareClass=shareClass)
+
+        fromPerson = request.POST.get("fromPerson")
+        if fromPerson:
+            fromPerson = Person.objects.get(pk=fromPerson)
+            transfer.FromPerson = fromPerson
+        fromCompany = request.POST.get("fromCompany")
+        if fromCompany:
+            fromCompany = Company.objects.get(pk=fromCompany)
+            transfer.FromCompany = fromCompany
+        toPerson = request.POST.get("toPerson")
+        if toPerson:
+            toPerson = Person.objects.get(pk=toPerson)
+            transfer.ToPerson = toPerson
+        toCompany = request.POST.get("toCompany")
+        if toCompany:
+            toCompany = Company.objects.get(pk=toCompany)
+            transfer.ToCompany = toCompany
+
+        def checkEnoughShares(t):
+            if t == "person":
+                print(fromPerson)
+                transfers_rec = Transfer.objects.filter(ToPerson=fromPerson,
+                        Date__lt=date,
+                        ShareClass=shareClass, Company=company)
+                total = 0
+                for tran in transfers_rec:
+                    total += tran.Ammount
+
+                transfers_sent = Transfer.objects.filter(FromPerson=fromPerson,
+                        ShareClass=shareClass,
+                        Date__lte=date,
+                        Company=company)
+                for tran in transfers_sent:
+                    total -= tran.Ammount
+
+                print(total)
+                if total >= int(ammount):
+                    return True
+                else:
+                    return False
+            if t == "company":
+                if company == toCompany:
+                    auth_shares = AuthorizedShares.objects.filter(Company=fromCompany,
+                            ShareClass=shareClass)
+                    total = 0
+                    for tran in auth_shares:
+                        total += tran.Ammount
+                    auth_deleted = Transfer.objects.filter(ToCompany=toCompany,
+                            ShareClass=shareClass, Company=company)
+                    for tran in auth_deleted:
+                        total -= tran.Ammount
+                    if total >= int(ammount):
+                        return True
+                    else:
+                        return False
+                else:
+                    transfers_rec = Transfer.objects.filter(ToPerson=fromPerson,
+                            Date__lt=date,
+                            ShareClass=shareClass, Company=company)
+                    total = 0
+                    for tran in transfers_rec:
+                        total += tran.Ammount
+
+                    transfers_sent = Transfer.objects.filter(FromPerson=fromPerson,
+                            ShareClass=shareClass,
+                            Date__lte=date,
+                            Company=company)
+                    for tran in transfers_sent:
+                        total -= tran.Ammount
+
+                    print(total)
+                    if total >= int(ammount):
+                        return True
+                    else:
+                        return False
+
+        if fromCompany:
+            enough = checkEnoughShares("company")
+        elif fromPerson:
+            enough = checkEnoughShares("company")
+        if enough:
+            transfer.save()
+            context['error_type'] = "success"
+            context['alert'] = "Transver Saved"
+        else:
+            context['error_type'] = "danger"
+            context['alert'] = "Not enough shares!"
+        return companies(request, context=context)
+
+
+    return render(request, 'enter_transfer.html', context)
 
 def enter_transfer_person(request, person_id=None):
 

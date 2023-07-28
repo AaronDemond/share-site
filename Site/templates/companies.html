@@ -75,15 +75,17 @@
 
     <div class="row" id="companylist">
     {% for company in companies %}
-        <div class="col-sm-4">
+        <div class="col-sm-3">
 {{company}}
             
         </div>
-        <div class="col-sm-8" style="padding-bottom: 10px;">
-            <a class="btn btn-primary" role="button" href="/companies/{{company.id}}/issue">Authorize Shares</a>
-            <a class="btn btn-primary" role="button" href="/companies/{{company.id}}/shareholdersRegister">Shareholders Register</a>
-            <a class="btn btn-primary" role="button" href="/companies/{{company.id}}/shareholdersLedger">Shareholders Ledger</a>
-            <a class="btn btn-primary" role="button" href="{{company.id}}/changeManagement">Change Management</a>
+        <div class="col-sm-9" style="padding-bottom: 10px;">
+            <a  href="/companies/{{company.id}}/issue">Authorize Shares</a> |
+            <a  href="/companies/{{company.id}}/enterTransfer">Enter Transfer</a> |
+            <a  href="/companies/{{company.id}}/shareholdersRegister">Shareholders Register</a> |
+            <a  href="/companies/{{company.id}}/shareholdersLedger">Shareholders Ledger</a> |
+            <a  href="{{company.id}}/changeManagement">Change Management</a>
+            <!-- class="btn btn-primary" role="button" -->
             
         </div>
 {% endfor %}

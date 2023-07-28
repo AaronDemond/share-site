@@ -69,13 +69,18 @@ class AuthorizedShares(models.Model):
         verbose_name_plural = "AuthorizedShares"
 
 class CompanyParticipant(models.Model):
-    Date = models.DateTimeField()
     CompanyReference = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
-            related_name = "CompanyReference")
-    Person = models.ForeignKey(Person, null=True, blank=True, on_delete=models.CASCADE,
-            related_name = "LinkedPerson")
-    Company = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "Participant")
+    LinkedPerson = models.ForeignKey(Person, null=True, blank=True, on_delete=models.CASCADE,
             related_name = "LinkedCompany")
+    LinkedCompany = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "LinkedCompany")
+
+    def __str__(self):
+        if self.LinkedPerson:
+            return self.LinkedPerson.Name + " is linked to " + self.CompanyReference.Name
+        elif self.LinkedCompany:
+            return self.LinkedCompany.Name + " is linked to " + self.CompanyReference.Name
 
     
 class Transfer(models.Model):
@@ -94,19 +99,9 @@ class Transfer(models.Model):
     Price = models.FloatField()
 
     def __str__(self):
-        #return "TEST"
-        if self.FromCompany:
-            return str(self.Ammount) + " " + str(self.ShareClass) + " from " + \
-                    str(self.FromCompany) + " to " + str(self.ToPerson)
-
-        elif self.FromPerson:
-            if self.ToPerson:
-                return str(self.Ammount) + " " + str(self.ShareClass) + " from " + \
-                    str(self.FromPerson) + " to " + str(self.ToPerson)
-
-            elif self.ToCompany:
-                return str(self.Ammount) + " " + str(self.ShareClass) + " from " + \
-                    str(self.FromPerson) + " to " + str(self.ToCompany)
+        _from = self.FromPerson or self.FromCompany
+        _to = self.ToPerson or self.ToCompany
+        return str(self.Ammount) + " from " + _from.Name + " to " + _to.Name
             
 
 
