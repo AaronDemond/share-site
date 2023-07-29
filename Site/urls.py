@@ -11,5 +11,5 @@ urlpatterns = [
         path('companies/<int:company_id>/enterTransfer/', views.enter_transfer, name="enter_transfer"),
         path('companies/create/', views.create_company, name="create_company"),
 
-        path("people/", views.people, name="people"),
+        path("entities/", views.people, name="people"),
 ]

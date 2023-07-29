@@ -1,25 +1,42 @@
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 class Person(models.Model):
     Name = models.CharField(max_length=500)
     Address = models.CharField(max_length=500)
+    created = models.DateTimeField(editable=False)
+    modified= models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        self.modified = timezone.now()
+        return super(Person, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.Name
     
 class Company(models.Model):
     Name = models.CharField(max_length=500)
+    created = models.DateTimeField(editable=False)
+    modified= models.DateTimeField()
 
     def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        self.modified = timezone.now()
         if self.Name == "":
             raise Exception("Can't be a blank name")
         else:
             super(Company, self).save(*args, **kwargs)
-    
+
     def __str__(self):
         return self.Name
+
 
 
 class Manager(models.Model):

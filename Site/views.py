@@ -28,14 +28,21 @@ def shareholders_register(request, company_id=None):
     
 def people(request, context=None):
     query = request.GET.get('query', None)
+    ql = []
     if query:
         ql = Person.objects.filter(Name__icontains=query).order_by("-pk")
     else:
-        ql = Person.objects.all().order_by("-pk")
+        people = Person.objects.all().order_by("-pk")
+        companies = Company.objects.all().order_by("-pk")
+        for p in people:
+            ql.append(p)
+        for c in companies:
+            ql.append(c)
+        ql.sort(key=lambda x: x.created)
     if context:
         context['people'] = ql
     else:
-        context = {'people' : ql,}
+        context = {'people' : ql}
     return render(request, 'people.html', context)
 
 def issue_shares(request, company_id=None):
