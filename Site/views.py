@@ -192,36 +192,44 @@ def enter_transfer(request, company_id=None):
                 else:
                     return False
             if t == "company":
-                if company == toCompany:
-                    auth_shares = AuthorizedShares.objects.filter(Company=fromCompany,
+                if company == fromCompany:
+                    auth_shares = AuthorizedShares.objects.filter(Company=company,
                             ShareClass=shareClass)
                     total = 0
+
                     for tran in auth_shares:
-                        total += tran.Ammount
-                    auth_deleted = Transfer.objects.filter(ToCompany=toCompany,
+                        total += tran.Ammount 
+                    auth_used = Transfer.objects.filter(ToCompany=company,
                             ShareClass=shareClass, Company=company)
+
+                    for tran in auth_used:
+                        total -= tran.Ammount
+                    auth_deleted = Transfer.objects.filter(FromCompany=company,
+                            ShareClass=shareClass, Company=company)
+
                     for tran in auth_deleted:
                         total -= tran.Ammount
+
                     if total >= int(ammount):
                         return True
                     else:
                         return False
                 else:
-                    transfers_rec = Transfer.objects.filter(ToPerson=fromPerson,
+                    transfers_rec = Transfer.objects.filter(ToCompany=fromCompany,
                             Date__lt=date,
                             ShareClass=shareClass, Company=company)
+
                     total = 0
                     for tran in transfers_rec:
                         total += tran.Ammount
 
-                    transfers_sent = Transfer.objects.filter(FromPerson=fromPerson,
+                    transfers_sent = Transfer.objects.filter(FromCompany=fromCompany,
                             ShareClass=shareClass,
                             Date__lte=date,
                             Company=company)
                     for tran in transfers_sent:
                         total -= tran.Ammount
 
-                    print(total)
                     if total >= int(ammount):
                         return True
                     else:
@@ -230,7 +238,7 @@ def enter_transfer(request, company_id=None):
         if fromCompany:
             enough = checkEnoughShares("company")
         elif fromPerson:
-            enough = checkEnoughShares("company")
+            enough = checkEnoughShares("person")
         if enough:
             transfer.save()
             context['error_type'] = "success"
@@ -271,12 +279,10 @@ def shareholders_ledger(request, company_id=None):
         peopleClassList.append(d)
     company_ids = []
     for tran in transfers:
-        if tran.FromCompany:
-            if tran.FromCompany != company:
-                company_ids.append(tran.FromCompany.id)
-        if tran.ToCompany:
-            if tran.FromCompany != company:
-                company_ids.append(tran.ToCompany.id)
+        if tran.FromCompany and tran.FromCompany != company:
+            company_ids.append(tran.FromCompany.id)
+        if tran.ToCompany and tran.ToCompany != company:
+            company_ids.append(tran.ToCompany.id)
     companies = Company.objects.filter(id__in=company_ids)
     companyClassList = []
     for c in companies:
@@ -299,6 +305,8 @@ def shareholders_ledger(request, company_id=None):
             if search_string not in p['company'].Name.lower():
                 context['companyClassList'].remove(p)
         return render(request, 'ledger_ajax.html', context)
+
+    #request for a specific ledger
     if request.GET.get('type'):
         ledgerType = request.GET.get('type')
         context['ledgerType']=ledgerType
