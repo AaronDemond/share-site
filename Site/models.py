@@ -6,8 +6,8 @@ from django.utils import timezone
 class Person(models.Model):
     Name = models.CharField(max_length=500)
     Address = models.CharField(max_length=500)
-    created = models.DateTimeField(editable=False)
-    modified= models.DateTimeField()
+    Created = models.DateTimeField(editable=False)
+    Modified= models.DateTimeField()
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -21,8 +21,8 @@ class Person(models.Model):
     
 class Company(models.Model):
     Name = models.CharField(max_length=500)
-    created = models.DateTimeField(editable=False)
-    modified= models.DateTimeField()
+    Created = models.DateTimeField(editable=False)
+    Modified= models.DateTimeField()
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''

@@ -30,20 +30,70 @@ def people(request, context=None):
     query = request.GET.get('query', None)
     ql = []
     if query:
-        ql = Person.objects.filter(Name__icontains=query).order_by("-pk")
+        people = Person.objects.filter(Name__icontains=query).order_by("-pk")
+        companies = Company.objects.filter(Name__icontains=query).order_by("-pk")
     else:
         people = Person.objects.all().order_by("-pk")
         companies = Company.objects.all().order_by("-pk")
-        for p in people:
-            ql.append(p)
-        for c in companies:
-            ql.append(c)
-        ql.sort(key=lambda x: x.created)
+
+    for p in people:
+        ql.append([p,"person"])
+    for c in companies:
+        ql.append([c, "company"])
+    ql.sort(key=lambda x: x[0].Created)
+
     if context:
-        context['people'] = ql
+        context['entities'] = ql
     else:
-        context = {'people' : ql}
+        context = {'entities' : ql}
+
     return render(request, 'people.html', context)
+def link(request, _id=None):
+    _type = request.GET.get("type")
+    context = {}
+    if _type == "person":
+        context["entity"] = Person.objects.get(pk=_id)
+    elif _type == "company":
+        context["entity"] = Company.objects.get(pk=_id)
+    if request.GET.get("search"):
+        query = request.GET.get("query")
+        companies = Company.objects.filter(Name__icontains=query).order_by("-pk")
+    else:
+        companies = Company.objects.all().order_by("-pk")
+
+    if request.GET.get("company_id"):
+        company = Company.objects.get(pk=request.GET.get("company_id"))
+        companyReference = company
+        companyParticipant = CompanyParticipant(CompanyReference=companyReference)
+        if _type == "person":
+            companyParticipant.LinkedPerson = context["entity"]
+            q = CompanyParticipant.objects.filter(CompanyReference = company,
+                    LinkedPerson = context["entity"])
+            if len(q) > 0:
+                context["alert_type"] = "danger"
+                context["alert"] = "Link already exists"
+                return people(request, context)
+
+        elif _type == "company":
+            companyParticipant.LinkedCompany = context["entity"]
+            q = CompanyParticipant.objects.filter(CompanyReference = company,
+                    LinkedCompany = context["entity"])
+            if len(q) > 0:
+                context["alert_type"] = "danger"
+                context["alert"] = "Link already exists"
+                return people(request, context)
+        try:
+            companyParticipant.save()
+            context["alert_type"] = "success"
+            context["alert"] = "Entity Linked"
+            return people(request, context)
+        except:
+            context["alert_type"] = "danger"
+            context["alert"] = "Error saving link"
+    context["companies"] = companies 
+    context["type"] = _type
+
+    return render(request, "link.html", context)
 
 def issue_shares(request, company_id=None):
     current_url = resolve(request.path_info).url_name

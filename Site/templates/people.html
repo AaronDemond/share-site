@@ -55,7 +55,7 @@
             
         </div>
 <div class="col-lg-12">
-    <form action ="{% url 'people' %}" method ="GET" />
+    <form action ="{% url 'entities' %}" method ="GET" />
                                 <input type="hidden" name="search_type" value="search">
                                 <div class="col-xs-12">
                                     <br />
@@ -71,13 +71,18 @@
 </div>
 
     <div class="row" id="peopleList">
-    {% for person in people %}
+    {% for e in entities %}
         <div class="col-sm-4">
-{{person}}
+{{e.0}}
             
         </div>
         <div class="col-sm-8" style="padding-bottom: 10px;">
             <a class="btn btn-primary" role="button" href="">Assign Management</a>
+            {% if e.1 == "person" %}
+            <a class="btn btn-primary" role="button" href="/link/{{e.0.id}}/?type=person">Link to Company</a>
+            {% else %}
+            <a class="btn btn-primary" role="button" href="/link/{{e.0.id}}/?type=company">Link to Company</a>
+            {% endif %}
             
         </div>
 {% endfor %}

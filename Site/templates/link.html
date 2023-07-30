@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load extras %}
+{% block main %}
+<h1>Link {{entity}} to a Company</h1>
+<div class="col-sm-12" style="padding-bottom: 20px;">
+    <form action ="/link/{{entity.id}}/" method ="GET" />
+                                <input type="hidden" name="type" value="{{type}}">
+                                <input type="hidden" name="search" value="True">
+                                <div class="col-sm-12">
+                                    <br />
+                                    <div class="input-group">
+					<input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                                        <span class="input-group-btn">
+                                        <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+</div>
+</div>
+
+    <div class="row" id="peopleList">
+    {% for e in companies %}
+        <div class="col-sm-4">
+{{e}}
+            
+        </div>
+        <div class="col-sm-8" style="padding-bottom: 10px;">
+            <a class="btn btn-primary" role="button" href="/link/{{entity.id}}/?company_id={{e.id}}&type={{type}}">Link</a>
+            
+        </div>
+{% endfor %}
+    </div>	</main>
+
+{% endblock main %}
