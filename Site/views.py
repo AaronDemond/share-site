@@ -3,7 +3,7 @@ from django.db.models import Q
 import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
-from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant
+from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager
 from django.urls import resolve
 
 
@@ -352,6 +352,14 @@ def shareholders_ledger(request, company_id=None):
         companyClassList.append(d)
     context['peopleClassList']=peopleClassList
     context['companyClassList']=companyClassList
+    mixed = []
+    for entry in peopleClassList:
+        mixed.append({'type': 'person', 'entity': entry['person'], 'shareTypes': entry['shareTypes']})
+    for entry in companyClassList:
+        mixed.append({'type': 'company', 'entity': entry['company'], 'shareTypes': entry['shareTypes']})
+    mixed.sort(key = lambda x: x['entity'].Modified, reverse = True)
+    context['mixed'] = mixed
+    print(peopleClassList)
     if request.GET.get('query'):
         search_string = request.GET.get('query')
         search_string = search_string.lower()
@@ -420,6 +428,40 @@ def shareholders_ledger(request, company_id=None):
     return render(request, 'shareholders_ledger.html', context)
 
 
+def management(request, company_id = None):
+    context = {}
+    company = Company.objects.get(pk=company_id)
+    participants = company.Participant.all()
+    context['participants'] = participants
+    context['company'] = company
+    if request.GET.get("type") == "search":
+        print(request.GET.get("query"))
+        context['participants'] = []
+        for p in participants:
+            if p.LinkedPerson:
+                if request.GET.get("query") in p.LinkedPerson.Name.lower():
+                    context['participants'].append(p)
+        return render(request, 'enter_management_search.html', context)
+    titles = [
+            ("Officer", "Officer"),
+            ("President", "President"), 
+            ("Secretary", "Secretary"),
+            ("VP", "VP"),
+            ("Other", "Other")
+            ]
+    context['titles'] = titles
+    if request.method == "POST":
+        person_id = request.POST.get("person_id")
+        print(person_id)
+        person = Person.objects.get(pk=person_id)
+        role = request.POST.get("role")
+        new_management = Manager(Person=person, Title=role, Company=company)
+        new_management.save()
+
+        context["error_type"] = "success"
+        context["alert"] = "Management updated"
+        return companies(request, context = context)
+    return render(request, 'management.html', context)
     
 
 

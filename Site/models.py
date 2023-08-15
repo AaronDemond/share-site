@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
+import datetime
 
 class Person(models.Model):
     Name = models.CharField(max_length=500)
@@ -114,6 +115,25 @@ class Transfer(models.Model):
     Ammount = models.IntegerField()
     ShareClass = models.ForeignKey(ShareClass, on_delete =models.CASCADE)
     Price = models.FloatField()
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        self.Company.Modified = datetime.datetime.now()
+        if self.ToPerson:
+            self.ToPerson.Modified = datetime.datetime.now()
+            self.ToPerson.save()
+        if self.FromPerson:
+            self.FromPerson.Modified = datetime.datetime.now()
+            self.FromPerson.save()
+        if self.ToCompany:
+            self.ToCompany.Modified = datetime.datetime.now()
+            self.ToCompany.save()
+        if self.FromCompany:
+            self.FromCompany.Modified = datetime.datetime.now()
+            self.FromCompany.save()
+
+        return super(Transfer, self).save(*args, **kwargs)
+
 
     def __str__(self):
         _from = self.FromPerson or self.FromCompany

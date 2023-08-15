@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class="row">
+    <div class="col-sm-12">
+       <h3>Select a person</h3>
+
+       <a href="/" >Home</a> / <a href="/companies" >Companies</a> / Change Management
+       <hr>
+       <h5>{{company}}</h5>
+    </div>
+</div>
+
+<form method="POST">
+
+    {% csrf_token %}
+    <div class = "row" id="entityHolder">
+<div class="col-sm-12">
+                    <div class="input-group" style="padding-bottom: 20px;">
+					    <input type="text" class="form-control" name = "query" id = "query_text" value="" placeholder="Search for..">
+                        <span class="input-group-btn">
+                            <button class="btn btn-success" onclick="search()" type="button">Go!</button>
+                        </span>
+                    </div>
+    
+</div>
+    </div>
+    <div class="row" id = "searchHolder">
+        {% for participant in participants %}
+        {% if participant.LinkedPerson %}
+                <div class="col-sm-3">
+                        {{participant.LinkedPerson}}
+                </div>    
+
+                <div class="col-sm-9" style="padding-bottom: 20px;">
+                    <button class="btn btn-primary"  
+                    onclick="selectPerson({{participant.LinkedPerson.id}},
+                    '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div class="row">
+        <div id="selectedHolder" class="col-lg-12">
+            
+        </div>
+        
+    </div>
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Role</span>
+               <select name="role" id="some_name" class="form-control">
+                   {% for title in titles %}
+                   <option value="{{title.0}}">
+                   {{title.0}}
+                   </option>
+                   {% endfor %}
+                   
+               </select> 
+            </div>
+                            
+        </div>
+        
+    </div>
+    <div class="row">
+       <div class="col-lg-12">
+            <button class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
+       </div> 
+    </div></form>
+{% endblock main %}
+{% block scripts %}
+
+    <script type="text/javascript">
+        function selectPerson(participant_id, participant_name, type){
+            let txt = `<input type = "hidden" 
+            name = "person_id" value = "${participant_id}"><p>${participant_name}
+                selected</p>`;
+            $("#selectedHolder").html(txt);
+            $("#entityHolder").toggle();
+        }
+ function search() {
+    var search_string = $('#query_text').val();
+     $.ajax({url: '/companies/{{company.id}}/changeManagement?type=search&query=' + search_string, async:false, success: function(result){
+            $("#searchHolder").html(result);
+            }});
+ }
+    </script>
+{% endblock scripts %}

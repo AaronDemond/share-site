@@ -18,37 +18,28 @@
                                         </span>
                                     </div>
 
-    {% for person in peopleClassList %}
-    {% for class in person.shareTypes %}
+    {% for entry in mixed %}
+    {% for class in entry.shareTypes %}
     <div class="row personRow">
 
-        <div class="col-sm-3">
-            {{person.person}} {{class}}
+        <div class="col-sm-4">
+            {{entry.entity}} {{class}}
         </div>
-        <div class="col-sm-9" style="padding-bottom: 20px;">
+        <div class="col-sm-8" style="padding-bottom: 20px;">
 
-            <a class="btn btn-primary" role="button" href="?type=person&id={{person.person.id}}&shareClass={{class.id}}">View Ledger</a>
-            <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
+            {% if entry.type == 'person' %}
+                <a class="btn btn-primary" role="button" href="?type=person&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
+                <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
+            {% else %}
+                <a class="btn btn-primary" role="button" href="?type=company&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
+                <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
+            {% endif %}
         </div>
     </div>
         {% endfor %}
         {% endfor %}
 
-    {% for c in companyClassList %}
-    {% for class in c.shareTypes %}
-    <div class="row personRow">
 
-        <div class="col-sm-3">
-            {{c.company}} {{class}}
-        </div>
-        <div class="col-sm-9" style="padding-bottom: 20px;">
-
-            <a class="btn btn-primary" role="button" href="?type=company&id={{c.company.id}}&shareClass={{class.id}}">View Ledger</a>
-            <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
-        </div>
-    </div>
-        {% endfor %}
-        {% endfor %}
 </div>
 <script type = "text/javascript">
     function select(person_id, person_name) {
