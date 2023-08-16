@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block main %}
+<style type="text/css">
+div.transferContainer>div:nth-of-type(odd) {
+    background: #f8f9fa;
+} 
+</style>
+<h1>Find a Transfer</h1>
+<div class="row">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / Transfers
+    </div>
+
+    {% if alert %}
+    <div class="row">
+        <div class="col-sm-5" style="padding-top: 20px;">
+            
+            <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
+            
+    {{alert}}
+                
+            </div>
+        </div>
+        <div class="col-sm-7" style="padding-top: 20px;">
+            <button type="button" class="btn btn-danger close alert-button">Close</button>
+            
+        </div>
+    </div>
+        {% endif %}
+
+<div class="col-lg-12">
+    <form method ="GET" />
+                                <input type="hidden"  name="search_type" value="search">
+                                <div class="col-xs-12">
+                                    <br />
+                                    <div class="input-group">
+					<input type="text" style="margin-bottom: 20px"class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                                        <span class="input-group-btn">
+                                        <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+</div>
+</div>
+
+    <form method="post">
+        <input type="hidden" value="" name="selectedTransfer" id="selectedTransfer"/>
+        <input type="hidden" value="" name="selectedShareType" id="selectedShareType"/>
+        {% csrf_token %}
+    <div class="row transferContainer" id="transferContainer">
+    {% for transfer in transfers %}
+        
+        <div class="row">
+        
+        <div class="col-sm-9">
+{{transfer}}
+            
+        </div>
+        <div class="col-sm-3" style="padding-bottom: 10px;">
+            <button type="button" class="btn btn-primary" onclick="selectTransfer('{{transfer}}','{{transfer.id}}','{{transfer.ShareClass.id}}')">Select</button>
+        </div>
+            
+        </div>
+{% endfor %}
+    </div>	
+    <div class="row">
+       <div class="col-lg-12">
+           <hr>
+          <button type="submit" class="btn btn-danger">Delete</button> 
+       </div> 
+    </div>
+    </form>
+{% endblock main %}
+{% block scripts %}
+    <script type = "text/javascript">
+        function selectTransfer(text, id, share_type){
+            console.log(text);
+            let txt = `<div class="col-lg-12">${text} selected</div>`;
+            $("#selectedTransfer").val(id);
+            $("#selectedShareType").val(share_type);
+            $("#transferContainer").html(txt);
+        }
+
+      $(".close").click(function(){
+      $(".alert").hide();
+      $(".alert-button").hide();
+    });
+
+    </script>
+{% endblock scripts %}

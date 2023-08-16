@@ -10,6 +10,7 @@ urlpatterns = [
         path('companies/<int:company_id>/shareholdersLedger/', views.shareholders_ledger, name="shareholders_ledger"),
         path('companies/<int:company_id>/enterTransfer/', views.enter_transfer, name="enter_transfer"),
         path('companies/<int:company_id>/changeManagement/', views.management, name="management"),
+        path('companies/<int:company_id>/transfers/', views.transfers, name="transfers"),
         path('companies/create/', views.create_company, name="create_company"),
 
         path("entities/", views.people, name="entities"),

@@ -6,6 +6,7 @@ from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_
 from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager
 from django.urls import resolve
 
+PAGELENGTH = 5
 
 def index(request, **kwargs):
 
@@ -29,6 +30,7 @@ def shareholders_register(request, company_id=None):
 def people(request, context=None):
     query = request.GET.get('query', None)
     ql = []
+    context = {}
     if query:
         people = Person.objects.filter(Name__icontains=query).order_by("-pk")
         companies = Company.objects.filter(Name__icontains=query).order_by("-pk")
@@ -42,10 +44,22 @@ def people(request, context=None):
         ql.append([c, "company"])
     ql.sort(key=lambda x: x[0].Modified, reverse=True)
 
-    if context:
-        context['entities'] = ql
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
     else:
-        context = {'entities' : ql}
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(ql):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    ql = ql[start:end]
+
+    context['entities'] = ql
+    context['page'] = page
 
     return render(request, 'people.html', context)
 def link(request, _id=None):
@@ -171,6 +185,69 @@ def create_company(request):
             context["alert"] = "ERROR! " + str(e)
 
     return render(request, 'create_company.html', context)
+
+def transfers(request, company_id=None, context={}):
+    company = Company.objects.get(pk=company_id)
+    _transfers = list(Transfer.objects.filter(Company=company).order_by("-Date"))
+    context["transfers"] = _transfers
+    tt=[]
+    if request.GET.get("query"):
+        query = request.GET.get("query").lower()
+        for t in _transfers:
+            if query in t.__str__().lower():
+                tt.append(t)
+        context['transfers'] = tt
+
+    #User confirmed deletion of impossible transfers
+    if request.POST.get("confirm"):
+        try:
+            selected = request.POST.getlist("confirm")
+            to_delete = Transfer.objects.filter(pk__in=selected)
+            context['error_type'] = "success"
+            context['alert'] = "Transfers deleted"
+            to_delete.delete()
+        except Exception as e:
+            context['error_type'] = "danger"
+            context['alert'] = "Problem deleting transfers: " + str(e)
+
+        return companies(request, context = context)
+
+    #Get list of impossible transfers
+    if request.POST.get("selectedTransfer"):
+        transfer_id = request.POST.get("selectedTransfer")
+        share_type_id = request.POST.get("selectedShareType")
+        shareClass = ShareClass.objects.get(pk=share_type_id) 
+        _transfers = list(Transfer.objects.filter(Company=company, ShareClass=shareClass).order_by("Date"))
+        transfer = Transfer.objects.get(pk=transfer_id)
+        _transfers.remove(transfer)
+        to_be_deleted = []
+        to_be_deleted.append(transfer)
+        participants = company.Participant.all()
+        register = {}
+        for p in participants:
+            if p.LinkedPerson:
+                register[p.LinkedPerson] = 0
+            if p.LinkedCompany:
+                register[p.LinkedCompany] = 0
+        auth_shares = AuthorizedShares.objects.filter(Company=company, ShareClass=shareClass)
+        auth_ammount = sum([x.Ammount for x in auth_shares])
+        register[company] = auth_ammount
+
+        for t in _transfers:
+            receiver = t.ToPerson or t.ToCompany
+            sender = t.FromPerson or t.FromCompany
+            if register[sender] >= t.Ammount:
+                register[sender] -= t.Ammount
+                if receiver != company:
+                    register[receiver] += t.Ammount
+                else:
+                    register[receiver] -= t.Ammount
+            else:
+                to_be_deleted.append(t)
+        context["transfers"] = to_be_deleted
+        return render(request, 'transfers_confirm.html', context)
+
+    return render(request, 'transfers.html', context)
 
 def enter_transfer(request, company_id=None):
     company = Company.objects.get(pk=int(company_id))
