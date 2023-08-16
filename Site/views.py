@@ -27,10 +27,9 @@ def shareholders_register(request, company_id=None):
     context = {}
     return render(request, 'shareholders_register.html', context)
     
-def people(request, context=None):
+def people(request, context={}):
     query = request.GET.get('query', None)
     ql = []
-    context = {}
     if query:
         people = Person.objects.filter(Name__icontains=query).order_by("-pk")
         companies = Company.objects.filter(Name__icontains=query).order_by("-pk")

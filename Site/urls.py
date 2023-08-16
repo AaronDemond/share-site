@@ -15,5 +15,4 @@ urlpatterns = [
 
         path("entities/", views.people, name="entities"),
         path('link/<int:_id>/', views.link, name="link"),
-        path('link/<int:_id>/', views.link, name="link"),
 ]

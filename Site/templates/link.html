@@ -2,6 +2,9 @@
 {% load extras %}
 {% block main %}
 <h1>Link {{entity}} to a Company</h1>
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/entities/">People</a> / Link
+    </div>
 <div class="col-sm-12" style="padding-bottom: 20px;">
     <form action ="/link/{{entity.id}}/" method ="GET" />
                                 <input type="hidden" name="type" value="{{type}}">

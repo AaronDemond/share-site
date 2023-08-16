@@ -91,7 +91,7 @@
     <div class="row">
        <div class="col-sm-3">
            {% if page > 1 %}
-           <a href="?page={{ page|changeValue:'-1'}}" class="btn btn-primary"><</a>
+           <a href="/entities/?page={{ page|changeValue:'-1'}}" class="btn btn-primary"><</a>
            {% endif %}
        </div> 
        <div class="col-sm-6">
@@ -99,7 +99,7 @@
        </div>
        <div class="col-sm-3">
            {% if hasNextPage == True %}
-           <a href="?page={{ page|changeValue:'1'}}" class="btn btn-primary">></a>
+           <a href="/entities/?page={{ page|changeValue:'1'}}" class="btn btn-primary">></a>
            {% endif %}
        </div> 
     </div>
