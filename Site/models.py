@@ -7,13 +7,10 @@ import datetime
 class Person(models.Model):
     Name = models.CharField(max_length=500)
     Address = models.CharField(max_length=500)
-    Created = models.DateTimeField(editable=False)
     Modified= models.DateTimeField()
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
-        if not self.id:
-            self.created = timezone.now()
         self.modified = timezone.now()
         return super(Person, self).save(*args, **kwargs)
 
@@ -22,13 +19,10 @@ class Person(models.Model):
     
 class Company(models.Model):
     Name = models.CharField(max_length=500)
-    Created = models.DateTimeField(editable=False)
     Modified= models.DateTimeField()
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
-        if not self.id:
-            self.created = timezone.now()
         self.modified = timezone.now()
         if self.Name == "":
             raise Exception("Can't be a blank name")

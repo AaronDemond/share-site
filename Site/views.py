@@ -40,7 +40,7 @@ def people(request, context=None):
         ql.append([p,"person"])
     for c in companies:
         ql.append([c, "company"])
-    ql.sort(key=lambda x: x[0].Created)
+    ql.sort(key=lambda x: x[0].Modified, reverse=True)
 
     if context:
         context['entities'] = ql
@@ -209,19 +209,29 @@ def enter_transfer(request, company_id=None):
         transfer = Transfer(Date=date,Price=price,Ammount=ammount,
                 Company=company,ShareClass=shareClass)
 
+        fromCompany = request.POST.get("fromCompany")
         fromPerson = request.POST.get("fromPerson")
+        toPerson = request.POST.get("toPerson")
+        toCompany = request.POST.get("toCompany")
+        if fromCompany and toCompany:
+            if fromCompany == toCompany:
+                context['error_type'] = "danger"
+                context['alert'] = "Origin same as destination"
+                return companies(request, context=context)
+        if fromPerson and toPerson:
+            if fromPerson == toPerson:
+                context['error_type'] = "danger"
+                context['alert'] = "Origin same as destination"
+                return companies(request, context=context)
         if fromPerson:
             fromPerson = Person.objects.get(pk=fromPerson)
             transfer.FromPerson = fromPerson
-        fromCompany = request.POST.get("fromCompany")
         if fromCompany:
             fromCompany = Company.objects.get(pk=fromCompany)
             transfer.FromCompany = fromCompany
-        toPerson = request.POST.get("toPerson")
         if toPerson:
             toPerson = Person.objects.get(pk=toPerson)
             transfer.ToPerson = toPerson
-        toCompany = request.POST.get("toCompany")
         if toCompany:
             toCompany = Company.objects.get(pk=toCompany)
             transfer.ToCompany = toCompany
