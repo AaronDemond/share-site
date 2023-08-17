@@ -1,14 +1,14 @@
- {% for participant in participants %}
-        {% if participant.LinkedPerson %}
-                <div class="col-sm-3">
-                        {{participant.LinkedPerson}}
-                </div>    
+{% for participant in participants %}
+    {% if participant.LinkedPerson %}
+        <div class="col-sm-3">
+            {{participant.LinkedPerson}}
+        </div>    
 
-                <div class="col-sm-9" style="padding-bottom: 20px;">
-                    <button class="btn btn-primary"  
+        <div class="col-sm-9" style="padding-bottom: 20px;">
+            <button class="btn btn-primary"  
                     onclick="selectPerson({{participant.LinkedPerson.id}},
                     '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
-                </div>
-            {% endif %}
-        {% endfor %}
+        </div>
+    {% endif %}
+{% endfor %}
 

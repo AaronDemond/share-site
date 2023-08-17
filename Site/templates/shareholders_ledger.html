@@ -2,42 +2,46 @@
 {% load extras %}
 {% block main %}
 <h1>{{company}} Shareholders Ledger</h1>
-    <div class="row">
-        
-        <div class="col-sm-12" style = "padding-bottom: 20px">
-            <a href="/" >Home</a> / <a href="/companies">Companies</a>
-            / {{company}}
-        </div>
+<div class="row">
+
+    <div class="col-sm-12" style = "padding-bottom: 20px">
+        <a href="/" >Home</a> / <a href="/companies">Companies</a>
+        / {{company}}
     </div>
+</div>
 <div id="participantHolder" class="row">
 
-                                    <div class="input-group" style="padding-bottom: 20px">
-					<input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
-                                        <span class="input-group-btn">
-                                        <button class="btn btn-success" onclick="search()">Go!</button>
-                                        </span>
-                                    </div>
+    <div class="input-group" style="padding-bottom: 20px">
+        <input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+        <span class="input-group-btn">
+            <button class="btn btn-success" onclick="search()">Go!</button>
+        </span>
+    </div>
 
     {% for entry in mixed %}
-    {% for class in entry.shareTypes %}
-    <div class="row personRow">
+        {% for class in entry.shareTypes %}
+            <div class="row personRow">
 
-        <div class="col-sm-4">
-            {{entry.entity}} {{class}}
-        </div>
-        <div class="col-sm-8" style="padding-bottom: 20px;">
+                <div class="col-sm-4">
+                    {{entry.entity}} {{class}}
+                </div>
+                <div class="col-sm-8" style="padding-bottom: 20px;">
 
-            {% if entry.type == 'person' %}
-                <a class="btn btn-primary" role="button" href="?type=person&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
-                <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
-            {% else %}
-                <a class="btn btn-primary" role="button" href="?type=company&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
-                <button class="btn btn-primary" rol="button" onclick="select({{person.id}}, '{{person}}')">select</button> 
-            {% endif %}
-        </div>
-    </div>
+                    {% if entry.type == 'person' %}
+                        <a class="btn btn-primary" role="button" 
+                            href="?type=person&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
+                        <button class="btn btn-primary" rol="button" 
+                            onclick="select({{person.id}}, '{{person}}')">select</button> 
+                    {% else %}
+                        <a class="btn btn-primary" role="button" 
+                            href="?type=company&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
+                        <button class="btn btn-primary" rol="button" 
+                            onclick="select({{person.id}}, '{{person}}')">select</button> 
+                    {% endif %}
+                </div>
+            </div>
         {% endfor %}
-        {% endfor %}
+    {% endfor %}
 
 
 </div>
@@ -45,20 +49,20 @@
     function select(person_id, person_name) {
         //$("#fromHolder").html('<input type="text" class = "form-control" name = "FromCompany" value = '+company_id+'>');
         if (direction=="To") {
-        $("#peopleHolder").html('<input type="hidden" name="toPerson", value='+person_id+'> <p> {{direction}} '+person_name+' </p>');
+            $("#peopleHolder").html('<input type="hidden" name="toPerson", value='+person_id+'> <p> {{direction}} '+person_name+' </p>');
         } else {
-        $("#peopleHolder").html('<input type="hidden" name="fromPerson", value='+person_id+'> <p> {{direction}} '+person_name+' </p>');
-        return false;
+            $("#peopleHolder").html('<input type="hidden" name="fromPerson", value='+person_id+'> <p> {{direction}} '+person_name+' </p>');
+            return false;
         }
     }
-    function search() {
-        var search_string = $("#search_string").val()
-        $.ajax({url: '?query='+search_string, async:false, success: function(result){
-            $("#participantHolder").html(result);
-            return false;
-        }});
+function search() {
+    var search_string = $("#search_string").val()
+    $.ajax({url: '?query='+search_string, async:false, success: function(result){
+        $("#participantHolder").html(result);
         return false;
+    }});
+    return false;
 
-    }
+}
 </script>
 {% endblock main %}

@@ -1,60 +1,60 @@
 {% extends 'base.html' %}
 {% block main %}
-                <h1>Enter a Transfer</h1>
+<h1>Enter a Transfer</h1>
 
+<div class="row">
+    <div class="col-sm-12">
+
+        <a href="/" >Home</a> / <a href="/companies" >Companies</a> / Enter Transfer
+    </div>
+
+</div>
+<div class="row">
+    <form id="form" method="POST">
+
+        {% csrf_token %}
+        <hr>
+        <h3>Select where the shares are originating</h3>
+        <div id="fromHolder">
+            <div class="input-group" style="padding-bottom: 20px;">
+                <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
+                <span class="input-group-btn">
+                    <button class="btn btn-success" onclick="search('fromHolder','From')" type="button">Go!</button>
+                </span>
+            </div>
+            {% for participant in participants %}
                 <div class="row">
-                    <div class="col-sm-12">
-                        
-       <a href="/" >Home</a> / <a href="/companies" >Companies</a> / Enter Transfer
-                    </div>
-                    
-                </div>
-        <div class="row">
-            <form id="form" method="POST">
-
-                {% csrf_token %}
-                <hr>
-                    <h3>Select where the shares are originating</h3>
-                    <div id="fromHolder">
-                    <div class="input-group" style="padding-bottom: 20px;">
-					    <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
-                        <span class="input-group-btn">
-                            <button class="btn btn-success" onclick="search('fromHolder','From')" type="button">Go!</button>
-                        </span>
-                    </div>
-                    {% for participant in participants %}
-                    <div class="row">
-                        <div class="col-sm-3">
-                            {% if participant.LinkedPerson %}
-                                {{participant.LinkedPerson}}
-                            {% else %}
-                                {{participant.LinkedCompany}}
-                            {% endif %}
-                        </div>    
-                        <div class="col-sm-9" style="padding-bottom: 20px">
+                    <div class="col-sm-3">
+                        {% if participant.LinkedPerson %}
+                            {{participant.LinkedPerson}}
+                        {% else %}
+                            {{participant.LinkedCompany}}
+                        {% endif %}
+                    </div>    
+                    <div class="col-sm-9" style="padding-bottom: 20px">
                         {% if participant.LinkedPerson %}
                             <button class="btn btn-primary" 
-                            onclick="selectFrom({{participant.LinkedPerson.id}},
-                            '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                                    onclick="selectFrom({{participant.LinkedPerson.id}},
+                                    '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
                         {% else %}
                             <button class="btn btn-primary"  
-                            onclick="selectFrom({{participant.LinkedCompany.id}}, 
-                            '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
+                                    onclick="selectFrom({{participant.LinkedCompany.id}}, 
+                                    '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
                         {% endif %}
-                        </div>
                     </div>
-                    {% endfor %}
                 </div>
-                <div class="row">
-                    <h3 id="q2title" style="display: none">Select where the shares are going</h3>
-                    <div id="toHolder" style="display: none">
-                    <div class="input-group" style="padding-bottom: 20px;">
-					    <input type="text" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
-                        <span class="input-group-btn">
-                            <button class="btn btn-success" onclick="search('toHolder','To')" type="button">Go!</button>
-                        </span>
-                    </div>
-                    {% for participant in participants %}
+            {% endfor %}
+        </div>
+        <div class="row">
+            <h3 id="q2title" style="display: none">Select where the shares are going</h3>
+            <div id="toHolder" style="display: none">
+                <div class="input-group" style="padding-bottom: 20px;">
+                    <input type="text" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
+                    <span class="input-group-btn">
+                        <button class="btn btn-success" onclick="search('toHolder','To')" type="button">Go!</button>
+                    </span>
+                </div>
+                {% for participant in participants %}
                     <div class="row">
                         <div class="col-sm-3">
                             {% if participant.LinkedPerson %}
@@ -64,110 +64,112 @@
                             {% endif %}
                         </div>    
                         <div class="col-sm-9" style="padding-bottom: 20px;">
-                        {% if participant.LinkedPerson %}
-                            <button class="btn btn-primary"  
-                            onclick="selectTo({{participant.LinkedPerson.id}},
-                            '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
-                        {% else %}
-                            <button class="btn btn-primary"  
-                            onclick="selectTo({{participant.LinkedCompany.id}}, 
-                            '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
-                        {% endif %}
+                            {% if participant.LinkedPerson %}
+                                <button class="btn btn-primary"  
+                                        onclick="selectTo({{participant.LinkedPerson.id}},
+                                        '{{participant.LinkedPerson}}','Person')" 
+                                        type="button">select</button> 
+                            {% else %}
+                                <button class="btn btn-primary"  
+                                        onclick="selectTo({{participant.LinkedCompany.id}}, 
+                                        '{{participant.LinkedCompany}}', 'Company')" 
+                                        type="button">select</button> 
+                            {% endif %}
                         </div>
                     </div>
-                    {% endfor %}
-                    </div>
-                    
-                </div>
-<div class="row">
-                        
-                        <div class="col-sm-4" style="padding-top: 20px;">
-                            
-                            <div class="input-group">
-                                <span class="input-group-text">Date</span> 
-                                <input type="date" class="form-control" value="" name="date" id=""/> 
-                                <input type="time" class="form-control" value="" name="time" id=""/> 
-                            </div>
-                        </div>
-                        <div class="col-sm-8">
-                            
-                            <div class="input-group mb-3" style="padding-top: 20px;">
-                                <span class="input-group-text">Ammount</span>
-                                <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
-            
-                            </div>
-                        </div>
+                {% endfor %}
+            </div>
 
-
-                    </div>
-                <div class="row">
-                    <div class="col-sm-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text">Price</span>
-                            <input type="text" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
-        
-                        </div>
-                        
-                    </div>
-                    <div class="col-sm-8">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text">Share class</span>
-                           <select name="shareClass" id="some_name" class="form-control">
-                               {% for share_class in share_classes %}
-                               <option value="{{share_class.id}}">
-                               {{share_class}}
-                               </option>
-                               {% endfor %}
-                               
-                           </select> 
-                        </div>
-                        
-                    </div>
-                </div>
-
-<div class="row">
-                    <div class="col-sm-12">
-                        
-                                        <button class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
-                    </div>
-                    
-                </div>
-            </form>
         </div>
+        <div class="row">
+
+            <div class="col-sm-4" style="padding-top: 20px;">
+
+                <div class="input-group">
+                    <span class="input-group-text">Date</span> 
+                    <input type="date" class="form-control" value="" name="date" id=""/> 
+                    <input type="time" class="form-control" value="" name="time" id=""/> 
+                </div>
+            </div>
+            <div class="col-sm-8">
+
+                <div class="input-group mb-3" style="padding-top: 20px;">
+                    <span class="input-group-text">Ammount</span>
+                    <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
+
+                </div>
+            </div>
+
+
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Price</span>
+                    <input type="text" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
+
+                </div>
+
+            </div>
+            <div class="col-sm-8">
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Share class</span>
+                    <select name="shareClass" id="some_name" class="form-control">
+                        {% for share_class in share_classes %}
+                            <option value="{{share_class.id}}">
+                            {{share_class}}
+                            </option>
+                        {% endfor %}
+
+                    </select> 
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+
+                <button class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
+            </div>
+
+        </div>
+    </form>
+</div>
 {% endblock main %}
 
 {% block scripts %}
-    <script type="text/javascript">
-        function selectFrom(participant_id, participant_name, type){
-            let fromHolderText = `<input type="hidden" name="from${type}",
+<script type="text/javascript">
+    function selectFrom(participant_id, participant_name, type){
+        let fromHolderText = `<input type="hidden" name="from${type}",
                 value="${participant_id}"> <p> ${participant_name} </p>`;
-            $("#fromHolder").html(fromHolderText);
-            $("#q2title").toggle();
-            $("#toHolder").toggle();
+        $("#fromHolder").html(fromHolderText);
+        $("#q2title").toggle();
+        $("#toHolder").toggle();
 
-        }
-        function selectTo(participant_id, participant_name, type){
-            let fromHolderText = `<input type="hidden" name="to${type}",
+    }
+function selectTo(participant_id, participant_name, type){
+    let fromHolderText = `<input type="hidden" name="to${type}",
                 value="${participant_id}"> <p> ${participant_name} </p>`;
-            $("#toHolder").html(fromHolderText);
+    $("#toHolder").html(fromHolderText);
 
-        }
+}
 
-        function search(target_div,direction){
+function search(target_div,direction){
 
-            if (direction == "From") {
-            var search_string = $("#participantSearchString").val();
-            } else {
-            
-            var search_string = $("#participantSearchString2").val();
-            }
-            url = "/companies/{{company.id}}/enterTransfer/?type=search&targetDiv="+target_div+"&direction="+direction+"&query="+search_string;
-            t_div = '#' + target_div;
-            $.ajax({url: url, async:false, success: function(result){
-            $(t_div).html(result);
-            }});
-        }
-    </script>
+    if (direction == "From") {
+        var search_string = $("#participantSearchString").val();
+    } else {
+
+        var search_string = $("#participantSearchString2").val();
+    }
+    url = "/companies/{{company.id}}/enterTransfer/?type=search&targetDiv="+target_div+"&direction="+direction+"&query="+search_string;
+    t_div = '#' + target_div;
+    $.ajax({url: url, async:false, success: function(result){
+        $(t_div).html(result);
+    }});
+}
+</script>
 {% endblock scripts %}
 
 
