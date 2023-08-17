@@ -445,7 +445,6 @@ def shareholders_ledger(request, company_id=None):
         mixed.append({'type': 'company', 'entity': entry['company'], 'shareTypes': entry['shareTypes']})
     mixed.sort(key = lambda x: x['entity'].Modified, reverse = True)
     context['mixed'] = mixed
-    print(peopleClassList)
     if request.GET.get('query'):
         search_string = request.GET.get('query')
         search_string = search_string.lower()
@@ -511,6 +510,7 @@ def shareholders_ledger(request, company_id=None):
             context['t'].append(tt)
 
         return render(request, 'ledger.html', context)
+    print("HIT")
     return render(request, 'shareholders_ledger.html', context)
 
 
