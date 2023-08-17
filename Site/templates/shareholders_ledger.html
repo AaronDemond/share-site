@@ -30,13 +30,9 @@
                     {% if entry.type == 'person' %}
                         <a class="btn btn-primary" role="button" 
                             href="?type=person&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
-                        <button class="btn btn-primary" rol="button" 
-                            onclick="select({{person.id}}, '{{person}}')">select</button> 
                     {% else %}
                         <a class="btn btn-primary" role="button" 
                             href="?type=company&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
-                        <button class="btn btn-primary" rol="button" 
-                            onclick="select({{person.id}}, '{{person}}')">select</button> 
                     {% endif %}
                 </div>
             </div>
@@ -46,15 +42,6 @@
 
 </div>
 <script type = "text/javascript">
-    function select(person_id, person_name) {
-        //$("#fromHolder").html('<input type="text" class = "form-control" name = "FromCompany" value = '+company_id+'>');
-        if (direction=="To") {
-            $("#peopleHolder").html('<input type="hidden" name="toPerson", value='+person_id+'> <p> {{direction}} '+person_name+' </p>');
-        } else {
-            $("#peopleHolder").html('<input type="hidden" name="fromPerson", value='+person_id+'> <p> {{direction}} '+person_name+' </p>');
-            return false;
-        }
-    }
 function search() {
     var search_string = $("#search_string").val()
     $.ajax({url: '?query='+search_string, async:false, success: function(result){
