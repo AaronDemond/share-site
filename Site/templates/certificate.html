@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load extras %}
+{% block main %}
+<style type="text/css" >
+.darkBack {
+    background-color: #CFCCCB;
+}
+    
+</style>
+<div class="row">
+    <div class="col-sm-12">
+        <b>{{transfer.ShareClass}} Shares</b>
+        <hr>
+    </div>
+   <div class="col-sm-4">
+      <div class="row">
+         <div class="col-sm-6">
+            Certificate No.: 
+         </div> 
+         <div class="col-sm-6 darkBack">
+             {{transfer.pk}} 
+         </div>
+         <div class="col-sm-6">
+             Quantity:
+         </div> 
+         <div class="col-sm-6 darkBack">
+             {{transfer.Ammount}} 
+         </div>
+         <div class="col-sm-6">
+             Class:
+         </div> 
+         <div class="col-sm-6 darkBack">
+             {{transfer.ShareClass}} 
+         </div>
+         <div class="col-sm-12" style="padding-bottom: 20px">
+             
+         </div>
+         <div class="col-sm-6">
+             Issued to:
+         </div> 
+         <div class="col-sm-6 darkBack">
+             {{to}} 
+         </div>
+         <div class="col-sm-6">
+             Date:
+         </div> 
+         <div class="col-sm-6 darkBack">
+             {{date}} 
+         </div>
+      </div>
+   </div> 
+   <div class="col-sm-4" style="padding-left: 40px">
+      <div class="row">
+         <div class="col-sm-12">
+            Acquired from: 
+         </div> 
+         <div class="col-sm-12 darkBack">
+             {{from}}
+         </div>
+      </div> 
+   </div>
+   <div class="col-sm-4" style="padding-left: 40px">
+      <div class="row">
+         <div class="col-sm-12">
+             additional info
+         </div> 
+         <div class="col-sm-12 darkBack" style="height: 120px">
+         </div>
+      </div> 
+   </div>
+</div>
+<div class="row">
+   <div class="col-sm-12" style="text-align: center; padding-top: 100px">
+       <div class="row">
+           <div class="col-sm-12">
+                <h3>{{company}}</h3>
+           </div>
+       </div>
+       <div class="row">
+           <div class="col-sm-12">
+                INCORPORATED UNDER THE LAWS OF THE PROVINCE OF NOVA SCOTIA
+           </div>
+       </div>
+       <div class="row">
+           <div class="col-sm-6" style="text-align: left;">
+               No. <b>{{transfer.pk}}</b>
+           </div>
+           <div class="col-sm-6" style="text-align: right;">
+               {{transfer.Ammount}} {{transfer.ShareClass}} shares
+           </div>
+       </div>
+       
+   </div> 
+</div>
+<div class="row">
+   <div class="col-sm-12" style="padding: 20px; left: 10%; right:10%; border-style: solid; margin-top: 20px;">
+       AUTHORIZED SHARE CAPITAL: 
+       {% for key, value in auth_totals.items %}
+           {{value}} {{key.0}} shares 
+           {% if key.1 == None %} 
+                having no par value{% if forloop.counter < no_of_auth_types and forloop.counter != no_of_auth_types|changeValue:'-1' %},{% elif forloop.counter == no_of_auth_types|changeValue:'-1' %} and{% endif %}{% else %} each having a par value of ${{key.1}}{% if forloop.counter < no_of_auth_types and forloop.counter != no_of_auth_types|changeValue:'-1' %},{% elif forloop.counter == no_of_auth_types|changeValue:'-1' %} and{% endif %}{% endif %}{% endfor %}; and the aforementioned shares each have respective terms and conditions as set out in the applicable constating documents of the Company including the Memorandum of Association of the company.
+   </div> 
+</div>
+{% endblock main %}

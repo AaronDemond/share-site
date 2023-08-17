@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block main %}
+
+<h1>Select a Register Type</h1>
+<div class="row">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / Registers
+    </div>
+
+    {% if alert %}
+    <div class="row">
+        <div class="col-sm-5" style="padding-top: 20px;">
+
+            <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
+
+                {{alert}}
+
+            </div>
+        </div>
+        <div class="col-sm-7" style="padding-top: 20px;">
+            <button type="button" class="btn btn-danger close alert-button">Close</button>
+
+        </div>
+    </div>
+    {% endif %}
+
+    
+</div>
+
+<div class="row" id="registerList">
+    <div class="col-sm-12" style="padding-top: 20px">
+        <a href="/companies/{{company.id}}/registers/?role=shareholders"
+           class = "btn btn-primary">Shareholders</a>
+        {% for role in roles %}
+        <a href="/companies/{{company.id}}/registers/?role={{role}}"
+           class = "btn btn-primary">{{role}}s</a>
+        {% endfor %}
+    </div>
+</div>	
+{% endblock main %}

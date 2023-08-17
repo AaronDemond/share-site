@@ -185,11 +185,38 @@ def create_company(request):
 
     return render(request, 'create_company.html', context)
 
-def transfers(request, company_id=None, context={}):
+def transfers(request, company_id=None, transfer_id=None,context={}):
     company = Company.objects.get(pk=company_id)
     _transfers = list(Transfer.objects.filter(Company=company).order_by("-Date"))
     context["transfers"] = _transfers
+    context["company"] = company
     tt=[]
+    if transfer_id:
+        transfer = Transfer.objects.get(pk=transfer_id)
+        context["transfer"] = transfer
+        context["date"] = transfer.Date.date()
+        context["from"] = transfer.FromCompany or transfer.FromPerson
+        context["to"] = transfer.ToPerson or transfer.ToCompany
+        auth_shares = AuthorizedShares.objects.filter(Company=company)
+        auth_types = set([x.ShareClass for x in auth_shares])
+        auth_types_value = {}
+
+        #Returns a dict of type {(ShareClass,Value):Ammount)}
+        for a in auth_types:
+            auth_types_value[a] = set()
+        for a in auth_shares:
+            auth_types_value[a.ShareClass].add(a.Value)
+        auth_totals = {}
+        for a in auth_types:
+            for value in auth_types_value[a]:
+                auth_totals[(a,value)] = 0
+                for auth in auth_shares:
+                    if auth.ShareClass == a and auth.Value == value:
+                        auth_totals[(a,value)] += auth.Ammount
+
+        context["no_of_auth_types"] = len(auth_totals)
+        context["auth_totals"] = auth_totals 
+        return render(request, 'certificate.html', context)
     if request.GET.get("query"):
         query = request.GET.get("query").lower()
         for t in _transfers:
@@ -533,7 +560,8 @@ def management(request, company_id = None):
             ("President", "President"), 
             ("Secretary", "Secretary"),
             ("VP", "VP"),
-            ("Other", "Other")
+            ("Other", "Other"),
+            ("Director")
             ]
     context['titles'] = titles
     if request.method == "POST":
@@ -549,6 +577,22 @@ def management(request, company_id = None):
         return companies(request, context = context)
     return render(request, 'management.html', context)
     
+def registers(request, company_id=None):
+    company = Company.objects.get(pk=company_id)
+    managers = company.Manager.all()
+    filled_roles = set([x.Title for x in managers])
+    context = {'roles' : filled_roles, 'company' : company}
+    return render(request, 'registers.html', context)
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -41,6 +41,7 @@ class Manager(models.Model):
             ("President", "President"), 
             ("Secretary", "Secretary"),
             ("VP", "VP"),
+            ("Director", "Director"),
             ("Other", "Other")
             ]
     Person = models.ForeignKey(Person, on_delete=models.CASCADE, unique = False,
@@ -48,6 +49,8 @@ class Manager(models.Model):
     Title = models.CharField(max_length=200, choices=titles)
     Company = models.ForeignKey(Company, on_delete=models.CASCADE, unique = False,
             related_name = "Manager")
+    StartDate= models.DateTimeField()
+    EndDate= models.DateTimeField()
 
     def __str__(self):
         return str(self.Person) + " " + str(self.Title) + " at " + str(self.Company)
@@ -67,6 +70,7 @@ class AuthorizedShares(models.Model):
     ShareClass = models.ForeignKey(ShareClass, on_delete=models.CASCADE,
             related_name="AuthorizedShares")
     Date = models.DateTimeField()
+    Value = models.FloatField(null = True, blank = True)
 
     def save(self, *args, **kwargs):
         if int(self.Ammount) < 0:
@@ -132,7 +136,7 @@ class Transfer(models.Model):
     def __str__(self):
         _from = self.FromPerson or self.FromCompany
         _to = self.ToPerson or self.ToCompany
-        return str(self.Ammount) + " from " + _from.Name + " to " + _to.Name
+        return str(self.Ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name
             
 
 

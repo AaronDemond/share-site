@@ -58,7 +58,9 @@ div.transferContainer>div:nth-of-type(odd) {
 
                 </div>
                 <div class="col-sm-3" style="padding-bottom: 10px;">
-                    <button type="button" class="btn btn-primary" onclick="selectTransfer('{{transfer}}','{{transfer.id}}','{{transfer.ShareClass.id}}')">Select</button>
+                    <button type="button" class="btn btn-primary" onclick="selectTransfer('{{transfer}}','{{transfer.id}}','{{transfer.ShareClass.id}}')">Delete</button>
+                <a href="/companies/{{company.id}}/certificates/{{transfer.id}}/"
+                   class = "btn btn-primary">Certificate</a>
                 </div>
 
             </div>
