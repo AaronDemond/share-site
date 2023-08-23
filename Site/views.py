@@ -15,9 +15,9 @@ def index(request, **kwargs):
 def companies(request, company_id=None, context=None):
     query = request.GET.get('query', None)
     if query:
-        ql = Company.objects.filter(Name__icontains=query).order_by("-pk")
+        ql = Company.objects.filter(Name__icontains=query).order_by("-Modified")
     else:
-        ql = Company.objects.all().order_by("-pk")
+        ql = Company.objects.all().order_by("-Modified")
     if context:
         context['companies'] = ql
     else:
@@ -276,7 +276,7 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
         return render(request, 'transfers_confirm.html', context)
 
     return render(request, 'transfers.html', context)
-
+import functools
 def enter_transfer(request, company_id=None):
     company = Company.objects.get(pk=int(company_id))
     participants = company.Participant.all()
@@ -284,6 +284,17 @@ def enter_transfer(request, company_id=None):
     context = {}
     context['company']=company
     context['share_classes']=share_classes
+    def compare(item1, item2):
+        item1 = item1.LinkedPerson or item1.LinkedCompany
+        item2 = item2.LinkedPerson or item2.LinkedCompany
+        if item1.Modified < item2.Modified:
+            return -1
+        elif item1.Modified > item2.Modified:
+            return 1
+        else:
+            return 0
+    participants = list(participants)
+    participants.sort(key=functools.cmp_to_key(compare), reverse=True)
     context['participants']=participants
     if request.GET.get('type') == 'search':
         context['participants'] = []
@@ -301,11 +312,13 @@ def enter_transfer(request, company_id=None):
                     context['participants'].append(p)
         return render(request, 'enter_transfer_search.html', context)
     if request.method=="POST":
+        import pytz
 
         date = request.POST.get("date")
         time = request.POST.get("time")
         dt = date + " " + time
         date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+        date = pytz.timezone("America/Halifax").localize(date)
         price = request.POST.get("price")
         ammount = request.POST.get("ammount")
         shareClass = request.POST.get("shareClass")
@@ -344,68 +357,81 @@ def enter_transfer(request, company_id=None):
         def checkEnoughShares(t):
             if t == "person":
                 print(fromPerson)
-                transfers_rec = Transfer.objects.filter(ToPerson=fromPerson,
-                        Date__lt=date,
-                        ShareClass=shareClass, Company=company)
+                transfers = Transfer.objects.filter(Q(FromPerson \
+                = fromPerson, ShareClass=shareClass) |\
+                Q(ToPerson = fromPerson, ShareClass=shareClass)).order_by('Date')
+                transfers = list(transfers)
                 total = 0
-                for tran in transfers_rec:
-                    total += tran.Ammount
+                newInserted = False
+                for t in transfers:
+                    if t.Date > date and newInserted == False:
+                        total -= int(ammount)
+                        newInserted = True
+                        if total < 0:
+                            return False
+                    if t.ToPerson == fromPerson:
+                        total += t.Ammount
+                    elif t.FromPerson == fromPerson:
+                        total -= t.Ammount
+                    if total < 0:
+                        return False
+                if newInserted == False:
+                    total -= int(ammount)
+                    if total < 0:
+                        return False
+                return True
 
-                transfers_sent = Transfer.objects.filter(FromPerson=fromPerson,
-                        ShareClass=shareClass,
-                        Date__lte=date,
-                        Company=company)
-                for tran in transfers_sent:
-                    total -= tran.Ammount
-
-                print(total)
-                if total >= int(ammount):
-                    return True
-                else:
-                    return False
             if t == "company":
                 if company == fromCompany:
                     auth_shares = AuthorizedShares.objects.filter(Company=company,
-                            ShareClass=shareClass)
+                            ShareClass=shareClass, Date__lte = date)
                     total = 0
+
+                    transfers = Transfer.objects.filter(Q(FromCompany \
+                    = company, ShareClass=shareClass) | \
+                    Q(ToCompany = company, ShareClass=shareClass)).order_by('Date')
+                    transfers = list(transfers)
 
                     for tran in auth_shares:
                         total += tran.Ammount 
-                    auth_used = Transfer.objects.filter(ToCompany=company,
-                            ShareClass=shareClass, Company=company)
-
-                    for tran in auth_used:
-                        total -= tran.Ammount
-                    auth_deleted = Transfer.objects.filter(FromCompany=company,
-                            ShareClass=shareClass, Company=company)
-
-                    for tran in auth_deleted:
-                        total -= tran.Ammount
-
-                    if total >= int(ammount):
-                        return True
-                    else:
-                        return False
+                    newInserted = False
+                    for t in transfers:
+                        if t.Date > date and newInserted == False:
+                            total -= int(ammount)
+                            newInserted = True
+                            if total < 0:
+                                return False
+                        total -= t.Ammount
+                        if total < 0:
+                            return False
+                    if newInserted == False:
+                        total -= int(ammount)
+                        if total < 0:
+                            return False
+                    return True
                 else:
-                    transfers_rec = Transfer.objects.filter(ToCompany=fromCompany,
-                            Date__lt=date,
-                            ShareClass=shareClass, Company=company)
-
+                    transfers = Transfer.objects.filter(Q(FromCompany \
+                    = fromCompany, ShareClass=shareClass) |\
+                    Q(ToCompany = fromCompany, ShareClass=shareClass)).order_by('Date')
                     total = 0
-                    for tran in transfers_rec:
-                        total += tran.Ammount
-
-                    transfers_sent = Transfer.objects.filter(FromCompany=fromCompany,
-                            ShareClass=shareClass,
-                            Date__lte=date,
-                            Company=company)
-                    for tran in transfers_sent:
-                        total -= tran.Ammount
-
-                    if total >= int(ammount):
-                        return True
-                    else:
-                        return False
+                    newInserted = False
+                    for t in transfers:
+                        if t.Date > date and newInserted == False:
+                            total -= int(ammount)
+                            newInserted = True
+                            if total < 0:
+                                return False
+                        if t.ToCompany == fromCompany:
+                            total += t.Ammount
+                        elif t.FromCompany == fromCompany:
+                            total -= t.Ammount
+                        if total < 0:
+                            return False
+                    if newInserted == False:
+                        total -= int(ammount)
+                        if total < 0:
+                            return False
+                    return True
 
         if fromCompany:
             enough = checkEnoughShares("company")
@@ -628,9 +654,10 @@ def registers(request, company_id=None):
         if role == "Secretary":
             context["role"] = "Secretaries Register"
 
-        transfers = Transfer.objects.filter(Company=company)
+        transfers = Transfer.objects.filter(Company=company).order_by("Date")
 
         #creates a dict of form {(entity,ShareClass):[ammount, date]}
+        #named entityShareClass
         entities = set()
         for t in transfers:
             entityFrom = t.FromCompany or t.FromPerson
@@ -689,7 +716,6 @@ def registers(request, company_id=None):
         #Sort by date
         entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
 
-        #
         context["entities"] = entities
         context["entityShareClass"] = entityShareClass
         context["company"] = company
