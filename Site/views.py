@@ -174,8 +174,9 @@ def create_company(request):
     context = {}
     if request.method == "POST":
         name = request.POST.get("Name")
+        date = datetime.datetime.now()
         try:
-            new_company = Company(Name=name)
+            new_company = Company(Name=name, Modified=date)
             new_company.save()
             context["error_type"] = "success"
             context["alert"] = "Company created"
@@ -618,9 +619,81 @@ def management(request, company_id = None):
     
 def registers(request, company_id=None):
     company = Company.objects.get(pk=company_id)
-    managers = company.Manager.all()
+    managers = company.Manager.filter(EndDate__isnull=True)
     filled_roles = set([x.Title for x in managers])
     context = {'roles' : filled_roles, 'company' : company}
+    if request.GET.get("role"):
+        role = request.GET.get("role")
+        context["role"] = role + "s" + " Register"
+        if role == "Secretary":
+            context["role"] = "Secretaries Register"
+
+        transfers = Transfer.objects.filter(Company=company)
+
+        #creates a dict of form {(entity,ShareClass):[ammount, date]}
+        entities = set()
+        for t in transfers:
+            entityFrom = t.FromCompany or t.FromPerson
+            entityTo = t.ToCompany or t.ToPerson
+            entities.add(entityTo)
+            entities.add(entityFrom)
+        entityShareClass = dict()
+        for t in transfers:
+            for e in entities:
+                if t.ToPerson == e or t.ToCompany == e:
+                    if e != company:
+                        entityShareClass[(e,t.ShareClass)]=[0]
+        for t in transfers:
+            toEntity = t.ToPerson or t.ToCompany
+            fromEntity = t.FromPerson or t.FromCompany
+
+            #Keeps running track of entities shares held
+            if toEntity != company:
+                entityShareClass[(toEntity, t.ShareClass)][0] += t.Ammount
+            if fromEntity != company:
+                entityShareClass[(fromEntity, t.ShareClass)][0] -= t.Ammount
+
+            #Ensures most current date is kept
+            if toEntity != company:
+                if len(entityShareClass[(toEntity, t.ShareClass)]) == 1:
+                    entityShareClass[(toEntity, t.ShareClass)].append(t.Date.date())
+                elif t.Date.date() > entityShareClass[(toEntity, t.ShareClass)][1]:
+                    entityShareClass[(toEntity, t.ShareClass)][1]=t.Date.date()
+            if fromEntity != company:
+                if len(entityShareClass[(fromEntity, t.ShareClass)]) == 1:
+                    entityShareClass[(fromEntity, t.ShareClass)].append(t.Date.date())
+                elif t.Date.date() > entityShareClass[(fromEntity, t.ShareClass)][1]:
+                    entityShareClass[(fromEntity, t.ShareClass)][1]=t.Date.date()
+
+        #Delete entities with zero shares held
+        to_delete = []
+        for key, value in entityShareClass.items():
+            if value[0] == 0:
+                to_delete.append(key)
+        for key in to_delete:
+            del entityShareClass[key]
+
+        #Remove all entities who are not part of selected management
+        if role != "ShareHolder":
+            filteredManagers = company.Manager.filter(EndDate__isnull = True, Title=role)
+            entities = set()
+            for manager in filteredManagers:
+                entities.add(manager.Person)
+            to_delete = []
+            for key, value in entityShareClass.items():
+                if key[0] not in entities:
+                    to_delete.append(key)
+            for key in to_delete:
+                del entityShareClass[key]
+
+        #Sort by date
+        entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
+
+        #
+        context["entities"] = entities
+        context["entityShareClass"] = entityShareClass
+        context["company"] = company
+        return render(request, 'register.html', context)
     return render(request, 'registers.html', context)
 
 

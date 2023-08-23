@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class="row"id="linkHolder">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / <a href="/companies/{{company.id}}/registers/">Registers</a> / {{ role }}
+    </div>
+</div>
+<div class="row">
+   <div class="col-sm-12" style="text-align: center">
+       <h3>{{company}}</h3> 
+       <p>{{role}}</p>
+   </div> 
+</div>
+<div class="row">
+    <div class="col-sm-12"> 
+        <table class="table">
+            <col>
+            <colgroup span="3"></colgroup>
+            <tr>
+                <th scope="col" rowspan ="2" style="vertical-align: middle; text-align:center;">Date</th>
+                <th scope="col" rowspan="2" style="vertical-align: middle; text-align:center;">Name of Registered<br> Shareholder</th>
+                <th scope="col" rowspan="2" style="vertical-align: middle; text-align:center;">Address</th>
+                <th colspan="4" scope="colgroup" style="text-align: center;" >Shares Held</th>
+            </tr>
+            <tr>
+                <th scope="col" style="text-align:center">Number</th>
+                <th scope="col" style="text-align: center">Class</th>
+            </tr>
+            {% for key, value in entityShareClass.items %}
+            <tr>
+                <td>{{value.1}}</td>
+                <td>{{key.0.Name}}</td>
+                <td>{{key.0.Address}}</td>
+                <td><p style="text-align: right; margin-bottom: 0px;">{{value.0}}</p></td>
+                <td>{{key.1}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+<div class="row" id="controls">
+   <div class="col-sm-12">
+       <button type="button" onclick="printable()" class="btn btn-primary">Printable</button>
+   </div> 
+</div>
+{% endblock main %}
+
+{% block scripts %}
+<script type = "text/javascript">
+    function printable() {
+        $("#linkHolder").hide();
+        $("#controls").hide();
+    }
+</script>
+{% endblock scripts %}
