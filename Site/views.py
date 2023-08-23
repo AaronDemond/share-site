@@ -136,6 +136,7 @@ def issue_shares(request, company_id=None):
         ammount = request.POST.get('Ammount')
         date = request.POST.get("date")
         time = request.POST.get("time")
+        value = request.POST.get("parValue")
         dt = date + " " + time
         
 
@@ -151,7 +152,7 @@ def issue_shares(request, company_id=None):
 
                 authorized_shares = AuthorizedShares(Company=company,
                         Ammount=ammount, ShareClass=share_class,
-                        Date=date)
+                        Date=date, Value=value)
                 authorized_shares.save()
                 context["error_type"] = "success"
                 context["alert"] = "Shares authorized"
@@ -547,7 +548,17 @@ def management(request, company_id = None):
     participants = company.Participant.all()
     context['participants'] = participants
     context['company'] = company
+    managers = Manager.objects.filter(Company=company,EndDate__isnull=True)
+    context["managers"] = managers
     if request.GET.get("type") == "search":
+        delete = request.GET.get("delete")
+        if delete == "True":
+            m = []
+            for manager in managers:
+                if request.GET.get("query").lower() in manager.Person.Name.lower():
+                    m.append(manager)
+            context['managers'] = m
+            return render(request, "delete_management_search.html", context)
         print(request.GET.get("query"))
         context['participants'] = []
         for p in participants:
@@ -561,20 +572,48 @@ def management(request, company_id = None):
             ("Secretary", "Secretary"),
             ("VP", "VP"),
             ("Other", "Other"),
-            ("Director")
+            ("Director", "Director")
             ]
     context['titles'] = titles
     if request.method == "POST":
-        person_id = request.POST.get("person_id")
-        print(person_id)
-        person = Person.objects.get(pk=person_id)
-        role = request.POST.get("role")
-        new_management = Manager(Person=person, Title=role, Company=company)
-        new_management.save()
+        _type = request.POST.get("type")
+        if _type == "delete":
+            try:
+                deletedManager = request.POST.get("deletedManager")
+                deletedManager = Manager.objects.get(pk=deletedManager)
+                date = request.POST.get("date")
+                time = request.POST.get("time")
+                dt = date + " " + time
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+                deletedManager.EndDate = date
+                deletedManager.save()
+                context["error_type"] = "success"
+                context["alert"] = "Management updated"
+            except Exception as e:
+                context["error_type"] = "danger"
+                context["alert"] = str(e)
 
-        context["error_type"] = "success"
-        context["alert"] = "Management updated"
-        return companies(request, context = context)
+            return companies(request, context = context)
+
+        if _type == "add":
+            try:
+                date = request.POST.get("date")
+                time = request.POST.get("time")
+                dt = date + " " + time
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+                person_id = request.POST.get("person_id")
+                print(person_id)
+                person = Person.objects.get(pk=person_id)
+                role = request.POST.get("role")
+                new_management = Manager(Person=person, Title=role, Company=company, StartDate=date)
+                new_management.save()
+
+                context["error_type"] = "success"
+                context["alert"] = "Management updated"
+            except Exception as e:
+                context["error_type"] = "danger"
+                context["alert"] = str(e)
+            return companies(request, context = context)
     return render(request, 'management.html', context)
     
 def registers(request, company_id=None):
@@ -583,9 +622,6 @@ def registers(request, company_id=None):
     filled_roles = set([x.Title for x in managers])
     context = {'roles' : filled_roles, 'company' : company}
     return render(request, 'registers.html', context)
-
-
-
 
 
 

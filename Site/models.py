@@ -32,8 +32,6 @@ class Company(models.Model):
     def __str__(self):
         return self.Name
 
-
-
 class Manager(models.Model):
 
     titles = [
@@ -50,7 +48,7 @@ class Manager(models.Model):
     Company = models.ForeignKey(Company, on_delete=models.CASCADE, unique = False,
             related_name = "Manager")
     StartDate= models.DateTimeField()
-    EndDate= models.DateTimeField()
+    EndDate= models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return str(self.Person) + " " + str(self.Title) + " at " + str(self.Company)

@@ -7,6 +7,13 @@
 }
     
 </style>
+<div class="row" id="linkHolder">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / 
+        <a href= "/companies/{{company.id}}/transfers/">Transfers</a> / Certificate
+        <hr>
+    </div>
+</div>
 <div class="row">
     <div class="col-sm-12">
         <b>{{transfer.ShareClass}} Shares</b>
@@ -62,9 +69,9 @@
    <div class="col-sm-4" style="padding-left: 40px">
       <div class="row">
          <div class="col-sm-12">
-             additional info
+             Additional info
          </div> 
-         <div class="col-sm-12 darkBack" style="height: 120px">
+         <div class="col-sm-12 darkBack" id="additionalInfo" style="height: 120px">
          </div>
       </div> 
    </div>
@@ -93,7 +100,7 @@
    </div> 
 </div>
 <div class="row">
-   <div class="col-sm-12" style="padding: 20px; left: 10%; right:10%; border-style: solid; margin-top: 20px;">
+   <div class="col-sm-12" id="authorizedHolder" style="padding: 20px; left: 10%; right:10%; border-style: solid; margin-top: 20px;">
        AUTHORIZED SHARE CAPITAL: 
        {% for key, value in auth_totals.items %}
            {{value}} {{key.0}} shares 
@@ -101,4 +108,93 @@
                 having no par value{% if forloop.counter < no_of_auth_types and forloop.counter != no_of_auth_types|changeValue:'-1' %},{% elif forloop.counter == no_of_auth_types|changeValue:'-1' %} and{% endif %}{% else %} each having a par value of ${{key.1}}{% if forloop.counter < no_of_auth_types and forloop.counter != no_of_auth_types|changeValue:'-1' %},{% elif forloop.counter == no_of_auth_types|changeValue:'-1' %} and{% endif %}{% endif %}{% endfor %}; and the aforementioned shares each have respective terms and conditions as set out in the applicable constating documents of the Company including the Memorandum of Association of the company.
    </div> 
 </div>
+<div class="row" style="padding-top:20px;">
+   <div class="col-sm-3">
+      <p>This is to Certify that</p> 
+   </div> 
+   <div class="col-sm-9">
+       <p><b>{{to}}</b></p> 
+   </div>
+</div>
+<div class="row">
+   <div class="col-sm-12">
+       <p>is the registered owner of <b><u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{transfer.Ammount}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u></b> fully paid and non- assessable {{transfer.ShareClass}} shares of <b>{{company}}</b></p> 
+   </div> 
+</div>
+<div class="row">
+    <div class="col-sm-3">
+        
+    </div>
+   <div class="col-sm-9">
+      <p>transferable only on the books of the Company (subject to the restrictions imposed by the Articles of Association of the Company) by the holder hereof in person or by duly authorized attorney upon surrender of this Certificate properly endorsed.</p> 
+   </div> 
+</div>
+<div class="row">
+    <div class="col-sm-3">
+        
+    </div>
+   <div class="col-sm-9">
+       <p>IN WITNESS WHEREOF the Company has caused this Certificate to be signed by its duly authorized officers and to be sealed with the seal of the Company on <b>{{date}}</b></p> 
+   </div> 
+</div>
+<div class="row">
+   <div class="col-sm-3" style="height: 25px;">
+   </div> 
+   <div class="col-sm-4" style="height:25px;">
+       <p style="margin-bottom: 0px;"><u><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></u></p>
+   </div>
+   <div class="col-sm-3" style="height: 25px;">
+       <p style="margin-bottom: 0px;"><u><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></u></p>
+   </div>
+   <div class="col-sm-3">
+   </div>
+   <div class="col-sm-4">
+      <p>President</p> 
+   </div>
+   <div class="col-sm-3">
+      <p>Secretary</p> 
+   </div>
+</div>
+<div class="row" id="buttonHolder">
+   <div class="col-sm-4">
+       <button class="btn btn-primary" onclick="defaultText()" 
+           type="button">Text Placeholder</button> 
+       <button class="btn btn-primary" onclick="printable()" 
+           type="button">Printable</button> 
+   </div> 
+   <div class="col-sm-8">
+       <div class="input-group">
+           <span class="input-group-text">Additional info</span>
+       <textarea class="form-control" name="additionalInfo" 
+           id="additionalInfoTextArea" rows="4">Additional info</textarea>
+       </div>
+       <button type="button" style="margin-top: 20px" 
+           class="btn btn-primary" onclick = "additionalInfo()">Submit</button>
+       <button type="button" style="margin-top: 20px"
+            class="btn btn-primary" onclick="fixAdditionalInfoStyle()">Fix Style</button>
+   </div>
+</div>
 {% endblock main %}
+{% block scripts %}
+<script type = "text/javascript">
+    function defaultText() {
+        let txt = `Some default text blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah`;
+        $("#authorizedHolder").html(txt);
+    }
+    function printable() {
+        $("#linkHolder").toggle();
+        $("#buttonHolder").toggle();
+    }
+    function additionalInfo() {
+        var txt = $("#additionalInfoTextArea").val();
+        console.log("TEXT:")
+        console.log(txt)
+        var additionalInfo = "<p>" + txt +"</p>";
+        $("#additionalInfo").html(additionalInfo);
+    }
+    function fixAdditionalInfoStyle() {
+        $("#additionalInfo").removeAttr("style");
+    }
+
+</script>
+{% endblock scripts %}

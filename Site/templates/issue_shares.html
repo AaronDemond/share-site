@@ -29,20 +29,20 @@ body {
                 </div>
             </div>
             {% if alert %}
-                <div class="row">
-                    <div class="col-sm-5">
+            <div class="row">
+                <div class="col-sm-5">
 
-                        <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
 
-                            {{alert}}
-
-                        </div>
-                    </div>
-                    <div class="col-sm-7">
-                        <button type="button" class="btn btn-danger close alert-button">Close</button>
+                        {{alert}}
 
                     </div>
                 </div>
+                <div class="col-sm-7">
+                    <button type="button" class="btn btn-danger close alert-button">Close</button>
+
+                </div>
+            </div>
             {% endif %}
             <div class="row">
 
@@ -55,8 +55,8 @@ body {
 
                 <div class="col-lg-12">
                     {% for key, value in share_classes_authorized.items %}
-                        {{key}} : {{value}}
-                        </br>
+                    {{key}} : {{value}}
+                    </br>
                     {% endfor %}
                     <hr>
                 </div>
@@ -84,13 +84,25 @@ body {
                                     <select class="custom-select" name = "ShareClass" id="inputGroupSelect01">
                                         <option selected>Choose...</option>
                                         {% for sc in share_classes %}
-                                            <option value="{{sc.id}}">{{sc}}</option>
+                                        <option value="{{sc.id}}">{{sc}}</option>
                                         {% endfor %}
                                     </select>
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
-                                    </span>
                                 </div>
+                            </div>
+                            <div class="col-sm-6" style="margin-top: 20px">
+                                <div class="input-group">
+                                    <span class="input-group-text">Par value</span> 
+                                    <input type="text" class="form-control" name = "parValue"
+                                                       value="" placeholder="Par value">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-success browse-btn-fix" 
+                                        type="submit" style="margin-top: 20px">Go!</button>
+                                </span>
                             </div>
                         </div>
                     </form>

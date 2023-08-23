@@ -1,0 +1,18 @@
+
+                <div class="col-sm-12">
+                    <div class="input-group" style="padding-bottom: 20px;">
+                        <input type="text" class="form-control" name = "query" id = "deleteQuery" value="" placeholder="Search for..">
+                        <span class="input-group-btn">
+                            <button class="btn btn-success" onclick="searchRemove()" type="button">Go!</button>
+                        </span>
+                    </div>
+                </div>
+                {% for m in managers %}
+               <div class="col-sm-4">
+                   {{m}} 
+               </div> 
+               <div class="col-sm-8">
+                  <button type="button" class="btn btn-primary" 
+                                        style="margin-bottom: 20px" onclick="selectDeletion({{m.id}},'{{m}}')">Select</button> 
+               </div> 
+               {% endfor %}
