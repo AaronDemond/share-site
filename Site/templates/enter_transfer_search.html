@@ -1,9 +1,10 @@
+{% load extras %}
 <div class="input-group" style="padding-bottom: 20px;">
     <input type="text" class="form-control" name = "query" 
         id = "participantSearchString{% if direction == 'To' %}2{% endif %}" 
-        value="" placeholder="Search for..">
+                       value="{{query}}" placeholder="Search for..">
     <span class="input-group-btn">
-        <button class="btn btn-success" onclick="search('{{targetDiv}}','{{direction}}')"
+        <button class="btn btn-success" onclick="search('{{targetDiv}}','{{direction}}',1)"
             type="button">Go!</button>
     </span>
 </div>
@@ -29,3 +30,19 @@
         </div>
     </div>
 {% endfor %}
+<div class="row">
+                <div class="col-sm-3">
+                    {% if page > 1 %}
+
+                    <button class="btn btn-primary" onclick="search('{{targetDiv}}','{{direction}}',{{page|changeValue:'-1'}})" type="button"><</button>
+                    {% endif %}
+                </div> 
+                <div class="col-sm-6">
+
+                </div>
+                <div class="col-sm-3">
+                    {% if hasNextPage == True %}
+                    <button class="btn btn-primary" onclick="search('{{targetDiv}}','{{direction}}',{{page|changeValue:'1'}})" type="button">></button>
+                    {% endif %}
+                </div> 
+            </div>

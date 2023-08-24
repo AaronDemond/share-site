@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load extras %}
 {% block main %}
 <h1>Enter a Transfer</h1>
 
@@ -19,7 +20,7 @@
             <div class="input-group" style="padding-bottom: 20px;">
                 <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
                 <span class="input-group-btn">
-                    <button class="btn btn-success" onclick="search('fromHolder','From')" type="button">Go!</button>
+                    <button class="btn btn-success" onclick="search('fromHolder','From',1)" type="button">Go!</button>
                 </span>
             </div>
             {% for participant in participants %}
@@ -44,6 +45,22 @@
                     </div>
                 </div>
             {% endfor %}
+            <div class="row">
+                <div class="col-sm-3">
+                    {% if page > 1 %}
+
+                    <button class="btn btn-primary" onclick="search('fromHolder','From',{{page|changeValue:'-1'}})" type="button"><</button>
+                    {% endif %}
+                </div> 
+                <div class="col-sm-6">
+
+                </div>
+                <div class="col-sm-3">
+                    {% if hasNextPage == True %}
+                    <button class="btn btn-primary" onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
+                    {% endif %}
+                </div> 
+            </div>
         </div>
         <div class="row">
             <h3 id="q2title" style="display: none">Select where the shares are going</h3>
@@ -51,7 +68,7 @@
                 <div class="input-group" style="padding-bottom: 20px;">
                     <input type="text" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
                     <span class="input-group-btn">
-                        <button class="btn btn-success" onclick="search('toHolder','To')" type="button">Go!</button>
+                        <button class="btn btn-success" onclick="search('toHolder','To',1)" type="button">Go!</button>
                     </span>
                 </div>
                 {% for participant in participants %}
@@ -78,6 +95,22 @@
                         </div>
                     </div>
                 {% endfor %}
+                <div class="row">
+                    <div class="col-sm-3">
+                        {% if page > 1 %}
+
+                        <button class="btn btn-primary" onclick="search('toHolder','To',{{page|changeValue:'-1'}})" type="button"><</button>
+                        {% endif %}
+                    </div> 
+                    <div class="col-sm-6">
+
+                    </div>
+                    <div class="col-sm-3">
+                        {% if hasNextPage == True %}
+                        <button class="btn btn-primary" onclick="search('toHolder','To',{{page|changeValue:'1'}})" type="button">></button>
+                        {% endif %}
+                    </div> 
+                </div>
             </div>
 
         </div>
@@ -155,7 +188,8 @@ function selectTo(participant_id, participant_name, type){
 
 }
 
-function search(target_div,direction){
+function search(target_div,direction,page){
+    console.log(page);
 
     if (direction == "From") {
         var search_string = $("#participantSearchString").val();
@@ -163,7 +197,7 @@ function search(target_div,direction){
 
         var search_string = $("#participantSearchString2").val();
     }
-    url = "/companies/{{company.id}}/enterTransfer/?type=search&targetDiv="+target_div+"&direction="+direction+"&query="+search_string;
+    url = "/companies/{{company.id}}/enterTransfer/?type=search&targetDiv="+target_div+"&direction="+direction+"&query="+search_string+"&page="+page;
     t_div = '#' + target_div;
     $.ajax({url: url, async:false, success: function(result){
         $(t_div).html(result);

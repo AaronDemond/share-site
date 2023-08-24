@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+import pytz
 from django.db.models import Q
 import datetime
 from django.views.decorators.csrf import csrf_exempt
@@ -298,11 +299,8 @@ def enter_transfer(request, company_id=None):
     context['participants']=participants
     if request.GET.get('type') == 'search':
         context['participants'] = []
-        query = request.GET.get('query')
-        direction = request.GET.get('direction')
-        targetDiv = request.GET.get('targetDiv')
-        context['direction'] = direction
-        context['targetDiv'] = targetDiv
+        query = request.GET.get('query').lower()
+        context['query']=query
         for p in participants:
             if p.LinkedPerson:
                 if query in p.LinkedPerson.Name.lower():
@@ -310,9 +308,30 @@ def enter_transfer(request, company_id=None):
             elif p.LinkedCompany:
                 if query in p.LinkedCompany.Name.lower():
                     context['participants'].append(p)
+
+    direction = request.GET.get('direction')
+    targetDiv = request.GET.get('targetDiv')
+    context['direction'] = direction
+    context['targetDiv'] = targetDiv
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['participants']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['participants'] = context['participants'][start:end]
+
+    context['page'] = page
+    if request.GET.get('type') == 'search':
         return render(request, 'enter_transfer_search.html', context)
+
     if request.method=="POST":
-        import pytz
 
         date = request.POST.get("date")
         time = request.POST.get("time")
