@@ -384,24 +384,29 @@ def enter_transfer(request, company_id=None):
             if t == "company":
                 if company == fromCompany:
                     auth_shares = AuthorizedShares.objects.filter(Company=company,
-                            ShareClass=shareClass, Date__lte = date)
+                            ShareClass=shareClass)
                     total = 0
-
                     transfers = Transfer.objects.filter(Q(FromCompany \
                     = company, ShareClass=shareClass) | \
                     Q(ToCompany = company, ShareClass=shareClass)).order_by('Date')
+                    all_tran = []
+                    all_tran.extend(list(transfers))
+                    all_tran.extend(list(auth_shares))
                     transfers = list(transfers)
-
-                    for tran in auth_shares:
-                        total += tran.Ammount 
+                    all_tran.sort(key = lambda x: x.Date)
+                    print(all_tran)
                     newInserted = False
-                    for t in transfers:
+                    for t in all_tran:
+                        print(total)
                         if t.Date > date and newInserted == False:
                             total -= int(ammount)
                             newInserted = True
                             if total < 0:
                                 return False
-                        total -= t.Ammount
+                        if isinstance(t, AuthorizedShares):
+                            total += t.Ammount
+                        else:
+                            total -= t.Ammount
                         if total < 0:
                             return False
                     if newInserted == False:
