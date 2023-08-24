@@ -179,14 +179,32 @@ def create_company(request):
         try:
             new_company = Company(Name=name, Modified=date)
             new_company.save()
-            context["error_type"] = "success"
+            context["alert_type"] = "success"
             context["alert"] = "Company created"
-            return companies(request=request, context = context)
+            return people(request=request, context = context)
         except Exception as e:
-            context["error_type"] = "danger"
+            context["alert_type"] = "danger"
             context["alert"] = "ERROR! " + str(e)
 
     return render(request, 'create_company.html', context)
+
+def create_person(request):
+    context = {}
+    if request.method == "POST":
+        try:
+            name = request.POST.get("Name")
+            address = request.POST.get("Address")
+            date = datetime.datetime.now()
+            new_person = Person(Name = name, Address = address, Modified = date)
+            new_person.save()
+            context["alert_type"] = "success"
+            context["alert"] = "Person created"
+            return people(request=request, context = context)
+        except Exception as e:
+            context["alert_type"] = "danger"
+            context["alert"] = "ERROR! " + str(e)
+            return people(request=request, context = context)
+    return render(request, 'create_person.html', context)
 
 def transfers(request, company_id=None, transfer_id=None,context={}):
     company = Company.objects.get(pk=company_id)

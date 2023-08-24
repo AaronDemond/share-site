@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block main %}
+<h1>Create a Person</h1>
+
+<div class="row">
+
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/entities/" >Entities</a> / Create a Person
+        <hr>
+    </div>
+</div>
+
+<form  method ="POST" />
+    <div class="row">
+
+        {% csrf_token %}
+        <div class="col-sm-6" style="margin: 0px;">
+            <input type="text" class="form-control" name = "Name" id = "Name" value="" placeholder="Name of Person">
+        </div>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name = "Address" id = "Name" value="" placeholder="Address">
+        </div>
+        <div class="col-sm-12">
+            <span class="input-group-btn">
+                <button class="btn btn-success browse-btn-fix" 
+                    style="margin-top: 20px;" type="submit">Go!</button>
+            </span>
+        </div>
+    </div>
+</form>
+{% endblock main %}
