@@ -69,6 +69,7 @@ class AuthorizedShares(models.Model):
             related_name="AuthorizedShares")
     Date = models.DateTimeField()
     Value = models.FloatField(null = True, blank = True)
+    Document = models.FileField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if int(self.Ammount) < 0:
