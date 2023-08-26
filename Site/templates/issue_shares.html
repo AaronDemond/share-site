@@ -1,3 +1,4 @@
+{% load extras %}
 <!doctype html>
 <html lang="en">
     <head>
@@ -55,16 +56,55 @@ body {
 
                 <div class="col-lg-12">
                     {% for key, value in share_classes_authorized.items %}
-                    {{key}} : {{value}}
+                    {{key}} : {{value.0}} {% for f in value.1 %} <a href="{{f.url}}">{{f}}</a> {% if forloop.counter < value.1|length %}|{% endif %} {% endfor %} 
                     </br>
                     {% endfor %}
+                    <button type="button" class="btn btn-primary"
+                        style="margin-top:20px;" 
+                        onclick="appendDocument()">Appened Document</button>
+                    <button type="button" class="btn btn-primary"
+                        style="margin-top:20px;" 
+                        onclick="authorizeShares()">Authorize Shares</button>
                     <hr>
                 </div>
             </div>
-
-            <div class="row">
+            <div class="row" id="appendFileHolder">
+                <div class="col-sm-12">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="append" id="append" value="True">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="input-group">
+                                    <input type="file" name="appendedFile" 
+                                        class="form-control" id="uploadedFile" value="">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">Share Type</span>
+                                    <select class="custom-select" name = "ShareClass" 
+                                            id="inputGroupSelect01">
+                                        <option selected>Choose...</option>
+                                        {% for sc in share_classes %}
+                                        <option value="{{sc.id}}">{{sc}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-success browse-btn-fix" 
+                                        type="submit" style="margin-top: 20px">Append</button>
+                                </span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="row" id="authorizeSharesHolder">
                 <div class="col-lg-12">
-                    <form  method ="POST" />
+                    <form  method ="POST" enctype="multipart/form-data"/>
 
                         {% csrf_token %}
                         <div class="row">
@@ -73,15 +113,22 @@ body {
 
                                 <div class="input-group">
                                     <span class="input-group-text">Date</span> 
-                                    <input type="date" class="form-control" value="" name="date" id=""/> 
-                                    <input type="time" class="form-control" value="" name="time" id=""/> 
+                                    <input type="date" class="form-control" 
+                                        value="" name="date" id=""/> 
+                                    <input type="time" class="form-control" 
+                                        value="" name="time" id=""/> 
                                 </div>
                             </div>
 
                             <div class="col-sm-6">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" name = "Ammount" id = "search_string" value="" placeholder="Ammount">
-                                    <select class="custom-select" name = "ShareClass" id="inputGroupSelect01">
+                                    <span class="input-group-text">Ammount</span>
+                                    <input type="text" class="form-control" 
+                                        name = "Ammount" id = "search_string" value="" 
+                                        placeholder="Ammount">
+                                    <span class="input-group-text">Share Type</span>
+                                    <select class="custom-select" name = "ShareClass" 
+                                            id="inputGroupSelect01">
                                         <option selected>Choose...</option>
                                         {% for sc in share_classes %}
                                         <option value="{{sc.id}}">{{sc}}</option>
@@ -93,10 +140,14 @@ body {
                                 <div class="input-group">
                                     <span class="input-group-text">Par value</span> 
                                     <input type="text" class="form-control" name = "parValue"
-                                                       value="" placeholder="Par value">
+                                        value="" placeholder="Par value">
                                 </div>
                             </div>
-                            <div class="col-sm-6">
+                            <div class="col-sm-6" style="margin-top: 20px;">
+                                <div class="input-group">
+                                    <input type="file" name="uploadedFile" 
+                                        class="form-control" id="uploadedFile" value="">
+                                </div>
                             </div>
                             <div class="col-sm-6">
                                 <span class="input-group-btn">
@@ -122,6 +173,29 @@ body {
                 $(".alert").hide();
                 $(".alert-button").hide();
             });
+            $("#appendFileHolder").hide();
+            $("#authorizeSharesHolder").hide();
+            function appendDocument() {
+                authorize_hidden = $("#authorizeSharesHolder").is(":hidden");
+                append_hidden = $("#appendFileHolder").is(":hidden");
+                if (authorize_hidden == false){
+                    $("#authorizeSharesHolder").hide();
+                }
+                if (append_hidden == true) {
+                    $("#appendFileHolder").show();
+                }
+            }
+            function authorizeShares() {
+                authorize_hidden = $("#authorizeSharesHolder").is(":hidden");
+                append_hidden = $("#appendFileHolder").is(":hidden");
+                if (authorize_hidden == true){
+                    $("#authorizeSharesHolder").show();
+                }
+                if (append_hidden == false) {
+                    $("#appendFileHolder").hide();
+                }
+            }
+                    
         </script>
     </body>
 </html>

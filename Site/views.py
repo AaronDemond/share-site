@@ -111,34 +111,59 @@ def link(request, _id=None):
 
 def issue_shares(request, company_id=None):
     current_url = resolve(request.path_info).url_name
-    #print(reoquest.path)
-    print("referer:")
-    print(request.META)
-    print(current_url)
     company = Company.objects.get(pk=int(company_id))
     share_classes = ShareClass.objects.all()
     context = {'company' : company}
-
 
     authorized = company.AuthorizedShares.all()
     share_classes_authorized = {}
     for t in authorized:
         if t.ShareClass not in share_classes_authorized.keys():
-            share_classes_authorized[str(t.ShareClass)] = 0
+            share_classes_authorized[str(t.ShareClass)] = [0]
     for t in authorized:
-        share_classes_authorized[str(t.ShareClass)] += t.Ammount
+        share_classes_authorized[str(t.ShareClass)][0] += t.Ammount
+        if t.Document:
+            if len(share_classes_authorized[str(t.ShareClass)]) == 1:
+                share_classes_authorized[str(t.ShareClass)].append([t.Document])
+            else:
+                share_classes_authorized[str(t.ShareClass)][1].append(t.Document)
 
+    transfers = Transfer.objects.filter(Company=company, ToCompany=company)
+    for t in transfers:
+        if len(share_classes_authorized)>0:
+            share_classes_authorized[str(t.ShareClass)][0] -= t.Ammount
 
     context['share_classes'] = share_classes
     context['share_classes_authorized'] = share_classes_authorized
 
     if request.method == "POST":
+        if request.POST.get("append") == "True":
+            _file = request.FILES["appendedFile"]
+            share_class = request.POST.get("ShareClass")
+            share_class = ShareClass.objects.get(pk=share_class)
+            authorized_shares = AuthorizedShares.objects.filter(ShareClass=share_class)
+            for a in authorized_shares:
+                if a.Document is not None:
+                    a.Document = None
+                    a.save()
+            authorized_shares_obj = authorized_shares[0]
+            authorized_shares_obj.Document = _file
+            authorized_shares_obj.save()
+            context["error_type"] = "success"
+            context["alert"] = "Document Appended"
+            return companies(request=request,context=context)
+
         share_class = request.POST.get('ShareClass')
         ammount = request.POST.get('Ammount')
         date = request.POST.get("date")
         time = request.POST.get("time")
         value = request.POST.get("parValue")
         dt = date + " " + time
+        date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+        if len(request.FILES) != 0:
+            _file = request.FILES["uploadedFile"]
+        else:
+            _file = False
         
 
         if share_class and ammount and date and time:
@@ -148,12 +173,15 @@ def issue_shares(request, company_id=None):
                 return render(request, 'issue_shares.html', context)
 
             try:
-                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
                 share_class = ShareClass.objects.get(pk=share_class)
-
-                authorized_shares = AuthorizedShares(Company=company,
-                        Ammount=ammount, ShareClass=share_class,
-                        Date=date, Value=value)
+                if _file:
+                    authorized_shares = AuthorizedShares(Company=company,
+                            Ammount=ammount, ShareClass=share_class,
+                            Date=date, Value=value, Document=_file)
+                else:
+                    authorized_shares = AuthorizedShares(Company=company,
+                            Ammount=ammount, ShareClass=share_class,
+                            Date=date, Value=value)
                 authorized_shares.save()
                 context["error_type"] = "success"
                 context["alert"] = "Shares authorized"
