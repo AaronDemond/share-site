@@ -272,11 +272,11 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
             for tran in all_tran:
                 for index, auth in enumerate(all_auth):
                     if auth.Date > tran.Date:
-                        toDecrease = auth_shares[index-1]
+                        toDecrease = all_auth[index-1]
                         auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
                         break
                     if index == len(all_auth) - 1:
-                        toDecrease = auth_shares[index]
+                        toDecrease = all_auth[index]
                         auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
                         break
 
