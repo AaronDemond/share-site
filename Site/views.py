@@ -160,6 +160,7 @@ def issue_shares(request, company_id=None):
         time = request.POST.get("time")
         value = request.POST.get("parValue")
         dt = date + " " + time
+        print(dt)
         if len(request.FILES) != 0:
             _file = request.FILES["uploadedFile"]
         else:
@@ -174,7 +175,7 @@ def issue_shares(request, company_id=None):
 
             try:
                 share_class = ShareClass.objects.get(pk=share_class)
-                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
                 if _file:
                     authorized_shares = AuthorizedShares(Company=company,
                             Ammount=ammount, ShareClass=share_class,
@@ -380,7 +381,7 @@ def enter_transfer(request, company_id=None):
         date = request.POST.get("date")
         time = request.POST.get("time")
         dt = date + " " + time
-        date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+        date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
         date = pytz.timezone("America/Halifax").localize(date)
         price = request.POST.get("price")
         ammount = request.POST.get("ammount")
@@ -407,15 +408,23 @@ def enter_transfer(request, company_id=None):
         if fromPerson:
             fromPerson = Person.objects.get(pk=fromPerson)
             transfer.FromPerson = fromPerson
-        if fromCompany:
+        elif fromCompany:
             fromCompany = Company.objects.get(pk=fromCompany)
             transfer.FromCompany = fromCompany
+        else:
+            context['error_type'] = "danger"
+            context['alert'] = "Select an origin"
+            return companies(request, context=context)
         if toPerson:
             toPerson = Person.objects.get(pk=toPerson)
             transfer.ToPerson = toPerson
-        if toCompany:
+        elif toCompany:
             toCompany = Company.objects.get(pk=toCompany)
             transfer.ToCompany = toCompany
+        else:
+            context['error_type'] = "danger"
+            context['alert'] = "Select a destination"
+            return companies(request, context=context)
 
         def checkEnoughShares(t):
             if t == "person":
@@ -450,17 +459,15 @@ def enter_transfer(request, company_id=None):
                             ShareClass=shareClass)
                     total = 0
                     transfers = Transfer.objects.filter(Q(FromCompany \
-                    = company, ShareClass=shareClass) | \
-                    Q(ToCompany = company, ShareClass=shareClass)).order_by('Date')
+                    = company, ShareClass=shareClass, Company=company) | \
+                    Q(ToCompany = company, ShareClass=shareClass, Company=company)).order_by('Date')
                     all_tran = []
                     all_tran.extend(list(transfers))
                     all_tran.extend(list(auth_shares))
                     transfers = list(transfers)
                     all_tran.sort(key = lambda x: x.Date)
-                    print(all_tran)
                     newInserted = False
                     for t in all_tran:
-                        print(total)
                         if t.Date > date and newInserted == False:
                             total -= int(ammount)
                             newInserted = True
@@ -679,7 +686,7 @@ def management(request, company_id = None):
                 date = request.POST.get("date")
                 time = request.POST.get("time")
                 dt = date + " " + time
-                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
                 deletedManager.EndDate = date
                 deletedManager.save()
                 context["error_type"] = "success"
@@ -695,7 +702,7 @@ def management(request, company_id = None):
                 date = request.POST.get("date")
                 time = request.POST.get("time")
                 dt = date + " " + time
-                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M")
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
                 person_id = request.POST.get("person_id")
                 print(person_id)
                 person = Person.objects.get(pk=person_id)

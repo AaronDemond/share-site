@@ -136,7 +136,6 @@ class Transfer(models.Model):
         _from = self.FromPerson or self.FromCompany
         _to = self.ToPerson or self.ToCompany
         return str(self.Ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name
-            
 
 
     
