@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load extras %}
+{% block main %}
+<h1>Create a New Share Class</h1>
+<div class="row">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / Share Classes
+    </div>
+    {% if alert %}
+    <div class="row">
+        <div class="col-sm-5" style="padding-top: 20px">
+
+            <div class="alert alert-{{ alert_type }} alert-dismissible fade show" style="margin-bottom: 0px" role="alert">
+
+                {{alert}}
+
+            </div>
+        </div>
+        <div class="col-sm-7" style="padding-top: 20px">
+            <button type="button" class="btn btn-danger close alert-button">Close</button>
+
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="col-sm-12" style="padding-top: 20px;">
+        <hr>
+    </div>
+</div>
+<div id="createShareClassHolder" class="row">
+    <form method="POST">
+        {% csrf_token %}
+        <div class="col-sm-6">
+            <div class="input-group">
+                <span class="input-group-text">Name of share class</span>
+                <input type="text" class="form-control" name="name" id="name" value="">
+            </div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+        <div class="col-sm-12">
+            <button class="btn btn-success browse-btn-fix" 
+                style="margin-top: 20px;" type="submit" >Submit</button>
+            <hr>
+        </div>
+    </form>
+</div>
+
+<div class="row" id="peopleList">
+    <div class="col-sm-12">
+        <h4>Existing Share Classes</h4>
+    </div>
+    {% for sc in share_classes %}
+    <div class="col-sm-4" style="margin-top:20px;">
+        {{sc}}
+
+    </div>
+    <div class="col-sm-8"><a href="/shareClass?delete={{sc.pk}}"
+           onclick="return confirm('Are you sure? All transfers using this class will be deleted')" class="btn btn-danger" style="margin-top: 20px;">Delete</a></div>
+    {% endfor %}
+</div>
+<div class="row">
+    <div class="col-sm-3">
+        {% if page > 1 %}
+        <a href="/entities/?page={{ page|changeValue:'-1'}}" class="btn btn-primary"><</a>
+        {% endif %}
+    </div> 
+    <div class="col-sm-6">
+
+    </div>
+    <div class="col-sm-3">
+        {% if hasNextPage == True %}
+        <a href="/entities/?page={{ page|changeValue:'1'}}" class="btn btn-primary">></a>
+        {% endif %}
+    </div> 
+</div>
+{% endblock main %}
+{% block scripts %}
+        <script type = "text/javascript">
+            $(".close").click(function(){
+                $(".alert").hide();
+                $(".alert-button").hide();
+            });
+        </script>
+{% endblock scripts %}

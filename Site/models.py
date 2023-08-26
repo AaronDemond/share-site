@@ -31,7 +31,11 @@ class Company(models.Model):
 
     def __str__(self):
         return self.Name
+class ManagerRole(models.Model):
+    Title = models.CharField(max_length=500, unique = True)
 
+    def __str__(self):
+        return self.Title
 class Manager(models.Model):
 
     titles = [
@@ -44,7 +48,9 @@ class Manager(models.Model):
             ]
     Person = models.ForeignKey(Person, on_delete=models.CASCADE, unique = False,
             related_name = "Manager")
-    Title = models.CharField(max_length=200, choices=titles)
+    Title = models.ForeignKey(ManagerRole, on_delete=models.CASCADE, unique = False,
+            related_name = "Manager")
+    #Title = models.CharField(max_length=200, choices=titles)
     Company = models.ForeignKey(Company, on_delete=models.CASCADE, unique = False,
             related_name = "Manager")
     StartDate= models.DateTimeField()

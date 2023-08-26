@@ -4,7 +4,7 @@ from django.db.models import Q
 import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
-from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager
+from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole
 from django.urls import resolve
 
 PAGELENGTH = 5
@@ -371,6 +371,7 @@ def enter_transfer(request, company_id=None):
             elif p.LinkedCompany:
                 if query in p.LinkedCompany.Name.lower():
                     context['participants'].append(p)
+            context['participants'].sort(key=functools.cmp_to_key(compare), reverse=True)
 
     direction = request.GET.get('direction')
     targetDiv = request.GET.get('targetDiv')
@@ -694,7 +695,8 @@ def management(request, company_id = None):
             ("Other", "Other"),
             ("Director", "Director")
             ]
-    context['titles'] = titles
+    _roles = ManagerRole.objects.all()
+    context['roles'] = _roles
     if request.method == "POST":
         _type = request.POST.get("type")
         if _type == "delete":
@@ -725,6 +727,13 @@ def management(request, company_id = None):
                 print(person_id)
                 person = Person.objects.get(pk=person_id)
                 role = request.POST.get("role")
+                role = ManagerRole.objects.get(pk=role)
+                existing = Manager.objects.filter(Person=person, Title=role,
+                        Company=company)
+                if len(existing) > 0:
+                    context["error_type"] = "danger"
+                    context["alert"] = "Already exists"
+                    return companies(request, context = context)
                 new_management = Manager(Person=person, Title=role, Company=company, StartDate=date)
                 new_management.save()
 
@@ -743,7 +752,8 @@ def registers(request, company_id=None):
     context = {'roles' : filled_roles, 'company' : company}
     if request.GET.get("role"):
         role = request.GET.get("role")
-        context["role"] = role + "s" + " Register"
+        if role != "ShareHolder":
+            context["role"] = ManagerRole.objects.get(pk=role).__str__() + "s" + " Register"
         if role == "Secretary":
             context["role"] = "Secretaries Register"
 
@@ -776,14 +786,18 @@ def registers(request, company_id=None):
             #Ensures most current date is kept
             if toEntity != company:
                 if len(entityShareClass[(toEntity, t.ShareClass)]) == 1:
-                    entityShareClass[(toEntity, t.ShareClass)].append(t.Date.date())
-                elif t.Date.date() > entityShareClass[(toEntity, t.ShareClass)][1]:
-                    entityShareClass[(toEntity, t.ShareClass)][1]=t.Date.date()
+                    entityShareClass[(toEntity, t.ShareClass)].append(t.Date)
+                elif t.Date > entityShareClass[(toEntity, t.ShareClass)][1]:
+                    entityShareClass[(toEntity, t.ShareClass)][1]=t.Date
             if fromEntity != company:
                 if len(entityShareClass[(fromEntity, t.ShareClass)]) == 1:
-                    entityShareClass[(fromEntity, t.ShareClass)].append(t.Date.date())
-                elif t.Date.date() > entityShareClass[(fromEntity, t.ShareClass)][1]:
-                    entityShareClass[(fromEntity, t.ShareClass)][1]=t.Date.date()
+                    entityShareClass[(fromEntity, t.ShareClass)].append(t.Date)
+                elif t.Date > entityShareClass[(fromEntity, t.ShareClass)][1]:
+                    entityShareClass[(fromEntity, t.ShareClass)][1]=t.Date
+
+        #Convert datetime to date
+        for key in entityShareClass:
+            entityShareClass[key][1] = entityShareClass[key][1].date()
 
         #Delete entities with zero shares held
         to_delete = []
@@ -795,6 +809,7 @@ def registers(request, company_id=None):
 
         #Remove all entities who are not part of selected management
         if role != "ShareHolder":
+            role = ManagerRole.objects.get(pk=role)
             filteredManagers = company.Manager.filter(EndDate__isnull = True, Title=role)
             entities = set()
             for manager in filteredManagers:
@@ -807,7 +822,10 @@ def registers(request, company_id=None):
                 del entityShareClass[key]
 
         #Sort by date
+        print(entityShareClass)
         entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
+        print("+++++++++++++++++++++++++++++")
+        print(entityShareClass)
 
         context["entities"] = entities
         context["entityShareClass"] = entityShareClass
@@ -815,11 +833,74 @@ def registers(request, company_id=None):
         return render(request, 'register.html', context)
     return render(request, 'registers.html', context)
 
+def share_class(request):
+    share_classes = ShareClass.objects.all()
+    context={'share_classes': share_classes}
+    delete = request.GET.get("delete")
+    if delete:
+        try:
+            to_delete = ShareClass.objects.get(pk=delete)
+            to_delete.delete()
+            context["alert_type"] = "success"
+            context["alert"] = "Share Class Deleted"
+            return render(request, 'share_class.html', context)
+        except Exception as e:
+            context["alert_type"] = "danger"
+            context["alert"] = str(e)
+            return render(request, 'share_class.html', context)
+    if request.method == "POST":
+        try:
+            name = request.POST.get("name")
+            existing = ShareClass.objects.filter(Name=name)
+            if len(existing) > 0:
+                context["alert_type"] = "danger"
+                context["alert"] = "Already Exists"
+                return render(request, 'share_class.html', context)
 
+            share_class = ShareClass(Name=name)
+            share_class.save()
+            context["alert_type"] = "success"
+            context["alert"] = "Share class created"
+        except Exception as e:
+            context["alert_type"] = "danger"
+            context["alert"] = str(e)
+    return render(request, 'share_class.html', context)
 
+def manager_role(request):
+    roles = ManagerRole.objects.all()
+    context = {'roles': roles}
 
+    delete = request.GET.get("delete")
+    if delete:
+        try:
+            to_delete = ManagerRole.objects.get(pk=delete)
+            to_delete.delete()
+            context["alert_type"] = "success"
+            context["alert"] = "Managment Role Deleted"
+            return render(request, 'manager_role.html', context)
+        except Exception as e:
+            context["alert_type"] = "danger"
+            context["alert"] = str(e)
+            return render(request, 'manager_role.html', context)
 
+    if request.method == "POST":
+        try:
+            title = request.POST.get("title")
+            existing = ManagerRole.objects.filter(Title=title)
+            if len(existing) > 0:
+                context["alert_type"] = "danger"
+                context["alert"] = "Already Exists"
+                return render(request, 'manager_role.html', context)
 
+            manager_role = ManagerRole(Title=title)
+            manager_role.save()
+            context["alert_type"] = "success"
+            context["alert"] = "Management Role Created"
+        except Exception as e:
+            context["alert_type"] = "danger"
+            context["alert"] = str(e)
+
+    return render(request, 'manager_role.html', context)
 
 
 
