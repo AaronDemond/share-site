@@ -5,7 +5,8 @@ div.transferContainer>div:nth-of-type(odd) {
     background: #f8f9fa;
 } 
 </style>
-<h1>Find a Transfer</h1>
+<h1 style="text-align: center;">{{company}}</h1>
+<h3 style="text-align: center;">Find a Transfer</h3>
 <div class="row">
     <div class="col-sm-12">
         <a href="/" >Home</a> / <a href="/companies/">Companies</a> / Transfers
@@ -50,7 +51,7 @@ div.transferContainer>div:nth-of-type(odd) {
             </div>
         {% endfor %}
     </div>	
-    <div class="row">
+    <div class="row" id="deleteButtonHolder">
         <div class="col-lg-12">
             <hr>
             <button type="submit" class="btn btn-danger">Delete</button> 
@@ -60,7 +61,9 @@ div.transferContainer>div:nth-of-type(odd) {
 {% endblock main %}
 {% block scripts %}
 <script type = "text/javascript">
+    $("#deleteButtonHolder").hide();
     function selectTransfer(text, id, share_type){
+        $("#deleteButtonHolder").show();
         console.log(text);
         let txt = `<div class="col-lg-12">${text} selected</div>`;
         $("#selectedTransfer").val(id);
