@@ -255,12 +255,30 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
         for a in auth_shares:
             auth_types_value[a.ShareClass].add(a.Value)
         auth_totals = {}
+        print(auth_types_value)
         for a in auth_types:
             for value in auth_types_value[a]:
                 auth_totals[(a,value)] = 0
                 for auth in auth_shares:
                     if auth.ShareClass == a and auth.Value == value:
                         auth_totals[(a,value)] += auth.Ammount
+
+        #Removes bought back shares from the dict created above
+        for auth_type in auth_types:
+            all_tran = Transfer.objects.filter(Company=company,
+                    ShareClass=auth_type,ToCompany=company)
+            all_auth = AuthorizedShares.objects.filter(Company=company,
+                    ShareClass=auth_type)
+            for tran in all_tran:
+                for index, auth in enumerate(all_auth):
+                    if auth.Date > tran.Date:
+                        toDecrease = auth_shares[index-1]
+                        auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
+                        break
+                    if index == len(all_auth) - 1:
+                        toDecrease = auth_shares[index]
+                        auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
+                        break
 
         context["no_of_auth_types"] = len(auth_totals)
         context["auth_totals"] = auth_totals 
