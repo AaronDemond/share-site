@@ -321,21 +321,25 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
                 register[p.LinkedPerson] = 0
             if p.LinkedCompany:
                 register[p.LinkedCompany] = 0
-        auth_shares = AuthorizedShares.objects.filter(Company=company, ShareClass=shareClass)
-        auth_ammount = sum([x.Ammount for x in auth_shares])
-        register[company] = auth_ammount
+        auth_shares = list(AuthorizedShares.objects.filter(Company=company, ShareClass=shareClass))
+        _transfers.extend(auth_shares)
+        _transfers.sort(key= lambda x: x.Date)
+        print(_transfers)
 
         for t in _transfers:
-            receiver = t.ToPerson or t.ToCompany
-            sender = t.FromPerson or t.FromCompany
-            if register[sender] >= t.Ammount:
-                register[sender] -= t.Ammount
-                if receiver != company:
-                    register[receiver] += t.Ammount
-                else:
-                    register[receiver] -= t.Ammount
+            if isinstance(t, AuthorizedShares):
+                register[company] += t.Ammount
             else:
-                to_be_deleted.append(t)
+                receiver = t.ToPerson or t.ToCompany
+                sender = t.FromPerson or t.FromCompany
+                if register[sender] >= t.Ammount:
+                    register[sender] -= t.Ammount
+                    if receiver != company:
+                        register[receiver] += t.Ammount
+                    else:
+                        register[receiver] -= t.Ammount
+                else:
+                    to_be_deleted.append(t)
         context["transfers"] = to_be_deleted
         return render(request, 'transfers_confirm.html', context)
 
