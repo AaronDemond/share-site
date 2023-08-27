@@ -1,57 +1,46 @@
 {% extends 'base.html' %}
 {% load extras %}
 {% block main %}
+
+<style type="text/css">
+div#entityContainer>div:nth-of-type(odd) {
+    background: #f8f9fa;
+} 
+</style>
 <div id="participantHolder" class="row">
 
+    <form method="GET">
+        <h1 style="text-align: center;">{{company}}</h1>
+        <h3 style="text-align: center;">Shareholders Ledger</h3>
+        <div class="row">
 
-    <h1 style="text-align: center;">{{company}}</h1>
-    <h3 style="text-align: center;">Shareholders Ledger</h3>
-    <div class="row">
-
-        <div class="col-sm-12" style = "padding-bottom: 20px">
-            <a href="/" >Home</a> / <a href="/companies">Companies</a>
-            / {{company}}
+            <div class="col-sm-12" style = "padding-bottom: 20px">
+                <a href="/" >Home</a> / <a href="/companies">Companies</a>
+                / {{company}}
+            </div>
         </div>
-    </div>
-    <div class="input-group" style="padding-bottom: 20px">
-        <input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
-        <span class="input-group-btn">
-            <button class="btn btn-success" onclick="search()">Go!</button>
-        </span>
-    </div>
+        <div class="input-group" style="padding-bottom: 20px">
+            <input type="text" class="form-control" name = "query" id = "search_string" value="{{query}}" placeholder="Search for..">
+            <span class="input-group-btn">
+                <button class="btn btn-success" type="submit">Go!</button>
+            </span>
+        </div>
 
-    {% for entry in mixed %}
-        {% for class in entry.shareTypes %}
+    </form>
+    <div id="entityContainer">
+        {% for entry in mixed2 %}
             <div class="row personRow">
-
+    
                 <div class="col-sm-4">
-                    {{entry.entity}} {{class}}
+                    {{entry.entity}} {{entry.shareClass}}
                 </div>
                 <div class="col-sm-8" style="padding-bottom: 20px;">
-
-                    {% if entry.type == 'person' %}
+    
                         <a class="btn btn-primary" role="button" 
-                            href="?type=person&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
-                    {% else %}
-                        <a class="btn btn-primary" role="button" 
-                            href="?type=company&id={{entry.entity.id}}&shareClass={{class.id}}">View Ledger</a>
-                    {% endif %}
+                            href="?type={{entry.type}}&id={{entry.entity.id}}&shareClass={{entry.shareClass.pk}}">View Ledger</a>
                 </div>
             </div>
         {% endfor %}
-    {% endfor %}
-
-
+    </div>
 </div>
-<script type = "text/javascript">
-function search() {
-    var search_string = $("#search_string").val()
-    $.ajax({url: '?query='+search_string, async:false, success: function(result){
-        $("#participantHolder").html(result);
-        return false;
-    }});
-    return false;
-
-}
-</script>
 {% endblock main %}

@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
 {% load extras %}
 {% block main %}
+
+<style type="text/css">
+div#participantsFromHolder>div:nth-of-type(odd) {
+    background: #f8f9fa;
+} 
+div#participantsToHolder>div:nth-of-type(odd) {
+    background: #f8f9fa;
+} 
+</style>
 <h1 style="text-align: center;">{{company}}</h1>
 <h3 style="text-align: center;">Enter a Transfer</h3>
 
@@ -24,42 +33,48 @@
                     <button class="btn btn-success" onclick="search('fromHolder','From',1)" type="button">Go!</button>
                 </span>
             </div>
+            <div id="participantsFromHolder" class="row">
             {% for participant in participants %}
-                <div class="row">
-                    <div class="col-sm-3">
-                        {% if participant.LinkedPerson %}
-                            {{participant.LinkedPerson}}
-                        {% else %}
-                            {{participant.LinkedCompany}}
-                        {% endif %}
-                    </div>    
-                    <div class="col-sm-9" style="padding-bottom: 20px">
-                        {% if participant.LinkedPerson %}
-                            <button class="btn btn-primary" 
-                                    onclick="selectFrom({{participant.LinkedPerson.id}},
-                                    '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
-                        {% else %}
-                            <button class="btn btn-primary"  
-                                    onclick="selectFrom({{participant.LinkedCompany.id}}, 
-                                    '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
-                        {% endif %}
+                    <div class="row">
+                        <div class="col-sm-3">
+                            {% if participant.LinkedPerson %}
+                                {{participant.LinkedPerson}}
+                            {% else %}
+                                {{participant.LinkedCompany}}
+                            {% endif %}
+                        </div>    
+                        <div class="col-sm-9" style="padding-bottom: 20px">
+                            {% if participant.LinkedPerson %}
+                                <button class="btn btn-primary" 
+                                        onclick="selectFrom({{participant.LinkedPerson.id}},
+                                        '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                            {% else %}
+                                <button class="btn btn-primary"  
+                                        onclick="selectFrom({{participant.LinkedCompany.id}}, 
+                                        '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
             {% endfor %}
+            </div>
             <div class="row">
                 <div class="col-sm-3">
                     {% if page > 1 %}
-
-                    <button class="btn btn-primary" onclick="search('fromHolder','From',{{page|changeValue:'-1'}})" type="button"><</button>
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="search('fromHolder','From',{{page|changeValue:'-1'}})" type="button"><</button>
+<button class="btn btn-primary" style="margin-top: 20px;" 
+                        onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
                     {% endif %}
                 </div> 
                 <div class="col-sm-6">
 
                 </div>
                 <div class="col-sm-3">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     {% if hasNextPage == True %}
-                    <button class="btn btn-primary" onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
+                    <button class="btn btn-primary" style="margin-top: 20px;" 
+                        onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
                     {% endif %}
+                    </div>
                 </div> 
             </div>
         </div>
@@ -72,6 +87,7 @@
                         <button class="btn btn-success" onclick="search('toHolder','To',1)" type="button">Go!</button>
                     </span>
                 </div>
+                <div class="row" id="participantsToHolder">
                 {% for participant in participants %}
                     <div class="row">
                         <div class="col-sm-3">
@@ -96,6 +112,7 @@
                         </div>
                     </div>
                 {% endfor %}
+                </div>
                 <div class="row">
                     <div class="col-sm-3">
                         {% if page > 1 %}
@@ -108,7 +125,9 @@
                     </div>
                     <div class="col-sm-3">
                         {% if hasNextPage == True %}
-                        <button class="btn btn-primary" onclick="search('toHolder','To',{{page|changeValue:'1'}})" type="button">></button>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button class="btn btn-primary" onclick="search('toHolder','To',{{page|changeValue:'1'}})" type="button">></button>
+                        </div>
                         {% endif %}
                     </div> 
                 </div>

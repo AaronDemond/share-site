@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load extras %}
 {% block main %}
 <style type="text/css">
 div.transferContainer>div:nth-of-type(odd) {
@@ -19,7 +20,7 @@ div.transferContainer>div:nth-of-type(odd) {
             <div class="col-xs-12">
                 <br />
                 <div class="input-group">
-                    <input type="text" style="margin-bottom: 20px"class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                    <input type="text" style="margin-bottom: 20px"class="form-control" name = "query" id = "search_string" value="{{query}}" placeholder="Search for..">
                     <span class="input-group-btn">
                         <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
                     </span>
@@ -36,25 +37,38 @@ div.transferContainer>div:nth-of-type(odd) {
     <div class="row transferContainer" id="transferContainer">
         {% for transfer in transfers %}
 
-            <div class="row">
+        <div class="row">
 
-                <div class="col-sm-9">
-                    {{transfer}}
-
-                </div>
-                <div class="col-sm-3" style="padding-bottom: 10px;">
-                    <button type="button" class="btn btn-primary" onclick="selectTransfer('{{transfer}}','{{transfer.id}}','{{transfer.ShareClass.id}}')">Delete</button>
-                <a href="/companies/{{company.id}}/certificates/{{transfer.id}}/"
-                   class = "btn btn-primary">Certificate</a>
-                </div>
+            <div class="col-sm-9">
+                {{transfer}}
 
             </div>
+            <div class="col-sm-3" style="padding-bottom: 10px;">
+                <button type="button" class="btn btn-primary" onclick="selectTransfer('{{transfer}}','{{transfer.id}}','{{transfer.ShareClass.id}}')">Delete</button>
+            <a href="/companies/{{company.id}}/certificates/{{transfer.id}}/"
+               class = "btn btn-primary">Certificate</a>
+            </div>
+
+        </div> 
         {% endfor %}
+        
     </div>	
-    <div class="row" id="deleteButtonHolder">
-        <div class="col-lg-12">
-            <hr>
-            <button type="submit" class="btn btn-danger">Delete</button> 
+    <div class="row" id="pagenationHolder">
+        <div class="col-sm-3">
+            {% if page > 1 %}
+
+            <button class="btn btn-primary" style="margin-top: 20px" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+            {% endif %}
+        </div> 
+        <div class="col-sm-6">
+
+        </div>
+        <div class="col-sm-3">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            {% if hasNextPage == True %}
+                <button class="btn btn-primary" style="margin-top: 20px" onclick="search({{page|changeValue:'1'}})" type="button">></button>
+            {% endif %}
+            </div>
         </div> 
     </div>
 </form>
@@ -63,12 +77,32 @@ div.transferContainer>div:nth-of-type(odd) {
 <script type = "text/javascript">
     $("#deleteButtonHolder").hide();
     function selectTransfer(text, id, share_type){
+        $("#pagenationHolder").hide();
         $("#deleteButtonHolder").show();
         console.log(text);
-        let txt = `<div class="col-lg-12">${text} selected</div>`;
+        let txt = `<div class="col-lg-12">${text} selected</div>
+
+        <div class="row" id="deleteButtonHolder">
+            <div class="col-lg-12">
+                <hr>
+                <button type="submit" class="btn btn-danger">Delete</button> 
+            </div> 
+        </div>
+            `;
         $("#selectedTransfer").val(id);
         $("#selectedShareType").val(share_type);
         $("#transferContainer").html(txt);
+    }
+
+    function search(page) {
+        search_txt = $("#search_string").val();
+        if (search_txt) {
+        href = "/companies/{{company.id}}/transfers?page="+page+"&query="+search_txt;
+        } else {
+        href = "/companies/{{company.id}}/transfers?page="+page;
+        }
+        console.log(href);
+        window.location = href;
     }
 
 $(".close").click(function(){

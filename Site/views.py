@@ -7,7 +7,7 @@ from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_
 from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole
 from django.urls import resolve
 
-PAGELENGTH = 5
+PAGELENGTH = 4
 
 def index(request, **kwargs):
 
@@ -34,9 +34,11 @@ def people(request, context={}):
     if query:
         people = Person.objects.filter(Name__icontains=query).order_by("-pk")
         companies = Company.objects.filter(Name__icontains=query).order_by("-pk")
+        context['query'] = query
     else:
         people = Person.objects.all().order_by("-pk")
         companies = Company.objects.all().order_by("-pk")
+        #context['query'] = ""
 
     for p in people:
         ql.append([p,"person"])
@@ -289,6 +291,24 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
             if query in t.__str__().lower():
                 tt.append(t)
         context['transfers'] = tt
+        context['query'] = query
+    else:
+        context['query'] = ""
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['transfers']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['transfers'] = context['transfers'][start:end]
+    context['page'] = page
 
     #User confirmed deletion of impossible transfers
     if request.POST.get("confirm"):
@@ -589,25 +609,34 @@ def shareholders_ledger(request, company_id=None):
         d = {'company':c,
                 'shareTypes':sharetypes}
         companyClassList.append(d)
-    context['peopleClassList']=peopleClassList
-    context['companyClassList']=companyClassList
-    mixed = []
+
+    mixed2=[]
     for entry in peopleClassList:
-        mixed.append({'type': 'person', 'entity': entry['person'], 'shareTypes': entry['shareTypes']})
+        for shareClass in entry['shareTypes']:
+            mixed2.append({'type': 'person', 'entity': entry['person'],
+                'shareClass': shareClass})
     for entry in companyClassList:
-        mixed.append({'type': 'company', 'entity': entry['company'], 'shareTypes': entry['shareTypes']})
-    mixed.sort(key = lambda x: x['entity'].Modified, reverse = True)
-    context['mixed'] = mixed
+        for shareClass in entry['shareTypes']:
+            mixed2.append({'type': 'company', 'entity': entry['company'],
+                'shareClass': shareClass})
+
+    mixed2.sort(key = lambda x: x['entity'].Modified, reverse = True)
     if request.GET.get('query'):
         search_string = request.GET.get('query')
         search_string = search_string.lower()
-        for p in context['peopleClassList']:
-            if search_string not in p['person'].Name.lower():
-                context['peopleClassList'].remove(p)
-        for p in context['companyClassList']:
-            if search_string not in p['company'].Name.lower():
-                context['companyClassList'].remove(p)
-        return render(request, 'ledger_ajax.html', context)
+        to_remove = []
+        for entry in mixed2:
+            _str = entry['entity'].Name.lower() + " " + entry['shareClass'].Name.lower()
+            if search_string not in _str:
+                to_remove.append(entry)
+        for entry in to_remove:
+            mixed2.remove(entry)
+
+        context['query'] = search_string
+    else:
+        context['query'] = ""
+
+    context['mixed2'] = mixed2
 
     #request for a specific ledger
     if request.GET.get('type'):
@@ -663,7 +692,6 @@ def shareholders_ledger(request, company_id=None):
             context['t'].append(tt)
 
         return render(request, 'ledger.html', context)
-    print("HIT")
     return render(request, 'shareholders_ledger.html', context)
 
 
@@ -826,10 +854,7 @@ def registers(request, company_id=None):
                 del entityShareClass[key]
 
         #Sort by date
-        print(entityShareClass)
         entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
-        print("+++++++++++++++++++++++++++++")
-        print(entityShareClass)
 
         context["entities"] = entities
         context["entityShareClass"] = entityShareClass

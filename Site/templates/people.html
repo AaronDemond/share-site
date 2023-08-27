@@ -15,6 +15,9 @@ body {
     padding: 4%
 }
 
+div#peopleList>div:nth-of-type(odd) {
+    background: #f8f9fa;
+} 
 
         #peopleList{
             padding-top: 20px;
@@ -61,7 +64,7 @@ body {
                         <div class="col-xs-12">
                             <br />
                             <div class="input-group">
-                                <input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                                <input type="text" class="form-control" name = "query" id = "search_string" value="{{query}}" placeholder="Search for..">
                                 <span class="input-group-btn">
                                     <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
                                 </span>
@@ -73,36 +76,40 @@ body {
 
             <div class="row" id="peopleList">
                 {% for e in entities %}
-                    <div class="col-sm-4">
-                        {{e.0}}
-
-                    </div>
-                    <div class="col-sm-8" style="padding-bottom: 10px;">
-                        <a class="btn btn-primary" role="button" href="">Assign Management</a>
-                        {% if e.1 == "person" %}
-                            <a class="btn btn-primary" role="button" 
-                                href="/link/{{e.0.id}}/?type=person">Link to Company</a>
-                        {% else %}
-                            <a class="btn btn-primary" role="button"
-                                href="/link/{{e.0.id}}/?type=company">Link to Company</a>
-                        {% endif %}
-
+                    <div class="row">
+                        <div class="col-sm-4">
+                            {{e.0}}
+                        
+                        </div>
+                        <div class="col-sm-8" style="padding-bottom: 10px;">
+                            <a class="btn btn-primary" role="button" href="">Assign Management</a>
+                            {% if e.1 == "person" %}
+                                <a class="btn btn-primary" role="button" 
+                                    href="/link/{{e.0.id}}/?type=person">Link to Company</a>
+                            {% else %}
+                                <a class="btn btn-primary" role="button"
+                                    href="/link/{{e.0.id}}/?type=company">Link to Company</a>
+                            {% endif %}
+                        
+                        </div>
                     </div>
                 {% endfor %}
             </div>
             <div class="row">
                 <div class="col-sm-3">
-                    {% if page > 1 %}
-                        <a href="/entities/?page={{ page|changeValue:'-1'}}" class="btn btn-primary"><</a>
-                    {% endif %}
+                {% if page > 1 %}
+                    <button class="btn btn-primary" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+                {% endif %}
                 </div> 
                 <div class="col-sm-6">
 
                 </div>
                 <div class="col-sm-3">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     {% if hasNextPage == True %}
-                    <a href="/entities/?page={{ page|changeValue:'1'}}" class="btn btn-primary">></a>
+                        <button class="btn btn-primary" onclick="search({{page|changeValue:'1'}})" type="button">></button>
                     {% endif %}
+                    </div>
                 </div> 
             </div>
         </main>
@@ -119,6 +126,18 @@ body {
                 $(".alert").hide();
                 $(".alert-button").hide();
             });
+
+    function search(page) {
+        search_txt = $("#search_string").val();
+        if (search_txt) {
+        href = "/entities?page="+page+"&query="+search_txt;
+        } else {
+        href = "/entities?page="+page;
+        }
+        console.log(href);
+        window.location = href;
+    }
+            
         </script>
     </body>
 </html>
