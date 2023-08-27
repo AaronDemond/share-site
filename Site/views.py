@@ -173,22 +173,28 @@ def issue_shares(request, company_id=None):
     if request.method == "POST":
         #File upload linked to a share class
         if request.POST.get("append") == "True":
-            _file = request.FILES["appendedFile"]
-            share_class = request.POST.get("ShareClass")
-            share_class = ShareClass.objects.get(pk=share_class)
-            authorized_shares = AuthorizedShares.objects.filter(ShareClass=share_class)
-            #remove previous documents
-            for a in authorized_shares:
-                if a.Document is not None:
-                    a.Document = None
-                    a.save()
-            #add new document
-            authorized_shares_obj = authorized_shares[0]
-            authorized_shares_obj.Document = _file
-            authorized_shares_obj.save()
-            context["error_type"] = "success"
-            context["alert"] = "Document Appended"
-            return companies(request=request,context=context)
+            try:
+                _file = request.FILES["appendedFile"]
+                share_class = request.POST.get("ShareClass")
+                share_class = ShareClass.objects.get(pk=share_class)
+                authorized_shares = AuthorizedShares.objects.filter(ShareClass=share_class,
+                        Company = company)
+                #remove previous documents
+                for a in authorized_shares:
+                    if a.Document is not None:
+                        a.Document = None
+                        a.save()
+                #add new document
+                authorized_shares_obj = authorized_shares[0]
+                authorized_shares_obj.Document = _file
+                authorized_shares_obj.save()
+                context["error_type"] = "success"
+                context["alert"] = "Document Appended"
+                return companies(request=request,context=context)
+            except Exception as e:
+                context["error_type"] = "danger"
+                context["alert"] = "ERROR! " + str(e)
+                return companies(request=request,context=context)
 
         #Authorize shares request
         share_class = request.POST.get('ShareClass')
@@ -197,7 +203,6 @@ def issue_shares(request, company_id=None):
         time = request.POST.get("time")
         value = request.POST.get("parValue")
         dt = date + " " + time
-        print(dt)
         if len(request.FILES) != 0:
             _file = request.FILES["uploadedFile"]
         else:
