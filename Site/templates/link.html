@@ -12,7 +12,7 @@
         <div class="col-sm-12">
             <br />
             <div class="input-group">
-                <input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                <input type="text" class="form-control" name = "query" id = "search_string" value="{{query}}" placeholder="Search for..">
                 <span class="input-group-btn">
                     <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
                 </span>
@@ -22,17 +22,52 @@
 </div>
 </div>
 
-<div class="row" id="peopleList">
-    {% for e in companies %}
-        <div class="col-sm-4">
-            {{e}}
+<div class="row">
+    <div class="row itemListContainer" id="peopleList">
+        {% for e in companies %}
+            <div class="row listItem">
+                <div class="col-sm-4 itemInList">
+                    {{e}}
+                
+                </div>
+                <div class="col-sm-8 buttonsInList">
+                    <a class="btn btn-primary" role="button" href="/link/{{entity.id}}/?company_id={{e.id}}&type={{type}}">Link</a>
+                
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="col-sm-3">
+                    {% if page > 1 %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" type="button" style="margin-top: 20px;"><</button>
+                    {% endif %}
 
-        </div>
-        <div class="col-sm-8" style="padding-bottom: 10px;">
-            <a class="btn btn-primary" role="button" href="/link/{{entity.id}}/?company_id={{e.id}}&type={{type}}">Link</a>
-
-        </div>
-    {% endfor %}
-</div>	</main>
+                    {% if hasNextPage == True %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" 
+                        onclick="search({{page|changeValue:'1'}})" type="button">></button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" style="margin-top: 20px;">></button>
+                    {% endif %}
+                </div>
+</main>
 
 {% endblock main %}
+{% block scripts %}
+<script type = "text/javascript">
+
+    function search(page) {
+        search_txt = $("#search_string").val();
+        if (search_txt) {
+            href = "/link/{{entity.id}}/?page="+page+"&query="+search_txt+"&type={{type}}&search=True";
+        } else {
+            href = "/link/{{entity.id}}/?page="+page+"&type={{type}}";
+        }
+        console.log(href);
+        window.location = href;
+    }
+
+</script>
+{% endblock scripts %}

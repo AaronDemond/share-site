@@ -1,14 +1,33 @@
-{% for participant in participants %}
-    {% if participant.LinkedPerson %}
-        <div class="col-sm-3">
-            {{participant.LinkedPerson}}
-        </div>    
+{% load extras %}
+    {% for participant in participants %}
+        {% if participant.LinkedPerson %}
+            <div class="row listItem">
+                <div class="col-sm-3 itemInList">
+                    {{participant.LinkedPerson}}
+                </div>    
+                
+                <div class="col-sm-9 buttonsInList">
+                    <button class="btn btn-primary"  
+                            onclick="selectPerson({{participant.LinkedPerson.id}},
+                            '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+<div class="row" style="background-color: white">
+                <div class="col-sm-3">
+                    {% if page > 1 %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" type="button" style="margin-top: 20px;"><</button>
+                    {% endif %}
 
-        <div class="col-sm-9" style="padding-bottom: 20px;">
-            <button class="btn btn-primary"  
-                    onclick="selectPerson({{participant.LinkedPerson.id}},
-                    '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
-        </div>
-    {% endif %}
-{% endfor %}
+                    {% if hasNextPage == True %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" 
+                        onclick="search({{page|changeValue:'1'}})" type="button">></button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" style="margin-top: 20px;">></button>
+                    {% endif %}
+                </div> 
+            </div>
 

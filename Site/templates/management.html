@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load extras %}
 {% block main %}
 <h1 style="text-align: center;">{{company}}</h1>
 <h3 style="text-align: center;">Change Management</h3>
@@ -28,22 +29,45 @@
                     <div class="input-group" style="padding-bottom: 20px;">
                         <input type="text" class="form-control" name = "query" id = "deleteQuery" value="" placeholder="Search for..">
                         <span class="input-group-btn">
-                            <button class="btn btn-success" onclick="searchRemove()" type="button">Go!</button>
+                            <button type="button" class="btn btn-success" onclick="searchRemove(1)" type="button">Go!</button>
                         </span>
                     </div>
                 </div>
-                {% for m in managers %}
-               <div class="col-sm-4">
-                   {{m}} 
-               </div> 
-               <div class="col-sm-8">
-                  <button type="button" class="btn btn-primary" 
-                                        style="margin-bottom: 20px" onclick="selectDeletion({{m.id}},'{{m}}')">Select</button> 
-               </div> 
-               {% endfor %}
+                <div class="row itemListContainer">
+                    {% for m in managers %}
+                    <div class="row listItem">
+                        <div class="col-sm-4 itemInList">
+                           {{m}} 
+                        </div> 
+                        <div class="col-sm-8 buttonsInList">
+                          <button type="button" class="btn btn-primary" 
+                                                 onclick="selectDeletion({{m.id}},'{{m}}')">Select</button> 
+                        </div> 
+                    </div>
+                    {% endfor %}
+                </div>
+<div class="row" style="background-color: white">
+                <div class="col-sm-3">
+                    {% if page > 1 %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="searchRemove({{page|changeValue:'-1'}})" type="button"><</button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" type="button" style="margin-top: 20px;"><</button>
+                    {% endif %}
+
+                    {% if hasNextPageRemove == True %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" 
+                        onclick="searchRemove({{page|changeValue:'1'}})" type="button">></button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" style="margin-top: 20px;">></button>
+                    {% endif %}
+                </div> 
+            </div>
         </div>
         <div class="row">
-           <div class="col-sm-5">
+            <div class="col-sm-12">
+                <hr>
+            </div>
+           <div class="col-sm-5" style="padding-top: 20px;">
                 <div class="input-group">
                     <span class="input-group-text">Date</span> 
                     <input type="date" class="form-control" value="" name="date" id=""/> 
@@ -64,31 +88,50 @@
 
         <input type="hidden" value="add" name="type" id=""/>
         {% csrf_token %}
-        <div class = "row" id="entityHolder">
+        <div class = "row entityHolder" id="entityHolder">
             <div class="col-sm-12">
                 <div class="input-group" style="padding-bottom: 20px;">
                     <input type="text" class="form-control" name = "query" id = "query_text" value="" placeholder="Search for..">
                     <span class="input-group-btn">
-                        <button class="btn btn-success" onclick="search()" type="button">Go!</button>
+                        <button class="btn btn-success" onclick="search(1)" type="button">Go!</button>
                     </span>
                 </div>
 
             </div>
-            <div class="row" id = "searchHolder">
+            <div class="row itemListContainer entityHolder" id = "searchHolder" >
                 {% for participant in participants %}
                     {% if participant.LinkedPerson %}
-                        <div class="col-sm-3">
-                            {{participant.LinkedPerson}}
-                        </div>    
-
-                        <div class="col-sm-9" style="padding-bottom: 20px;">
-                            <button class="btn btn-primary"  
-                                    onclick="selectPerson({{participant.LinkedPerson.id}},
-                                    '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                        <div class="row listItem">
+                            <div class="col-sm-3 itemInList">
+                                {{participant.LinkedPerson}}
+                            </div>    
+                            
+                            <div class="col-sm-9 buttonsInList">
+                                <button class="btn btn-primary"  
+                                        onclick="selectPerson({{participant.LinkedPerson.id}},
+                                        '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                            </div>
                         </div>
                     {% endif %}
                 {% endfor %}
+            <div class="row" style="background-color: white">
+                <div class="col-sm-3">
+                    {% if page > 1 %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" type="button" style="margin-top: 20px;"><</button>
+                    {% endif %}
+
+                    {% if hasNextPageAdd == True %}
+                    <button class="btn btn-primary" style="margin-top: 20px;" 
+                        onclick="search({{page|changeValue:'1'}})" type="button">></button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" style="margin-top: 20px;">></button>
+                    {% endif %}
+                </div> 
             </div>
+            </div>
+            
         </div>
         <div class="row">
             <div id="selectedHolder" class="col-lg-12">
@@ -96,7 +139,11 @@
             </div>
 
         </div>
-        <div class="row">
+
+        <div class="row" style="">
+            <div class="col-sm-12">
+                <hr>
+            </div>
             <div class="col-sm-4">
                 <div class="input-group mb-3">
                     <span class="input-group-text">Role</span>
@@ -161,18 +208,18 @@
             name = "person_id" value = "${participant_id}"><p>${participant_name}
                 selected</p>`;
             $("#selectedHolder").html(txt);
-            $("#entityHolder").toggle();
+            $(".entityHolder").toggle();
         }
-        function searchRemove() {
+        function searchRemove(page=1) {
             var search_string = $('#deleteQuery').val();
-            $.ajax({url: '/companies/{{company.id}}/changeManagement?type=search&delete=True&query=' + search_string, async:false, success: function(result){
+            $.ajax({url: '/companies/{{company.id}}/changeManagement?type=search&delete=True&query=' + search_string +"&page="+page, async:false, success: function(result){
 
             $("#selectDeleteHolder").html(result);
             }});
         }
-function search() {
+function search(page=1) {
     var search_string = $('#query_text').val();
-    $.ajax({url: '/companies/{{company.id}}/changeManagement?type=search&query=' + search_string, async:false, success: function(result){
+    $.ajax({url: '/companies/{{company.id}}/changeManagement?type=search&query=' + search_string+"&page="+page, async:false, success: function(result){
         $("#searchHolder").html(result);
     }});
 }

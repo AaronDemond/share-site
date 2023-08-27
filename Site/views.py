@@ -7,22 +7,40 @@ from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_
 from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole
 from django.urls import resolve
 
-PAGELENGTH = 4
+PAGELENGTH = 3
 
 def index(request, **kwargs):
 
     return render(request, 'index.html', {})
 
 def companies(request, company_id=None, context=None):
+    if context is None:
+        context = {}
     query = request.GET.get('query', None)
     if query:
         ql = Company.objects.filter(Name__icontains=query).order_by("-Modified")
+        context['query'] = query
     else:
         ql = Company.objects.all().order_by("-Modified")
-    if context:
-        context['companies'] = ql
+        context['query'] = ""
+
+    context['companies'] = ql
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
     else:
-        context = {'companies' : ql}
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(ql):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['companies'] = context['companies'][start:end]
+    context['page'] = page
+
     return render(request, 'companies.html', context)
 def shareholders_register(request, company_id=None):
     context = {}
@@ -38,7 +56,7 @@ def people(request, context={}):
     else:
         people = Person.objects.all().order_by("-pk")
         companies = Company.objects.all().order_by("-pk")
-        #context['query'] = ""
+        context['query'] = ""
 
     for p in people:
         ql.append([p,"person"])
@@ -74,8 +92,10 @@ def link(request, _id=None):
     if request.GET.get("search"):
         query = request.GET.get("query")
         companies = Company.objects.filter(Name__icontains=query).order_by("-pk")
+        context["query"] = query
     else:
         companies = Company.objects.all().order_by("-pk")
+        context["query"] = ""
 
     if request.GET.get("company_id"):
         company = Company.objects.get(pk=request.GET.get("company_id"))
@@ -108,6 +128,21 @@ def link(request, _id=None):
             context["alert"] = "Error saving link"
     context["companies"] = companies 
     context["type"] = _type
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['companies']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['page'] = page
+    context['companies'] = context['companies'][start:end]
 
     return render(request, "link.html", context)
 
@@ -438,6 +473,7 @@ def enter_transfer(request, company_id=None):
         fromPerson = request.POST.get("fromPerson")
         toPerson = request.POST.get("toPerson")
         toCompany = request.POST.get("toCompany")
+        print(request.POST)
         if fromCompany and toCompany:
             if fromCompany == toCompany:
                 context['error_type'] = "danger"
@@ -638,6 +674,22 @@ def shareholders_ledger(request, company_id=None):
 
     context['mixed2'] = mixed2
 
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['mixed2']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['mixed2'] = context['mixed2'][start:end]
+
+    context['page'] = page
+
     #request for a specific ledger
     if request.GET.get('type'):
         ledgerType = request.GET.get('type')
@@ -711,13 +763,59 @@ def management(request, company_id = None):
                 if request.GET.get("query").lower() in manager.Person.Name.lower():
                     m.append(manager)
             context['managers'] = m
-            return render(request, "delete_management_search.html", context)
-        print(request.GET.get("query"))
         context['participants'] = []
         for p in participants:
             if p.LinkedPerson:
                 if request.GET.get("query") in p.LinkedPerson.Name.lower():
                     context['participants'].append(p)
+    else:
+        context['participants'] = []
+        for p in participants:
+            if p.LinkedPerson:
+                context['participants'].append(p)
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if request.GET.get("type") == "search":
+        query = request.GET.get("query")
+        if delete == "True":
+            if end < len(context['managers']):
+                context["hasNextPage"] = True
+            else:
+                context["hasNextPage"] = False
+            context['managers'] = context['managers'][start:end]
+        else:
+            if end < len(context['participants']):
+                context["hasNextPage"] = True
+            else:
+                context["hasNextPage"] = False
+            context['participants'] = context['participants'][start:end]
+    else:
+        query = ""
+        if end < len(context['managers']):
+            context["hasNextPageRemove"] = True
+        else:
+            context["hasNextPageRemove"] = False
+        if end < len(context['participants']):
+            context["hasNextPageAdd"] = True
+        else:
+            context["hasNextPageAdd"] = False
+        context['participants'] = context['participants'][start:end]
+        context['managers'] = context['managers'][start:end]
+
+        print(context['participants'])
+
+
+    context['page'] = page
+    context["query"] = query
+    if request.GET.get("type") == "search":
+        if delete == "True":
+            return render(request, "delete_management_search.html", context)
         return render(request, 'enter_management_search.html', context)
     titles = [
             ("Officer", "Officer"),
@@ -756,17 +854,26 @@ def management(request, company_id = None):
                 dt = date + " " + time
                 date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
                 person_id = request.POST.get("person_id")
-                print(person_id)
                 person = Person.objects.get(pk=person_id)
                 role = request.POST.get("role")
                 role = ManagerRole.objects.get(pk=role)
                 existing = Manager.objects.filter(Person=person, Title=role,
                         Company=company)
-                if len(existing) > 0:
+                if len(existing) > 0 and existing[0].EndDate is None:
                     context["error_type"] = "danger"
                     context["alert"] = "Already exists"
                     return companies(request, context = context)
-                new_management = Manager(Person=person, Title=role, Company=company, StartDate=date)
+                if len(existing) > 0:
+                    manager = existing[0]
+                    manager.StartDate = date
+                    manager.EndDate = None
+                    manager.save()
+                    context["error_type"] = "success"
+                    context["alert"] = "Management updated"
+                    return companies(request, context = context)
+
+                new_management = Manager(Person=person, Title=role, 
+                        Company=company, StartDate=date)
                 new_management.save()
 
                 context["error_type"] = "success"
@@ -827,9 +934,6 @@ def registers(request, company_id=None):
                 elif t.Date > entityShareClass[(fromEntity, t.ShareClass)][1]:
                     entityShareClass[(fromEntity, t.ShareClass)][1]=t.Date
 
-        #Convert datetime to date
-        for key in entityShareClass:
-            entityShareClass[key][1] = entityShareClass[key][1].date()
 
         #Delete entities with zero shares held
         to_delete = []
@@ -856,6 +960,10 @@ def registers(request, company_id=None):
         #Sort by date
         entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
 
+        #Convert datetime to date
+        for key in entityShareClass:
+            entityShareClass[key][1] = entityShareClass[key][1].date()
+
         context["entities"] = entities
         context["entityShareClass"] = entityShareClass
         context["company"] = company
@@ -872,27 +980,43 @@ def share_class(request):
             to_delete.delete()
             context["alert_type"] = "success"
             context["alert"] = "Share Class Deleted"
-            return render(request, 'share_class.html', context)
         except Exception as e:
             context["alert_type"] = "danger"
             context["alert"] = str(e)
-            return render(request, 'share_class.html', context)
     if request.method == "POST":
         try:
             name = request.POST.get("name")
-            existing = ShareClass.objects.filter(Name=name)
+            existing = ShareClass.objects.filter(Name__iexact=name)
             if len(existing) > 0:
                 context["alert_type"] = "danger"
                 context["alert"] = "Already Exists"
-                return render(request, 'share_class.html', context)
-
-            share_class = ShareClass(Name=name)
-            share_class.save()
-            context["alert_type"] = "success"
-            context["alert"] = "Share class created"
+            elif name == "":
+                context["alert_type"] = "danger"
+                context["alert"] = "Cannot be blank"
+            else:
+                share_class = ShareClass(Name=name)
+                share_class.save()
+                context["alert_type"] = "success"
+                context["alert"] = "Share class created"
         except Exception as e:
             context["alert_type"] = "danger"
             context["alert"] = str(e)
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['share_classes']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['share_classes'] = context['share_classes'][start:end]
+
+    context['page'] = page
     return render(request, 'share_class.html', context)
 
 def manager_role(request):
@@ -906,28 +1030,44 @@ def manager_role(request):
             to_delete.delete()
             context["alert_type"] = "success"
             context["alert"] = "Managment Role Deleted"
-            return render(request, 'manager_role.html', context)
         except Exception as e:
             context["alert_type"] = "danger"
             context["alert"] = str(e)
-            return render(request, 'manager_role.html', context)
 
     if request.method == "POST":
         try:
             title = request.POST.get("title")
-            existing = ManagerRole.objects.filter(Title=title)
-            if len(existing) > 0:
+            existing = ManagerRole.objects.filter(Title__iexact=title)
+            if title == "":
+                context["alert_type"] = "danger"
+                context["alert"] = "cannot be blank"
+            elif len(existing) > 0:
                 context["alert_type"] = "danger"
                 context["alert"] = "Already Exists"
-                return render(request, 'manager_role.html', context)
-
-            manager_role = ManagerRole(Title=title)
-            manager_role.save()
-            context["alert_type"] = "success"
-            context["alert"] = "Management Role Created"
+            else:
+                manager_role = ManagerRole(Title=title)
+                manager_role.save()
+                context["alert_type"] = "success"
+                context["alert"] = "Management Role Created"
         except Exception as e:
             context["alert_type"] = "danger"
             context["alert"] = str(e)
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['roles']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['roles'] = context['roles'][start:end]
+
+    context['page'] = page
 
     return render(request, 'manager_role.html', context)
 

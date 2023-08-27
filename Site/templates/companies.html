@@ -1,3 +1,4 @@
+{% load extras %}
 <!doctype html>
 <html lang="en">
     <head>
@@ -7,6 +8,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+        <link href="/static/styles.css" rel="stylesheet">
         <!-- CSS here -->
         <link rel="stylesheet" href="style.css">
         <style type="text/css" media="screen">
@@ -17,9 +19,6 @@
             padding-top: 20px;
         }
 
-        #company_listing{
-            padding-botton: 10px;
-        }
 
         </style>
     </head>
@@ -56,7 +55,7 @@
                         <div class="col-xs-12">
                             <br />
                             <div class="input-group">
-                                <input type="text" class="form-control" name = "query" id = "search_string" value="" placeholder="Search for..">
+                                <input type="text" class="form-control" name = "query" id = "search_string" value="{{query}}" placeholder="Search for..">
                                 <span class="input-group-btn">
                                     <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
                                 </span>
@@ -64,27 +63,47 @@
                         </div>
                     </form>
                 </div>
-            </div>
 
-            <div class="row" id="companylist">
+            <div class="row itemListContainer" id="companylist">
                 {% for company in companies %}
-                <div class="col-sm-3">
-                    {{company}}
-
-                </div>
-                <div class="col-sm-9" style="padding-bottom: 10px;">
-                    <a  href="/companies/{{company.id}}/issue">Authorize Shares</a> |
-                    <a  href="/companies/{{company.id}}/enterTransfer">Enter Transfer</a> |
-                    <a  href="/companies/{{company.id}}/registers">Registers</a> |
-                    <a  href="/companies/{{company.id}}/shareholdersLedger">Shareholders Ledger</a> |
-                    <a  href="/companies/{{company.id}}/changeManagement">Change Management</a> |
-                    <a  href="/companies/{{company.id}}/transfers">Transfers</a>
-                    <!-- class="btn btn-primary" role="button" -->
-
+                <div class="row listItem">
+                    <div class="col-sm-3 itemInList">
+                        {{company}}
+                    
+                    </div>
+                    <div class="col-sm-9 buttonsInList" style="padding-bottom: 10px;">
+                        <a  href="/companies/{{company.id}}/issue">Authorize Shares</a> |
+                        <a  href="/companies/{{company.id}}/enterTransfer">Enter Transfer</a> |
+                        <a  href="/companies/{{company.id}}/registers">Registers</a> |
+                        <a  href="/companies/{{company.id}}/shareholdersLedger">Shareholders Ledger</a> |
+                        <a  href="/companies/{{company.id}}/changeManagement">Change Management</a> |
+                        <a  href="/companies/{{company.id}}/transfers">Transfers</a>
+                        <!-- class="btn btn-primary" role="button" -->
+                    
+                    </div>
                 </div>
                 {% endfor %}
             </div>	
+            </div>
         </main>
+<div class="row">
+    <div class="col-sm-3">
+        {% if page > 1 %}
+        <a href="/companies/?page={{ page|changeValue:'-1'}}" style="margin-top: 20px;"
+                                                               class="btn btn-primary"><</a>
+        {% else %}
+        <a href="/companies/?page={{ page|changeValue:'-1'}}" 
+           class="btn btn-primary disabled" style="margin-top: 20px;"><</a>
+        {% endif %}
+        {% if hasNextPage == True %}
+        <a href="/companies/?page={{ page|changeValue:'1'}}" style="margin-top: 20px;"
+                                                              class="btn btn-primary">></a>
+        {% else %}
+        <a href="/companies/?page={{ page|changeValue:'1'}}" style="margin-top: 20px;"
+                                                              class="btn btn-primary disabled">></a>
+        {% endif %}
+    </div> 
+</div>
         <footer>
 
         </footer>

@@ -27,8 +27,8 @@
         <hr>
     </div>
 </div>
-<div id="createShareClassHolder" class="row">
-    <form method="POST">
+<form method="POST">
+    <div id="createShareClassHolder" class="row">
         {% csrf_token %}
         <div class="col-sm-6">
             <div class="input-group">
@@ -40,46 +40,55 @@
         </div>
         <div class="col-sm-12">
             <button class="btn btn-success browse-btn-fix" 
-                style="margin-top: 20px;" type="submit" >Submit</button>
+                    style="margin-top: 20px;" type="submit" >Submit</button>
             <hr>
         </div>
-    </form>
-</div>
+    </div>
+</form>
 
-<div class="row" id="peopleList">
+<div class="row">
     <div class="col-sm-12">
         <h4>Existing Share Classes</h4>
     </div>
-    {% for sc in share_classes %}
-    <div class="col-sm-4" style="margin-top:20px;">
-        {{sc}}
+</div>
+<div class="row">
+    <div class="row itemListContainer" id="peopleList">
+        {% for sc in share_classes %}
+        <div class="row listItem">
+            <div class="col-sm-4 itemInList" >
+                {{sc}}
 
+            </div>
+                <div class="col-sm-8 buttonsInList"><a href="/shareClass?delete={{sc.pk}}"
+                                                       onclick="return confirm('Are you sure? All transfers using this class will be deleted')" class="btn btn-danger" >Delete</a></div>
+        </div>
+        {% endfor %}
     </div>
-    <div class="col-sm-8"><a href="/shareClass?delete={{sc.pk}}"
-           onclick="return confirm('Are you sure? All transfers using this class will be deleted')" class="btn btn-danger" style="margin-top: 20px;">Delete</a></div>
-    {% endfor %}
 </div>
 <div class="row">
     <div class="col-sm-3">
         {% if page > 1 %}
-        <a href="/entities/?page={{ page|changeValue:'-1'}}" class="btn btn-primary"><</a>
+        <a href="/shareClass/?page={{ page|changeValue:'-1'}}" style="margin-top: 20px;"
+                                                               class="btn btn-primary"><</a>
+        {% else %}
+        <a href="/shareClass/?page={{ page|changeValue:'-1'}}" 
+           class="btn btn-primary disabled" style="margin-top: 20px;"><</a>
         {% endif %}
-    </div> 
-    <div class="col-sm-6">
-
-    </div>
-    <div class="col-sm-3">
         {% if hasNextPage == True %}
-        <a href="/entities/?page={{ page|changeValue:'1'}}" class="btn btn-primary">></a>
+        <a href="/shareClass/?page={{ page|changeValue:'1'}}" style="margin-top: 20px;"
+                                                              class="btn btn-primary">></a>
+        {% else %}
+        <a href="/shareClass/?page={{ page|changeValue:'1'}}" style="margin-top: 20px;"
+                                                              class="btn btn-primary disabled">></a>
         {% endif %}
     </div> 
 </div>
 {% endblock main %}
 {% block scripts %}
-        <script type = "text/javascript">
-            $(".close").click(function(){
-                $(".alert").hide();
-                $(".alert-button").hide();
-            });
-        </script>
+<script type = "text/javascript">
+    $(".close").click(function(){
+        $(".alert").hide();
+        $(".alert-button").hide();
+    });
+</script>
 {% endblock scripts %}

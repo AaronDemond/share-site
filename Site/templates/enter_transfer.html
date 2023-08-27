@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load extras %}
 {% block main %}
-
+<!--
 <style type="text/css">
 div#participantsFromHolder>div:nth-of-type(odd) {
     background: #f8f9fa;
@@ -9,7 +9,9 @@ div#participantsFromHolder>div:nth-of-type(odd) {
 div#participantsToHolder>div:nth-of-type(odd) {
     background: #f8f9fa;
 } 
+
 </style>
+-->
 <h1 style="text-align: center;">{{company}}</h1>
 <h3 style="text-align: center;">Enter a Transfer</h3>
 
@@ -20,30 +22,29 @@ div#participantsToHolder>div:nth-of-type(odd) {
     </div>
 
 </div>
-<div class="row">
-    <form id="form" method="POST">
+<form id="form" method="POST">
 
         {% csrf_token %}
         <hr>
         <h3>Select where the shares are originating</h3>
-        <div id="fromHolder">
+        <div id="fromHolder" class="row">
             <div class="input-group" style="padding-bottom: 20px;">
                 <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
                 <span class="input-group-btn">
-                    <button class="btn btn-success" onclick="search('fromHolder','From',1)" type="button">Go!</button>
+                    <button class="btn btn-success" onclick="search('fromHolder','From',1)" type="button" id="fromSearch" >Go!</button>
                 </span>
             </div>
-            <div id="participantsFromHolder" class="row">
+            <div id="participantsFromHolder" class="row itemListContainer">
             {% for participant in participants %}
-                    <div class="row">
-                        <div class="col-sm-3">
+                    <div class="row listItem">
+                        <div class="col-sm-3 itemInList" >
                             {% if participant.LinkedPerson %}
                                 {{participant.LinkedPerson}}
                             {% else %}
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-9" style="padding-bottom: 20px">
+                        <div class="col-sm-9 buttonsInList" style="padding-top: 10px; padding-bottom: 10px;">
                             {% if participant.LinkedPerson %}
                                 <button class="btn btn-primary" 
                                         onclick="selectFrom({{participant.LinkedPerson.id}},
@@ -61,43 +62,41 @@ div#participantsToHolder>div:nth-of-type(odd) {
                 <div class="col-sm-3">
                     {% if page > 1 %}
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="search('fromHolder','From',{{page|changeValue:'-1'}})" type="button"><</button>
-<button class="btn btn-primary" style="margin-top: 20px;" 
-                        onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
-                    {% endif %}
-                </div> 
-                <div class="col-sm-6">
+                    {% else %}
 
-                </div>
-                <div class="col-sm-3">
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button class="btn btn-primary disabled" style="margin-top: 20px;" onclick="search('fromHolder','From',{{page|changeValue:'-1'}})" type="button"><</button>
+                    {% endif %}
+
                     {% if hasNextPage == True %}
                     <button class="btn btn-primary" style="margin-top: 20px;" 
                         onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
+                    {% else %}
+                    <button class="btn btn-primary disabled" style="margin-top: 20px;" 
+                        onclick="search('fromHolder','From',{{page|changeValue:'1'}})" type="button">></button>
                     {% endif %}
-                    </div>
                 </div> 
             </div>
         </div>
-        <div class="row">
+
             <h3 id="q2title" style="display: none">Select where the shares are going</h3>
-            <div id="toHolder" style="display: none">
+            <div id="toHolder" class="row" style="display: none">
                 <div class="input-group" style="padding-bottom: 20px;">
                     <input type="text" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
                     <span class="input-group-btn">
-                        <button class="btn btn-success" onclick="search('toHolder','To',1)" type="button">Go!</button>
+                        <button class="btn btn-success" id="toSearch" onclick="search('toHolder','To',1)" type="button">Go!</button>
                     </span>
                 </div>
-                <div class="row" id="participantsToHolder">
+                <div class="row itemListContainer" id="participantsToHolder">
                 {% for participant in participants %}
-                    <div class="row">
-                        <div class="col-sm-3">
+                    <div class="row listItem">
+                        <div class="col-sm-3 itemInList">
                             {% if participant.LinkedPerson %}
                                 {{participant.LinkedPerson}}
                             {% else %}
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-9" style="padding-bottom: 20px;">
+                        <div class="col-sm-9 buttonsInList" style="padding-top: 10px; padding-bottom: 10px;">
                             {% if participant.LinkedPerson %}
                                 <button class="btn btn-primary"  
                                         onclick="selectTo({{participant.LinkedPerson.id}},
@@ -116,43 +115,37 @@ div#participantsToHolder>div:nth-of-type(odd) {
                 <div class="row">
                     <div class="col-sm-3">
                         {% if page > 1 %}
-
-                        <button class="btn btn-primary" onclick="search('toHolder','To',{{page|changeValue:'-1'}})" type="button"><</button>
+                        <button class="btn btn-primary" style="margin-top: 20px;" onclick="search('toHolder','To',{{page|changeValue:'-1'}})" type="button"><</button>
+                        {% else %}
+                        <button class="btn btn-primary disabled" style="margin-top: 20px;" onclick="search('toHolder','To',{{page|changeValue:'-1'}})" type="button"><</button>
                         {% endif %}
-                    </div> 
-                    <div class="col-sm-6">
-
-                    </div>
-                    <div class="col-sm-3">
                         {% if hasNextPage == True %}
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button class="btn btn-primary" onclick="search('toHolder','To',{{page|changeValue:'1'}})" type="button">></button>
-                        </div>
+                            <button class="btn btn-primary"style="margin-top: 20px;" onclick="search('toHolder','To',{{page|changeValue:'1'}})" type="button">></button>
+                        {% else %}
+                            <button class="btn btn-primary disabled"style="margin-top: 20px;" onclick="search('toHolder','To',{{page|changeValue:'1'}})" type="button">></button>
                         {% endif %}
                     </div> 
                 </div>
             </div>
-
-        </div>
         <div class="row">
 
-            <div class="col-sm-4" style="padding-top: 20px;">
-
-                <div class="input-group">
-                    <span class="input-group-text">Date</span> 
-                    <input type="date" class="form-control" value="" name="date" id=""/> 
-                    <input type="time" class="form-control" value="" name="time" 
-                        step="1" id=""/> 
+                <div class="col-sm-4" style="padding-top: 20px;">
+                
+                    <div class="input-group">
+                        <span class="input-group-text">Date</span> 
+                        <input type="date" class="form-control" value="" name="date" id=""/> 
+                        <input type="time" class="form-control" value="" name="time" 
+                            step="1" id=""/> 
+                    </div>
                 </div>
-            </div>
-            <div class="col-sm-8">
-
-                <div class="input-group mb-3" style="padding-top: 20px;">
-                    <span class="input-group-text">Ammount</span>
-                    <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
-
+                <div class="col-sm-8">
+                
+                    <div class="input-group mb-3" style="padding-top: 20px;">
+                        <span class="input-group-text">Ammount</span>
+                        <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
+                
+                    </div>
                 </div>
-            </div>
 
 
         </div>
@@ -184,17 +177,38 @@ div#participantsToHolder>div:nth-of-type(odd) {
         <div class="row">
             <div class="col-sm-12">
 
-                <button class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
+                <button class="btn btn-success browse-btn-fix" type="submit" id="submitForm" >Submit</button>
             </div>
 
-        </div>
     </form>
-</div>
+        </div>
 {% endblock main %}
 
 {% block scripts %}
 <script type="text/javascript">
+    var doc = document;
+    function enterSearchFrom(event){
+        if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("fromSearch").click();
+        }
+    }
+    function enterSearchTo(event){
+        if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("toSearch").click();
+        }
+    }
+    function submitForm(event){
+        if (event.key === "Enter") {
+            document.getElementById("submitForm").click();
+        }
+    }
+    doc.addEventListener("keypress", enterSearchFrom);
     function selectFrom(participant_id, participant_name, type){
+        document.removeEventListener("keypress", enterSearchFrom);
+        doc.addEventListener("keypress", enterSearchTo);
+        console.log("TEST")
         let fromHolderText = `<input type="hidden" name="from${type}",
                 value="${participant_id}"> <p> ${participant_name} </p>`;
         $("#fromHolder").html(fromHolderText);
@@ -203,9 +217,11 @@ div#participantsToHolder>div:nth-of-type(odd) {
 
     }
 function selectTo(participant_id, participant_name, type){
-    let fromHolderText = `<input type="hidden" name="to${type}",
+    document.removeEventListener("keypress", enterSearchTo);
+    doc.addEventListener("keypress", submitForm);
+    let toHolderText = `<input type="hidden" name="to${type}",
                 value="${participant_id}"> <p> ${participant_name} </p>`;
-    $("#toHolder").html(fromHolderText);
+    $("#toHolder").html(toHolderText);
 
 }
 

@@ -1,0 +1,18 @@
+div.itemListContainer>div:nth-of-type(odd) {
+    background: #f8f9fa;
+} 
+
+.itemInList {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.buttonsInList {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.listItem {
+    margin-left: 10px;
+    padding-left: 0px;
+}
