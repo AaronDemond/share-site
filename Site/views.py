@@ -4,7 +4,7 @@ from django.db.models import Q
 import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
-from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole
+from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole, ShareCertificate
 from django.urls import resolve
 
 PAGELENGTH = 3
@@ -210,7 +210,7 @@ def issue_shares(request, company_id=None):
         
 
         if share_class and ammount and date and time:
-            if int(ammount) < 0:
+            if float(ammount) < 0:
                 context["error_type"] = "danger"
                 context["alert"] = "ERROR! Cannot issue negative share"
                 return render(request, 'issue_shares.html', context)
@@ -478,7 +478,6 @@ def enter_transfer(request, company_id=None):
         fromPerson = request.POST.get("fromPerson")
         toPerson = request.POST.get("toPerson")
         toCompany = request.POST.get("toCompany")
-        print(request.POST)
         if fromCompany and toCompany:
             if fromCompany == toCompany:
                 context['error_type'] = "danger"
@@ -521,7 +520,7 @@ def enter_transfer(request, company_id=None):
                 newInserted = False
                 for t in transfers:
                     if t.Date > date and newInserted == False:
-                        total -= int(ammount)
+                        total -= float(ammount)
                         newInserted = True
                         if total < 0:
                             return False
@@ -532,7 +531,7 @@ def enter_transfer(request, company_id=None):
                     if total < 0:
                         return False
                 if newInserted == False:
-                    total -= int(ammount)
+                    total -= float(ammount)
                     if total < 0:
                         return False
                 return True
@@ -553,7 +552,7 @@ def enter_transfer(request, company_id=None):
                     newInserted = False
                     for t in all_tran:
                         if t.Date > date and newInserted == False:
-                            total -= int(ammount)
+                            total -= float(ammount)
                             newInserted = True
                             if total < 0:
                                 return False
@@ -564,7 +563,7 @@ def enter_transfer(request, company_id=None):
                         if total < 0:
                             return False
                     if newInserted == False:
-                        total -= int(ammount)
+                        total -= float(ammount)
                         if total < 0:
                             return False
                     return True
@@ -576,7 +575,7 @@ def enter_transfer(request, company_id=None):
                     newInserted = False
                     for t in transfers:
                         if t.Date > date and newInserted == False:
-                            total -= int(ammount)
+                            total -= float(ammount)
                             newInserted = True
                             if total < 0:
                                 return False
@@ -587,7 +586,7 @@ def enter_transfer(request, company_id=None):
                         if total < 0:
                             return False
                     if newInserted == False:
-                        total -= int(ammount)
+                        total -= float(ammount)
                         if total < 0:
                             return False
                     return True
@@ -600,6 +599,8 @@ def enter_transfer(request, company_id=None):
             transfer.save()
             context['error_type'] = "success"
             context['alert'] = "Transver Saved"
+            transfer = Transfer.objects.all().latest("pk")
+            create_certificates(transfer)
         else:
             context['error_type'] = "danger"
             context['alert'] = "Not enough shares!"
@@ -607,6 +608,114 @@ def enter_transfer(request, company_id=None):
 
 
     return render(request, 'enter_transfer.html', context)
+
+def share_certificate(request, company_id = None):
+    return HttpResponse("TEST")
+
+def create_certificates(transfer):
+    if transfer.Company != transfer.ToCompany:
+        certificateTo = ShareCertificate(ReferenceCompany=transfer.Company,
+                Ammount = transfer.Ammount, ShareClass = transfer.ShareClass,
+                Date = transfer.Date, Cancelled = False, FromRemainder = False,
+                Transfer = transfer, CertificateNumber=None)
+        certificateTo = updateCertNos(certificateTo, transfer)
+
+        if transfer.FromPerson:
+            certificateTo.FromPerson = transfer.FromPerson
+        if transfer.FromCompany:
+            certificateTo.FromCompany = transfer.FromCompany
+        if transfer.ToPerson:
+            certificateTo.ToPerson = transfer.ToPerson
+        if transfer.ToCompany:
+            certificateTo.ToCompany = transfer.ToCompany
+
+        certificateTo.save()
+    fromTreasury = False 
+    if transfer.FromPerson:
+        certificates = ShareCertificate.objects.filter(ToPerson = transfer.FromPerson,
+                ShareClass = transfer.ShareClass, ReferenceCompany = transfer.Company,
+                Date__lt = transfer.Date).order_by("-Date")
+
+    if transfer.FromCompany:
+        certificates = ShareCertificate.objects.filter(ToCompany = transfer.FromCompany,
+                ShareClass = transfer.ShareClass, ReferenceCompany = transfer.Company,
+                Date__lt = transfer.Date).order_by("-Date")
+        if transfer.FromCompany == transfer.Company:
+            fromTreasury = True
+
+    if fromTreasury == False:
+        runningTotal = float(transfer.Ammount)
+        for c in certificates:
+            c.Cancelled = True
+            c.save()
+            if runningTotal >= c.Ammount:
+                runningTotal -= c.Ammount
+            elif runningTotal == 0:
+                break
+            else:
+                newTotal = c.Ammount - runningTotal
+                newDate = transfer.Date + datetime.timedelta(0,5)
+                certificateFrom = ShareCertificate(ReferenceCompany=transfer.Company,
+                    Ammount = newTotal, ShareClass = transfer.ShareClass,
+                    Date = newDate, Cancelled = False, FromRemainder = True, 
+                    Transfer = transfer, CertificateNumber=None)
+                if transfer.FromPerson:
+                    certificateFrom.ToPerson = transfer.FromPerson
+                elif transfer.FromCompany:
+                    certificateFrom.ToCompany = transfer.FromCompany
+
+                certificateFrom = updateCertNos(certificateFrom, transfer)
+                certificateFrom.save()
+                break
+
+#Updates cert numbers and returns cert
+def updateCertNos(certificate, transfer):
+    certificates = ShareCertificate.objects.filter(ReferenceCompany = transfer.Company,
+            ShareClass = transfer.ShareClass).order_by("Date")
+    if len(certificates) > 0:
+        for index, c in enumerate(certificates):
+            if certificate.Date < c.Date:
+                certificate.CertificateNumber = c.CertificateNumber
+                toUpdateCertNo = certificates[index:len(certificates)]
+                for c in toUpdateCertNo:
+                    shareClass = transfer.ShareClass
+                    number = c.CertificateNumber
+                    n = getNextCertificateNumber(shareClass, number=number)
+                    c.CertificateNumber = n
+                    c.save()
+                break
+    else:
+        n = getNextCertificateNumber(certificate.ShareClass, first=True)
+        certificate.CertificateNumber = n
+
+    if certificate.CertificateNumber is None:
+        previous = certificates.latest("Date")
+        previousNo = previous.CertificateNumber
+        n = getNextCertificateNumber(certificate.ShareClass, previousNo)
+        certificate.CertificateNumber = n
+
+    return certificate
+
+#given a cert no and share class returns the next number
+def getNextCertificateNumber(shareClass, number=False, first=False):
+    if first:
+        if shareClass.Name == "Common":
+            return "1"
+        else:
+            split = shareClass.Name.split()
+            s = split[2][0] + " - " + split[1] + " - " +str(1)
+            return str(s)
+    else:
+        if shareClass.Name == "Common":
+            return str(int(number) + 1)
+        else:
+            split = shareClass.Name.split()
+            n = str(int(number.split()[-1]) + 1)
+            s = split[2][0] + " - " + split[1] + " - " + n
+            return str(s)
+
+
+
 
 
 
@@ -746,6 +855,7 @@ def shareholders_ledger(request, company_id=None):
                 tt['total'] -= t.Ammount
                 tt['transferred'] = t.Ammount
             tt['transfer']=t
+            tt['date'] = t.Date.date()
             context['t'].append(tt)
 
         return render(request, 'ledger.html', context)

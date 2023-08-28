@@ -17,6 +17,8 @@ urlpatterns = [
         path('createPerson/', views.create_person, name="create_person"),
 
         path("entities/", views.people, name="entities"),
+        path("certificates/", views.share_certificate, name="share_certificate"),
+        path("certificates/<int:company_id>/", views.share_certificate, name="share_certificate_single"),
         path("shareClass/", views.share_class, name="share_class"),
         path("managerRole/", views.manager_role, name="manager_role"),
         path('link/<int:_id>/', views.link, name="link"),

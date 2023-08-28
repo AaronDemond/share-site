@@ -115,7 +115,7 @@ class Transfer(models.Model):
             related_name = "ToPersonTransfer")
     Company = models.ForeignKey(Company, on_delete = models.CASCADE, related_name = "Transfer")
     Date = models.DateTimeField()
-    Ammount = models.IntegerField()
+    Ammount = models.FloatField()
     ShareClass = models.ForeignKey(ShareClass, on_delete =models.CASCADE)
     Price = models.FloatField()
 
@@ -144,6 +144,38 @@ class Transfer(models.Model):
         return str(self.Ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name
 
 
+class ShareCertificate(models.Model):
+    ReferenceCompany = models.ForeignKey(Company, on_delete=models.CASCADE,
+            related_name = "ShareCertificate")
+    Ammount = models.FloatField()
+    ShareClass = models.ForeignKey(ShareClass, on_delete=models.CASCADE,
+            related_name="ShareCertificate")
+    Date = models.DateTimeField()
+    Cancelled = models.BooleanField()
+    FromRemainder = models.BooleanField()
+    FromPerson = models.ForeignKey(Person, null=True, blank=True, on_delete=models.CASCADE,
+            related_name = "FromPersonShareCertificate")
+    FromCompany = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "FromCompanyShareCertificate")
+    ToPerson = models.ForeignKey(Person, null=True, blank=True, on_delete=models.CASCADE,
+            related_name = "ToPersonShareCertificate")
+    ToCompany = models.ForeignKey(Company, null=True, blank=True, on_delete =models.CASCADE,
+            related_name = "ToCompanyShareCertificate")
+    CertificateNumber = models.CharField(max_length=200, null=True, blank=True)
+    Transfer = models.ForeignKey(Transfer, null=True, blank=True, on_delete=models.CASCADE,
+            related_name = "ShareCertificate")
+    class Meta:
+        verbose_name_plural = "ShareCertificates"
+
+    def __str__(self):
+        if self.FromRemainder:
+            _from = "remainder"
+        else:
+            _from = self.FromPerson or self.FromCompany
+        _to = self.ToPerson or self.ToCompany
+
+        return str(self.Ammount) + " " + str(self.ShareClass) + " shares from " \
+                +str(_from) + " to " + str(_to)
     
 
 
