@@ -320,7 +320,8 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
             shareCerts = ShareCertificate.objects.filter(ShareClass=shareClass,
                     ReferenceCompany = company)
             shareCerts.delete()
-            transfers = Transfer.objects.filter(ShareClass=shareClass, Company=company)
+            transfers = Transfer.objects.filter(ShareClass=shareClass, 
+                    Company=company).order_by("Date")
             for t in transfers:
                 create_certificates(t)
 
@@ -1013,15 +1014,15 @@ def shareholders_ledger(request, company_id=None):
             p = Person.objects.get(pk=p)
             context['owner'] = p
             transfers = Transfer.objects.filter(Q(FromPerson \
-                = p, ShareClass=shareClass) | Q(ToPerson = p, \
-                ShareClass=shareClass)).order_by('Date')
+                = p, ShareClass=shareClass, Company=company) | Q(ToPerson = p, \
+                ShareClass=shareClass, Company=company)).order_by('Date')
         if ledgerType == "company":
             c = request.GET.get("id")
             c = Company.objects.get(pk=c)
             context['owner'] = c
             transfers = Transfer.objects.filter(Q(FromCompany \
-                = c, ShareClass=shareClass) | Q(ToCompany = c, \
-                ShareClass=shareClass)).order_by('Date')
+                = c, ShareClass=shareClass, Company=company) | Q(ToCompany = c, \
+                ShareClass=shareClass, Company=company)).order_by('Date')
         context['t']=[]
         total = 0
         for t in transfers:
@@ -1057,10 +1058,13 @@ def shareholders_ledger(request, company_id=None):
             for c in t.ShareCertificate.all():
                 if c.FromRemainder == True:
                     cert = c
+                    break
                 elif c.ToPerson == context['owner']:
                     cert = c
+                    break
                 elif c.ToCompany == context['owner']:
                     cert = c
+                    break
             tt['cert'] = cert
             context['t'].append(tt)
 
