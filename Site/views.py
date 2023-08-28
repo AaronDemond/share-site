@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+import functools
 import pytz
 from django.db.models import Q
 import datetime
@@ -7,7 +8,7 @@ from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_
 from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole, ShareCertificate
 from django.urls import resolve
 
-PAGELENGTH = 3
+PAGELENGTH = 5
 
 def index(request, **kwargs):
 
@@ -62,7 +63,7 @@ def people(request, context={}):
         ql.append([p,"person"])
     for c in companies:
         ql.append([c, "company"])
-    ql.sort(key=lambda x: x[0].Modified, reverse=True)
+    ql.sort(key=lambda x: x[0].Name)
 
     if request.GET.get("page"):
         page = int(request.GET.get("page"))
@@ -281,50 +282,6 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
     context["transfers"] = _transfers
     context["company"] = company
     tt=[]
-    if transfer_id:
-        transfer = Transfer.objects.get(pk=transfer_id)
-        context["transfer"] = transfer
-        context["date"] = transfer.Date.date()
-        context["from"] = transfer.FromCompany or transfer.FromPerson
-        context["to"] = transfer.ToPerson or transfer.ToCompany
-        auth_shares = AuthorizedShares.objects.filter(Company=company)
-        auth_types = set([x.ShareClass for x in auth_shares])
-        auth_types_value = {}
-
-        #Returns a dict of type {(ShareClass,Value):Ammount)}
-        for a in auth_types:
-            auth_types_value[a] = set()
-        for a in auth_shares:
-            auth_types_value[a.ShareClass].add(a.Value)
-        auth_totals = {}
-        print(auth_types_value)
-        for a in auth_types:
-            for value in auth_types_value[a]:
-                auth_totals[(a,value)] = 0
-                for auth in auth_shares:
-                    if auth.ShareClass == a and auth.Value == value:
-                        auth_totals[(a,value)] += auth.Ammount
-
-        #Removes bought back shares from the dict created above
-        for auth_type in auth_types:
-            all_tran = Transfer.objects.filter(Company=company,
-                    ShareClass=auth_type,ToCompany=company)
-            all_auth = AuthorizedShares.objects.filter(Company=company,
-                    ShareClass=auth_type)
-            for tran in all_tran:
-                for index, auth in enumerate(all_auth):
-                    if auth.Date > tran.Date:
-                        toDecrease = all_auth[index-1]
-                        auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
-                        break
-                    if index == len(all_auth) - 1:
-                        toDecrease = all_auth[index]
-                        auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
-                        break
-
-        context["no_of_auth_types"] = len(auth_totals)
-        context["auth_totals"] = auth_totals 
-        return render(request, 'certificate.html', context)
     if request.GET.get("query"):
         query = request.GET.get("query").lower()
         for t in _transfers:
@@ -355,9 +312,18 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
         try:
             selected = request.POST.getlist("confirm")
             to_delete = Transfer.objects.filter(pk__in=selected)
+            shareClass = to_delete[0].ShareClass
+            company = to_delete[0].Company
+            to_delete.delete()
             context['error_type'] = "success"
             context['alert'] = "Transfers deleted"
-            to_delete.delete()
+            shareCerts = ShareCertificate.objects.filter(ShareClass=shareClass,
+                    ReferenceCompany = company)
+            shareCerts.delete()
+            transfers = Transfer.objects.filter(ShareClass=shareClass, Company=company)
+            for t in transfers:
+                create_certificates(t)
+
         except Exception as e:
             context['error_type'] = "danger"
             context['alert'] = "Problem deleting transfers: " + str(e)
@@ -404,7 +370,6 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
         return render(request, 'transfers_confirm.html', context)
 
     return render(request, 'transfers.html', context)
-import functools
 def enter_transfer(request, company_id=None):
     company = Company.objects.get(pk=int(company_id))
     participants = company.Participant.all()
@@ -412,6 +377,7 @@ def enter_transfer(request, company_id=None):
     context = {}
     context['company']=company
     context['share_classes']=share_classes
+    '''
     def compare(item1, item2):
         item1 = item1.LinkedPerson or item1.LinkedCompany
         item2 = item2.LinkedPerson or item2.LinkedCompany
@@ -421,6 +387,18 @@ def enter_transfer(request, company_id=None):
             return 1
         else:
             return 0
+    '''
+    def compare(item1, item2):
+        item1 = item1.LinkedPerson or item1.LinkedCompany
+        item2 = item2.LinkedPerson or item2.LinkedCompany
+
+        if item1.Name < item2.Name:
+            return 1
+        elif item1.Name > item2.Name:
+            return -1
+        else:
+            return 0
+
     participants = list(participants)
     participants.sort(key=functools.cmp_to_key(compare), reverse=True)
     context['participants']=participants
@@ -600,7 +578,13 @@ def enter_transfer(request, company_id=None):
             context['error_type'] = "success"
             context['alert'] = "Transver Saved"
             transfer = Transfer.objects.all().latest("pk")
-            create_certificates(transfer)
+            transfers = Transfer.objects.filter(ShareClass=shareClass,
+                    Company=company).order_by("Date")
+            certs = ShareCertificate.objects.filter(ShareClass=shareClass, 
+                    ReferenceCompany = company)
+            certs.delete()
+            for t in transfers:
+                create_certificates(t)
         else:
             context['error_type'] = "danger"
             context['alert'] = "Not enough shares!"
@@ -610,7 +594,206 @@ def enter_transfer(request, company_id=None):
     return render(request, 'enter_transfer.html', context)
 
 def share_certificate(request, company_id = None):
-    return HttpResponse("TEST")
+    company = Company.objects.get(pk=company_id)
+    participants = list(company.Participant.all())
+    transfers = Transfer.objects.filter(Company=company)
+    toFrom = set()
+    context = {'company' : company}
+
+    if request.GET.get("certId"):
+        cert = ShareCertificate.objects.get(pk=request.GET.get("certId"))
+        to = cert.ToPerson or cert.ToCompany
+        _from = cert.FromPerson or cert.FromCompany
+        date = cert.Date.date()
+        context = {"cert" : cert, 'to': to, 'date': date, 'from': _from}
+        context["company"] = company
+        context["type"] = request.GET.get("type")
+        context["id"] = request.GET.get("id")
+        context["shareClassId"] = request.GET.get("shareClassId")
+
+        auth_shares = AuthorizedShares.objects.filter(Company=company)
+        auth_types = set([x.ShareClass for x in auth_shares])
+        auth_types_value = {}
+
+        #Returns a dict of type {(ShareClass,Value):Ammount)}
+        for a in auth_types:
+            auth_types_value[a] = set()
+        for a in auth_shares:
+            auth_types_value[a.ShareClass].add(a.Value)
+        auth_totals = {}
+        print(auth_types_value)
+        for a in auth_types:
+            for value in auth_types_value[a]:
+                auth_totals[(a,value)] = 0
+                for auth in auth_shares:
+                    if auth.ShareClass == a and auth.Value == value:
+                        auth_totals[(a,value)] += auth.Ammount
+
+        #Removes bought back shares from the dict created above
+        for auth_type in auth_types:
+            all_tran = Transfer.objects.filter(Company=company,
+                    ShareClass=auth_type,ToCompany=company)
+            all_auth = AuthorizedShares.objects.filter(Company=company,
+                    ShareClass=auth_type)
+            for tran in all_tran:
+                for index, auth in enumerate(all_auth):
+                    if auth.Date > tran.Date:
+                        toDecrease = all_auth[index-1]
+                        auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
+                        break
+                    if index == len(all_auth) - 1:
+                        toDecrease = all_auth[index]
+                        auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
+                        break
+
+        context["no_of_auth_types"] = len(auth_totals)
+        context["auth_totals"] = auth_totals 
+        return render(request, "certificate.html", context)
+
+
+
+    #Remove participants with no share certificates
+    for t in transfers:
+        toFrom.add(t.FromCompany or t.FromPerson)
+        toFrom.add(t.ToCompany or t.ToPerson)
+    toFrom.remove(company)
+    toRemove = set()
+    for p in participants:
+        pp = p.LinkedPerson or p.LinkedCompany
+        if pp not in toFrom:
+            toRemove.add(p)
+    for p in toRemove:
+        participants.remove(p)
+
+    def compare3(item1, item2):
+        item1 = item1.LinkedCompany or item1.LinkedPerson
+        item2 = item2.LinkedCompany or item2.LinkedPerson
+
+        if item1.Name < item2.Name:
+            return 1
+        elif item1.Name > item2.Name:
+            return -1
+        else:
+            return 0
+
+    participants.sort(key=functools.cmp_to_key(compare3), reverse = True)
+    context["participants"] = participants
+    
+    #id = owner.pk
+    if request.GET.get("id"):
+        _type = request.GET.get("type")
+        shareClasses = set()
+        if _type == "company":
+            owner = Company.objects.get(pk=request.GET.get("id"))
+            certs = ShareCertificate.objects.filter(ToCompany=owner, ReferenceCompany=company)
+        if _type == "person":
+            owner = Person.objects.get(pk=request.GET.get("id"))
+            certs = ShareCertificate.objects.filter(ToPerson=owner, ReferenceCompany=company)
+        for c in certs:
+            shareClasses.add(c.ShareClass)
+        if request.GET.get("classSearch"):
+            query = request.GET.get("query").lower()
+            context["query"] = query
+            toRemove = []
+            for sc in shareClasses:
+                if query not in sc.__str__().lower():
+                    toRemove.append(sc)
+            for sc in toRemove:
+                shareClasses.remove(sc)
+
+        shareClasses = list(shareClasses)
+        shareClasses.sort(key=lambda x: x.Name)
+        context['owner'] = owner
+        context['shareClasses'] = shareClasses
+        context['type'] = _type
+        context['id'] = owner.pk
+
+        if request.GET.get("page"):
+            page = int(request.GET.get("page"))
+        else:
+            page = 1
+        start = (page - 1) * PAGELENGTH
+        end = start + PAGELENGTH
+        if end < len(context['shareClasses']):
+            context["hasNextPage"] = True
+        else:
+            context["hasNextPage"] = False
+        context['shareClasses'] = context['shareClasses'][start:end]
+        context['page'] = page
+
+
+
+
+        if request.GET.get("shareClassId"):
+            print("HIT")
+            shareClass = ShareClass.objects.get(pk=request.GET.get("shareClassId"))
+            if _type == "company":
+                owner = Company.objects.get(pk=request.GET.get("id"))
+                certs = ShareCertificate.objects.filter(ToCompany=owner, ShareClass=shareClass,
+                        ReferenceCompany=company)
+            if _type == "person":
+                owner = Person.objects.get(pk=request.GET.get("id"))
+                certs = ShareCertificate.objects.filter(ToPerson=owner, ShareClass=shareClass,
+                        ReferenceCompany=company)
+            certs = list(certs)
+            certs.sort(key = lambda x: x.pk, reverse=True)
+            if request.GET.get("query"):
+                query = request.GET.get("query").lower()
+                context["query"] = query
+                certs = list(certs)
+                to_remove = []
+                for c in certs:
+                    if query not in c.__str__().lower():
+                        to_remove.append(c)
+                for c in to_remove:
+                    certs.remove(c)
+
+            context["certs"] = certs
+            context["shareClassId"] = request.GET.get("shareClassId")
+
+            if request.GET.get("page"):
+                page = int(request.GET.get("page"))
+            else:
+                page = 1
+            start = (page - 1) * PAGELENGTH
+            end = start + PAGELENGTH
+            if end < len(context['certs']):
+                context["hasNextPage"] = True
+            else:
+                context["hasNextPage"] = False
+            context['certs'] = context['certs'][start:end]
+            context['page'] = page
+
+            return render(request, "certificate_list.html", context)
+        return render(request, 'entity_certificates.html', context)
+
+
+    #handle search query
+    if request.GET.get("query"):
+        filteredParticipants = []
+        q = request.GET.get("query")
+        for p in participants:
+            name = p.LinkedPerson.Name.lower() or p.LinkedCompany.Name.lower()
+            if q.lower() in name:
+                filteredParticipants.append(p)
+        context['participants'] = filteredParticipants
+        context['query'] = q
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+    if end < len(context['participants']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+    context['participants'] = context['participants'][start:end]
+    context['page'] = page
+
+
+    return render(request, 'certificates.html', context)
 
 def create_certificates(transfer):
     if transfer.Company != transfer.ToCompany:
@@ -634,21 +817,23 @@ def create_certificates(transfer):
     if transfer.FromPerson:
         certificates = ShareCertificate.objects.filter(ToPerson = transfer.FromPerson,
                 ShareClass = transfer.ShareClass, ReferenceCompany = transfer.Company,
-                Date__lt = transfer.Date).order_by("-Date")
+                Date__lt = transfer.Date, Cancelled=False).order_by("-Date")
 
     if transfer.FromCompany:
         certificates = ShareCertificate.objects.filter(ToCompany = transfer.FromCompany,
                 ShareClass = transfer.ShareClass, ReferenceCompany = transfer.Company,
-                Date__lt = transfer.Date).order_by("-Date")
+                Date__lt = transfer.Date, Cancelled=False).order_by("-Date")
         if transfer.FromCompany == transfer.Company:
             fromTreasury = True
-
+    print(certificates)
     if fromTreasury == False:
         runningTotal = float(transfer.Ammount)
         for c in certificates:
             c.Cancelled = True
             c.save()
-            if runningTotal >= c.Ammount:
+            if runningTotal == c.Ammount:
+                break
+            elif runningTotal > c.Ammount:
                 runningTotal -= c.Ammount
             elif runningTotal == 0:
                 break
@@ -770,7 +955,19 @@ def shareholders_ledger(request, company_id=None):
             mixed2.append({'type': 'company', 'entity': entry['company'],
                 'shareClass': shareClass})
 
-    mixed2.sort(key = lambda x: x['entity'].Modified, reverse = True)
+    def compare2(item1, item2):
+        item1 = item1['entity'].Name + item1['shareClass'].Name
+        item2 = item2['entity'].Name + item2['shareClass'].Name
+
+        if item1 < item2:
+            return 1
+        elif item1 > item2:
+            return -1
+        else:
+            return 0
+
+    mixed2.sort(key=functools.cmp_to_key(compare2), reverse = True)
+
     if request.GET.get('query'):
         search_string = request.GET.get('query')
         search_string = search_string.lower()
@@ -856,6 +1053,15 @@ def shareholders_ledger(request, company_id=None):
                 tt['transferred'] = t.Ammount
             tt['transfer']=t
             tt['date'] = t.Date.date()
+            cert=""
+            for c in t.ShareCertificate.all():
+                if c.FromRemainder == True:
+                    cert = c
+                elif c.ToPerson == context['owner']:
+                    cert = c
+                elif c.ToCompany == context['owner']:
+                    cert = c
+            tt['cert'] = cert
             context['t'].append(tt)
 
         return render(request, 'ledger.html', context)
@@ -868,7 +1074,7 @@ def management(request, company_id = None):
     participants = company.Participant.all()
     context['participants'] = participants
     context['company'] = company
-    managers = Manager.objects.filter(Company=company,EndDate__isnull=True)
+    managers = Manager.objects.filter(Company=company,EndDate__isnull=True).order_by("Person")
     context["managers"] = managers
     if request.GET.get("type") == "search":
         delete = request.GET.get("delete")
