@@ -654,10 +654,12 @@ def share_certificate(request, company_id = None):
 
 
     #Remove participants with no share certificates
+    print(transfers)
     for t in transfers:
         toFrom.add(t.FromCompany or t.FromPerson)
         toFrom.add(t.ToCompany or t.ToPerson)
-    toFrom.remove(company)
+    if company in toFrom:
+        toFrom.remove(company)
     toRemove = set()
     for p in participants:
         pp = p.LinkedPerson or p.LinkedCompany
