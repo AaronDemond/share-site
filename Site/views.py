@@ -153,22 +153,43 @@ def issue_shares(request, company_id=None):
     share_classes = ShareClass.objects.all()
     context = {'company' : company}
 
-    #Creates a dict of type {'Share Class' : [Ammount, Document]}
+    #Creates a dict of type {'Share Class' : [Ammount, Document, Issued, Remaining]}
     authorized = company.AuthorizedShares.all()
     share_classes_authorized = {}
+    shareClassSet = set()
     for t in authorized:
         if t.ShareClass not in share_classes_authorized.keys():
             share_classes_authorized[str(t.ShareClass)] = [0]
     for t in authorized:
         share_classes_authorized[str(t.ShareClass)][0] += t.Ammount
+        shareClassSet.add(t.ShareClass)
         if t.Document:
             share_classes_authorized[str(t.ShareClass)].append(t.Document)
+        else:
+            share_classes_authorized[str(t.ShareClass)].append(None)
     transfers = Transfer.objects.filter(Company=company, ToCompany=company)
     for t in transfers:
         if len(share_classes_authorized)>0:
             share_classes_authorized[str(t.ShareClass)][0] -= t.Ammount
+
+    transfers = Transfer.objects.filter(Company=company)
+    for t in authorized:
+        share_classes_authorized[str(t.ShareClass)].append(0)
+        share_classes_authorized[str(t.ShareClass)].append(0)
+
+    for t in transfers:
+        if t.FromCompany == company:
+            share_classes_authorized[str(t.ShareClass)][2] += t.Ammount
+
+    for shareClass in shareClassSet:
+        share_classes_authorized[str(shareClass)][3] = \
+                share_classes_authorized[str(shareClass)][0] - \
+                share_classes_authorized[str(shareClass)][2]
+
     context['share_classes'] = share_classes
     context['share_classes_authorized'] = share_classes_authorized
+    print(share_classes_authorized)
+
 
     #Either a share issue request or a file upload
     if request.method == "POST":

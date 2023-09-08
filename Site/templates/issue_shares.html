@@ -58,7 +58,7 @@ body {
 
                 <div class="col-lg-12">
                     {% for key, value in share_classes_authorized.items %}
-                    {{key}} : {{value.0}} <a href="{{value.1.url}}">{{value.1}}</a>
+                    {{key}} <b>Authorized:</b> {{value.0}} <b>Issued:</b> {{value.2}} <b>Remaining:</b> {{value.3}} {% if value.1 != None %} <a href="{{value.1.url}}">{{value.1}}</a>{% endif %} 
                     </br>
                     {% endfor %}
                     <button type="button" class="btn btn-primary"

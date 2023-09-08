@@ -1,5 +1,6 @@
 div.itemListContainer>div:nth-of-type(odd) {
-    background: #f8f9fa;
+    /* background: #f8f9fa; */
+    background: #e6e1e1;
 } 
 
 .itemInList {
