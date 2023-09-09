@@ -129,45 +129,49 @@ div#participantsToHolder>div:nth-of-type(odd) {
         <div class="row">
 
                 <div class="col-sm-4" style="padding-top: 20px;">
+                    <div class="input-group">
+                        <span class="input-group-text">Share class</span>
+                        <select name="shareClass" id="some_name" class="form-control">
+                            {% for share_class in share_classes %}
+                                <option value="{{share_class.id}}">
+                                {{share_class}}
+                                </option>
+                            {% endfor %}
+
+                        </select> 
+                    </div>
                 
+                    
+                </div>
+                <div class="col-sm-4" style="padding-top: 20px;">
                     <div class="input-group">
                         <span class="input-group-text">Date</span> 
                         <input type="date" class="form-control" value="" name="date" id=""/> 
                         <input type="time" class="form-control" value="" name="time" 
                             step="1" id=""/> 
                     </div>
-                </div>
-                <div class="col-sm-8">
                 
-                    <div class="input-group mb-3" style="padding-top: 20px;">
-                        <span class="input-group-text">Ammount</span>
-                        <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
-                
-                    </div>
+                    
                 </div>
 
 
         </div>
         <div class="row">
             <div class="col-sm-4">
-                <div class="input-group mb-3">
+                <div class="input-group mb-3" style="padding-top: 20px;">
+                        <span class="input-group-text">Ammount</span>
+                        <input type="text" class="form-control" placeholder= "Enter ammount" name="ammount" id=""/>
+                
+                    </div>
+                
+
+            </div>
+            <div class="col-sm-4">
+                
+                <div class="input-group mb-3" style="padding-top: 20px;">
                     <span class="input-group-text">Price</span>
                     <input type="text" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
 
-                </div>
-
-            </div>
-            <div class="col-sm-8">
-                <div class="input-group mb-3">
-                    <span class="input-group-text">Share class</span>
-                    <select name="shareClass" id="some_name" class="form-control">
-                        {% for share_class in share_classes %}
-                            <option value="{{share_class.id}}">
-                            {{share_class}}
-                            </option>
-                        {% endfor %}
-
-                    </select> 
                 </div>
 
             </div>

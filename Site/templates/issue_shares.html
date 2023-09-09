@@ -76,16 +76,10 @@ body {
                         {% csrf_token %}
                         <input type="hidden" name="append" id="append" value="True">
                         <div class="row">
-                            <div class="col-sm-6">
-                                <div class="input-group">
-                                    <input type="file" name="appendedFile" 
-                                        class="form-control" id="uploadedFile" value="">
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
+                            <div class="col-sm-4">
                                 <div class="input-group">
                                     <span class="input-group-text">Share Type</span>
-                                    <select class="custom-select" name = "ShareClass" 
+                                    <select class="form-control" name = "ShareClass" 
                                             id="inputGroupSelect01">
                                         <option selected>Choose...</option>
                                         {% for sc in share_classes %}
@@ -94,6 +88,13 @@ body {
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="file" name="appendedFile" 
+                                        class="form-control" id="uploadedFile" value="">
+                                </div>
+                            </div>
+                            
                             <div class="col-sm-6">
                                 <span class="input-group-btn">
                                     <button class="btn btn-success browse-btn-fix" 
@@ -114,6 +115,15 @@ body {
                             <div class="col-sm-6">
 
                                 <div class="input-group">
+
+                                    <span class="input-group-text">Share Type</span>
+                                    <select class="form-control" name = "ShareClass" 
+                                            id="inputGroupSelect01">
+                                        <option selected>Choose...</option>
+                                        {% for sc in share_classes %}
+                                        <option value="{{sc.id}}">{{sc}}</option>
+                                        {% endfor %}
+                                    </select>
                                     <span class="input-group-text">Date</span> 
                                     <input type="date" class="form-control" 
                                         value="" name="date" id=""/> 
@@ -124,18 +134,10 @@ body {
 
                             <div class="col-sm-6">
                                 <div class="input-group">
-                                    <span class="input-group-text">Ammount</span>
+                                    <span class="input-group-text">Quantity</span>
                                     <input type="text" class="form-control" 
                                         name = "Ammount" id = "search_string" value="" 
-                                        placeholder="Ammount">
-                                    <span class="input-group-text">Share Type</span>
-                                    <select class="custom-select" name = "ShareClass" 
-                                            id="inputGroupSelect01">
-                                        <option selected>Choose...</option>
-                                        {% for sc in share_classes %}
-                                        <option value="{{sc.id}}">{{sc}}</option>
-                                        {% endfor %}
-                                    </select>
+                                        placeholder="Quantity">
                                 </div>
                             </div>
                             <div class="col-sm-6" style="margin-top: 20px">
