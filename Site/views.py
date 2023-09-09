@@ -4,7 +4,7 @@ import pytz
 from django.db.models import Q
 import datetime
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
+from django.shortcuts import render, HttpResponse, HttpResponseRedirect 
 from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole, ShareCertificate
 from django.urls import resolve
 
