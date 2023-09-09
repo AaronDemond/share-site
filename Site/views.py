@@ -1380,7 +1380,7 @@ def registers(request, company_id=None):
                 r = ManagerRole.objects.get(pk=role)
                 _managers = Manager.objects.filter(Company=company, Title=r).order_by("StartDate")
                 if r.Title != "Secretary":
-                    plural_name = r.Title+"S"
+                    plural_name = r.Title+"s"
                 else:
                     plural_name = "Secretaries"
                 for m in _managers:
