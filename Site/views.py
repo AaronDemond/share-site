@@ -1377,9 +1377,27 @@ def registers(request, company_id=None):
         if request.GET.get("role"):
             role = request.GET.get("role")
             if role != "ShareHolder":
+                r = ManagerRole.objects.get(pk=role)
+                _managers = Manager.objects.filter(Company=company, Title=r).order_by("StartDate")
+                if r.Title != "Secretary":
+                    plural_name = r.Title+"S"
+                else:
+                    plural_name = "Secretaries"
+                for m in _managers:
+                    m.StartDate = m.StartDate.date()
+                    if m.EndDate is not None:
+                        m.EndDate = m.EndDate.date()
+                context['managers'] = _managers
+                context['plural'] = plural_name
+                context['title'] = r.Title
+                return render(request, "managementRegister.html", context)
+            if role != "ShareHolder":
                 context["role"] = ManagerRole.objects.get(pk=role).__str__() + "s" + " Register"
             if role == "Secretary":
                 context["role"] = "Secretaries Register"
+            
+            if role == "ShareHolder":
+                context["role"] = "Shareholder's Register"
 
             transfers = Transfer.objects.filter(Company=company).order_by("Date")
 

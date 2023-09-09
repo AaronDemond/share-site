@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class="row"id="linkHolder">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / <a href="/companies/{{company.id}}/registers/">Registers</a> / {{ role }}
+    </div>
+</div>
+<div class="row">
+   <div class="col-sm-12" style="text-align: center">
+       <h3>{{company}}</h3> 
+       <p>{{role}}</p>
+   </div> 
+</div>
+<div class="row">
+    <div class="col-sm-12"> 
+        <table class="table">
+            <tr>
+                <th class="tableHeader" style="text-align:center;">Name</th>
+                <th class="tableHeader" style="text-align:center;">Address</th>
+                <th class="tableHeader" style="text-align:center;">Date became a(n) {{title}}</th>
+                <th class="tableHeader" style="text-align:center">Date ceased to be a {{title}}</th>
+            </tr>
+            {% for manager in managers %}
+            <tr class="boldBorder boldBottom quarterWidth">
+                <td>{{manager.Person.Name}}</td>
+                <td>{{manager.Person.Address}}</td>
+                <td style="width: 20%; text-align: center;">{{manager.StartDate}}</td>
+                <td style="width: 20%; text-align: center;">{{manger.EndDate}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+<div class="row" id="controls">
+   <div class="col-sm-12">
+       <button type="button" onclick="printable()" class="btn btn-primary">Printable</button>
+   </div> 
+</div>
+{% endblock main %}
+
+{% block scripts %}
+<script type = "text/javascript">
+    function printable() {
+        $("#linkHolder").hide();
+        $("#controls").hide();
+    }
+</script>
+{% endblock scripts %}

@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% block main %}
 <div class="row"id="linkHolder">
@@ -17,17 +18,17 @@
             <col>
             <colgroup span="3"></colgroup>
             <tr>
-                <th scope="col" rowspan ="2" style="vertical-align: middle; text-align:center;">Date</th>
-                <th scope="col" rowspan="2" style="vertical-align: middle; text-align:center;">Name of Registered<br> Shareholder</th>
-                <th scope="col" rowspan="2" style="vertical-align: middle; text-align:center;">Address</th>
-                <th colspan="4" scope="colgroup" style="text-align: center;" >Shares Held</th>
+                <th class="tableHeader" scope="col" rowspan ="2" style="vertical-align: middle; text-align:center;">Date</th>
+                <th class="tableHeader" scope="col" rowspan="2" style="vertical-align: middle; text-align:center;">Name of Registered<br> Shareholder</th>
+                <th class="tableHeader" scope="col" rowspan="2" style="vertical-align: middle; text-align:center;">Address</th>
+                <th class="tableHeader" colspan="4" scope="colgroup" style="text-align: center;" >Shares Held</th>
             </tr>
             <tr>
-                <th scope="col" style="text-align:center">Number</th>
-                <th scope="col" style="text-align: center">Class</th>
+                <th class="tableHeader" scope="col" style="text-align:center">Number</th>
+                <th class="tableHeader" scope="col" style="text-align: center">Class</th>
             </tr>
             {% for key, value in entityShareClass.items %}
-            <tr>
+            <tr class="boldBorder boldBottom">
                 <td>{{value.1}}</td>
                 <td>{{key.0.Name}}</td>
                 <td>{{key.0.Address}}</td>

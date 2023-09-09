@@ -5,6 +5,36 @@ div.itemListContainer>div:nth-of-type(odd) {
 
 } 
 
+table {
+    width: 100%;
+}
+/*
+table.table tbody tr td,
+table.table thead tr th,
+table.table thead {
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+}
+*/
+tr.boldBottom:last-child > td { border-bottom: 2px solid black; }
+
+.boldBorder > td {
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+}
+/*
+.quarterWidth > td {
+    width: 25%;
+}
+*/
+.tableHeader {
+    border-left: 2px solid black;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+    border-top: 2px solid black;
+}
+
+
 .itemInList {
     padding-top: 15px;
     padding-bottom: 15px;
@@ -19,3 +49,4 @@ div.itemListContainer>div:nth-of-type(odd) {
     margin-left: 10px;
     padding-left: 0px;
 }
+
