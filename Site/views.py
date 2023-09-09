@@ -811,7 +811,7 @@ def share_certificate(request, company_id = None):
                     certs = ShareCertificate.objects.filter(ToPerson=owner, ShareClass=shareClass,
                             ReferenceCompany=company)
                 certs = list(certs)
-                certs.sort(key = lambda x: x.pk, reverse=True)
+                certs.sort(key = lambda x: x.Date, reverse=True)
                 if request.GET.get("query"):
                     query = request.GET.get("query").lower()
                     context["query"] = query

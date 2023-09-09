@@ -99,6 +99,26 @@ class SimpleTest(TestCase):
         
         #joes cons = 750 auth, 750 issued, tim = 750
 
+        date = "2023-02-01"
+        time = "16:0:0"
+        params = {"fromCompany" : joes_construction.pk, "toPerson" : tim.pk,
+                "date" : date, "time" : time, "shareClass" : class_a.pk,
+                "ammount" : 50, "price" : 10}
+        response = self.client.post("/companies/" + str(joes_construction.id) + \
+                "/enterTransfer/", params)
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+
+        #joes cons = 750 auth, 750 issued, tim = 750
+
+        date = "2023-01-01"
+        time = "16:0:0"
+        params = {"fromCompany" : joes_construction.pk, "toPerson" : tim.pk,
+                "date" : date, "time" : time, "shareClass" : class_a.pk,
+                "ammount" : 50, "price" : 10}
+        response = self.client.post("/companies/" + str(joes_construction.id) + \
+                "/enterTransfer/", params)
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+
 
 
     def test_create_manager(self):
