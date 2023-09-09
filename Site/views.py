@@ -225,7 +225,7 @@ def issue_shares(request, company_id=None):
     if request.user.is_authenticated:
         current_url = resolve(request.path_info).url_name
         company = Company.objects.get(pk=int(company_id))
-        share_classes = ShareClass.objects.all()
+        share_classes = ShareClass.objects.all().order_by("Name")
         context = {'company' : company}
 
         #Creates a dict of type {'Share Class' : [Ammount, Document, Issued, Remaining]}

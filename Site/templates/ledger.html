@@ -14,15 +14,15 @@
             <p>Shareholder's Ledger</p>
         </div> 
     </div>
-    <div class="row">
+    <div class="row" style="margin-bottom: 15px;">
         <div class="col-sm-3">
-            Name: 
+            <b>Name:</b>
         </div> 
         <div class="col-sm-9">
             {{owner}} 
         </div> 
         <div class="col-sm-3">
-            Address: 
+            <b>Address: </b>
         </div> 
         <div class="col-sm-9">
             {% if ledgerType == 'person' %}
@@ -31,7 +31,7 @@
         </div> 
 
         <div class="col-sm-3">
-            Class of shares: 
+            <b>Class of shares: </b>
         </div> 
         <div class="col-sm-9">
             {{shareClass}} 
@@ -42,19 +42,19 @@
             <table class="table">
                 <col>
                 <colgroup span="3"></colgroup>
-                <tr class="noBorder">
-                    <th scope="col" rowspan ="2" style="vertical-align: middle; text-align: center;">Date</th>
-                    <th scope="col" rowspan="2" style="vertical-align: middle; text-align: center;">Cert no.</th>
-                    <th scope="col" rowspan="2" style="vertical-align: middle; text-align: center;">To or From whom</th>
-                    <th colspan="4" scope="colgroup" style="text-align: center;" >Shares</th>
+                <tr>
+                    <th class="tableHeader" scope="col" rowspan ="2" style="vertical-align: middle; text-align: center;">Date</th>
+                    <th class="tableHeader" scope="col" rowspan="2" style="vertical-align: middle; text-align: center;">Cert no.</th>
+                    <th class="tableHeader" scope="col" rowspan="2" style="vertical-align: middle; text-align: center;">To or From whom</th>
+                    <th class="tableHeader" colspan="4" scope="colgroup" style="text-align: center;" >Shares</th>
                 </tr>
                 <tr>
-                    <th scope="col" style="text-align: center;">Acquired</th>
-                    <th scope="col" style="text-align: center;">Transferred</th>
-                    <th scope="col" style="text-align: center;">Balance Held</th>
+                    <th class="tableHeader" scope="col" style="text-align: center;">Acquired</th>
+                    <th class="tableHeader" scope="col" style="text-align: center;">Transferred</th>
+                    <th class="tableHeader" scope="col" style="text-align: center;">Balance Held</th>
                 </tr>
                 {% for tr in t %}
-                <tr>
+                <tr class="boldBorder boldBottom">
                     <td>{{tr.date}}</td>
                     <td>{{tr.cert.CertificateNumber}}</td>
                     <td>{{tr.toOrFrom}}</td>
