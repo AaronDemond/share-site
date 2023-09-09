@@ -59,6 +59,63 @@ def shareholders_register(request, company_id=None):
     
 def people(request, context={}):
     if request.user.is_authenticated:
+        print(context)
+        if "companyCreatedAlert" not in context.keys() \
+                and "personCreatedAlert" not in context.keys():
+            context["alert_type"] = None
+            context["alert"] = None
+        if request.method == "POST":
+            _type = request.POST.get("type")
+            entity_id = request.POST.get("entity_id")
+            address = request.POST.get("Address")
+            name = request.POST.get("Name")
+            print(name)
+
+            try:
+                if _type == "person":
+                    person = Person.objects.get(pk=entity_id)
+                    others = Person.objects.filter(Name=name)
+                    print(others)
+                    if len(others) > 0:
+                        raise Exception("Name already in use")
+                    person.Name = name
+                    person.Address = address
+                    person.save()
+                    context["alert_type"] = "success"
+                    context["alert"] = "Entity Updated"
+                elif _type == "company":
+                    company = Company.objects.get(pk=entity_id)
+                    others = Company.objects.filter(Name = name)
+                    if len(others) > 0:
+                        raise Exception("Name already in use")
+                    company.Name = name
+                    company.save()
+                    context["alert_type"] = "success"
+                    context["alert"] = "Entity Updated"
+            except Exception as e:
+                context["alert_type"] = "danger"
+                context["alert"] = "ERROR! " + str(e)
+        if request.GET.get("entity_id"):
+            _type = request.GET.get("type")
+            _id = request.GET.get("entity_id")
+            if _type == "person":
+                entity = Person.objects.get(pk=_id)
+            elif _type == "company":
+                entity = Company.objects.get(pk=_id)
+            context["entity"] = entity
+            context["type"] = _type
+
+            if request.GET.get("delete") == "true":
+                entity.delete()
+                context["alert_type"] = "success"
+                context["alert"] = "Entity Deleted"
+            if request.GET.get("edit") == "true":
+                context["edit"] = True
+                return render(request, "create_person.html", context)
+
+
+                
+
         query = request.GET.get('query', None)
         ql = []
         if query:
@@ -308,13 +365,21 @@ def create_company(request):
             date = pytz.timezone("America/Halifax").localize(date)
             try:
                 new_company = Company(Name=name, Modified=date)
-                new_company.save()
-                context["alert_type"] = "success"
-                context["alert"] = "Company created"
+                others = Company.objects.filter(Name=name)
+                if len(others) > 0:
+                    context["alert_type"] = "danger"
+                    context["alert"] = "ERROR! Name already in use"
+                else:
+                    new_company.save()
+                    context["alert_type"] = "success"
+                    context["alert"] = "Company created"
+                context["companyCreatedAlert"] = True
                 return people(request=request, context = context)
             except Exception as e:
                 context["alert_type"] = "danger"
                 context["alert"] = "ERROR! " + str(e)
+                context["companyCreatedAlert"] = True
+                return people(request=request, context = context)
 
         return render(request, 'create_company.html', context)
     else:
@@ -326,6 +391,9 @@ def create_person(request):
         if request.method == "POST":
             try:
                 name = request.POST.get("Name")
+                others = Person.objects.filter(Name=name)
+                if len(others) > 0:
+                    raise Exception("Name already in use")
                 address = request.POST.get("Address")
                 date = datetime.datetime.now()
                 date = pytz.timezone("America/Halifax").localize(date)
@@ -333,10 +401,12 @@ def create_person(request):
                 new_person.save()
                 context["alert_type"] = "success"
                 context["alert"] = "Person created"
+                context["personCreatedAlert"] = True
                 return people(request=request, context = context)
             except Exception as e:
                 context["alert_type"] = "danger"
                 context["alert"] = "ERROR! " + str(e)
+                context["personCreatedAlert"] = True
                 return people(request=request, context = context)
         return render(request, 'create_person.html', context)
     else:
@@ -445,7 +515,7 @@ def enter_transfer(request, company_id=None):
     if request.user.is_authenticated:
         company = Company.objects.get(pk=int(company_id))
         participants = company.Participant.all()
-        share_classes = ShareClass.objects.all()
+        share_classes = ShareClass.objects.all().order_by("Name")
         context = {}
         context['company']=company
         context['share_classes']=share_classes
@@ -562,8 +632,9 @@ def enter_transfer(request, company_id=None):
             def checkEnoughShares(t):
                 if t == "person":
                     transfers = Transfer.objects.filter(Q(FromPerson \
-                    = fromPerson, ShareClass=shareClass) |\
-                    Q(ToPerson = fromPerson, ShareClass=shareClass)).order_by('Date')
+                    = fromPerson, ShareClass=shareClass, Company=company) |\
+                    Q(ToPerson = fromPerson, ShareClass=shareClass,
+                        Company=company)).order_by('Date')
                     transfers = list(transfers)
                     total = 0
                     newInserted = False
@@ -618,8 +689,9 @@ def enter_transfer(request, company_id=None):
                         return True
                     else:
                         transfers = Transfer.objects.filter(Q(FromCompany \
-                        = fromCompany, ShareClass=shareClass) |\
-                        Q(ToCompany = fromCompany, ShareClass=shareClass)).order_by('Date')
+                        = fromCompany, ShareClass=shareClass,
+                        Company=company) | Q(ToCompany = fromCompany, 
+                            Company=company, ShareClass=shareClass)).order_by('Date')
                         total = 0
                         newInserted = False
                         for t in transfers:
@@ -1391,7 +1463,7 @@ def registers(request, company_id=None):
 
 def share_class(request):
     if request.user.is_authenticated:
-        share_classes = ShareClass.objects.all()
+        share_classes = ShareClass.objects.all().order_by("Name")
         context={'share_classes': share_classes}
         delete = request.GET.get("delete")
         if delete:

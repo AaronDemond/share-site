@@ -2,7 +2,7 @@
 {% block main %}
 <div id="container">
 
-    <div class="row">
+    <div class="row" id="linkHolder">
 
         <div class="col-sm-12" style = "padding-bottom: 20px">
             <a href="/" >Home</a> / <a href="/companies">Companies</a>
@@ -67,8 +67,9 @@
         </div>
     </div>
 </div>
-<input  type="button" value="Convert HTML to PDF"               
-                      onclick="convertHTMLtoPDF()">
+<!-- <input  type="button" value="Convert HTML to PDF"               
+    onclick="convertHTMLtoPDF()"> -->
+    <button class = "btn btn-primary" role = "button" id = "makePrintable">Make Printable</button>
 
 <script src=
 "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
@@ -94,6 +95,10 @@
             y: 12
         });               
     }           
+ $("#makePrintable").click(function() {
+    $("#linkHolder").hide();
+    $("#makePrintable").hide();
+ });
 </script>     
 {% endblock main %}
 

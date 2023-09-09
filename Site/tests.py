@@ -2,7 +2,8 @@ from django.test import TestCase
 import pytz
 import datetime
 from datetime import timedelta
-from Site.models import Person, Manager, ManagerRole, Company, CompanyParticipant, ShareClass
+from Site.models import Person, Manager, ManagerRole, Company, CompanyParticipant, \
+        ShareClass, Transfer
 from django.test import Client
 from django.contrib.auth.models import User
 import unittest
@@ -21,7 +22,7 @@ class SimpleTest(TestCase):
             "Address": "32 Rocky Ave"})
         response = self.client.post("/createPerson/", {"Name": "Amy",
             "Address": "55 South Street"})
-        response = self.client.post("/createPerson/", {"Name": "Abby",
+        response = self.client.post("/createPerson/", {"Name": "Sarah",
             "Address": "12 Skylight Ave"})
         response = self.client.post("/companies/create/", {"Name": "Joes Construction"})
         response = self.client.post("/companies/create/", {"Name": "Bobs General Store"})
@@ -39,23 +40,315 @@ class SimpleTest(TestCase):
             for c_id2 in company_ids:
                 response = self.client.get("/link/" + str(c_id) + "/?company_id=" + str(c_id2) \
                         + "&type=company")
-        date = "2023-02-01"
-        time = "12:0:0"
-        ammount = 1000
-        class_a_id = ShareClass.objects.all()[0].pk
-        joes_construction_id = Company.objects.all()[0].pk
-        parValue = 1.5
-        response = self.client.post("/companies/" + str(joes_construction_id) + \
-                "/issue/", {"Ammount" : ammount, "date" : date, "time" : time,
-                    "ShareClass": class_a_id})
-        print(response.context["alert"])
+    def construct_authorize(self, params):
+        response = self.client.post("/companies/" + \
+                str(Company.objects.get(Name=params["company"]).pk) + \
+                "/issue/", {"Ammount": params["ammount"], "date": params["date"],
+                    "time": params["time"], 
+                    "ShareClass": ShareClass.objects.get(Name=params["shareClass"]).pk})
+        return response
+    def construct_transfer(self, params):
+        _context = dict()
+        _from = params["from"]
+        if _from["type"] == "person":
+            fromPerson = Person.objects.get(Name=_from["name"])
+            _context["fromPerson"] = fromPerson.pk
+        elif _from["type"] == "company":
+            fromCompany = Company.objects.get(Name=_from["name"])
+            _context["fromCompany"] = fromCompany.pk
 
+        _to = params["to"]
+        if _to["type"] == "person":
+            toPerson = Person.objects.get(Name=_to["name"])
+            _context["toPerson"] = toPerson.pk
+        elif _to["type"] == "company":
+            toCompany = Company.objects.get(Name=_to["name"])
+            _context["toCompany"] = toCompany.pk
+
+        company = Company.objects.get(Name=params["company"])
+        shareClass = ShareClass.objects.get(Name=params["shareClass"])
+        _context["shareClass"] = shareClass.pk
+        _context["ammount"] = params["ammount"]
+        _context["date"] = params["date"]
+        _context["time"] = params["time"]
+        _context["price"] = params["price"]
+
+        response = self.client.post("/companies/" + str(company.pk) + \
+                "/enterTransfer/", _context)
+
+        return response
+    def test_registers(self):
+        self.construct_people_company_links()
+        params = {"company": "Joes Construction", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred"}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"company": "Bobs General Store", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred"}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"company": "Bobs General Store", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class B Preferred"}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"from": {"type": "company", "name": "Bobs General Store"}, 
+            "to": {"type": "person", "name": "Sarah"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "100", "date": "2023-01-01", "time": "01:00:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "company", "name": "Bobs General Store"}, 
+            "to": {"type": "person", "name": "Sarah"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "200", "date": "2023-01-01", "time": "01:01:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        #Sarah now at 300 class A
+
+        params = {"from": {"type": "person", "name": "Sarah"}, 
+            "to": {"type": "person", "name": "John"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "50", "date": "2023-01-01", "time": "01:02:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        #Sarah now at 250, John at 50
+
+        params = {"from": {"type": "person", "name": "John"}, 
+            "to": {"type": "person", "name": "Sarah"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "100", "date": "2023-01-01", "time": "01:03:01",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
+
+        #Sarah now at 250, John at 50
+
+        #Test sarah
+        response = self.construct_register("Bobs General Store")
+        entries = response.context["entityShareClass"]
+        shareClass = ShareClass.objects.get(Name="Class A Preferred")
+        person = Person.objects.get(Name="Sarah")
+        for key in list(entries.keys()):
+            if shareClass in key and person in key:
+                self.assertEqual(entries[key][0], 250)
+                break
+
+        #Test John
+        person = Person.objects.get(Name="John")
+        for key in list(entries.keys()):
+            if shareClass in key and person in key:
+                self.assertEqual(entries[key][0], 50)
+                break
+
+        params = {"from": {"type": "person", "name": "Sarah"}, 
+            "to": {"type": "company", "name": "Bobs General Store"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "50", "date": "2023-01-01", "time": "01:04:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        #Sarah now at 200, John at 50
+
+        #Test sarah
+        response = self.construct_register("Bobs General Store")
+        entries = response.context["entityShareClass"]
+        shareClass = ShareClass.objects.get(Name="Class A Preferred")
+        person = Person.objects.get(Name="Sarah")
+        for key in list(entries.keys()):
+            if shareClass in key and person in key:
+                self.assertEqual(entries[key][0], 200)
+                break
+
+    def construct_register(self, company):
+        company = Company.objects.get(Name=company)
+        response = self.client.get("/companies/"+str(company.pk)+"/registers/?role=ShareHolder")
+        return response
+
+        
+    def test_enough_company(self):
+        self.construct_people_company_links()
+        params = {"company": "Joes Construction", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred"}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"company": "Bobs General Store", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred"}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"company": "Bobs General Store", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class B Preferred"}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"from": {"type": "company", "name": "Bobs General Store"}, 
+            "to": {"type": "person", "name": "Sarah"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "800", "date": "2023-01-01", "time": "01:00:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "company", "name": "Bobs General Store"}, 
+            "to": {"type": "company", "name": "Joes Construction"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "200", "date": "2023-01-01", "time": "01:01:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Sarah"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "201", "date": "2023-01-01", "time": "01:01:01",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "company", "name": "Bobs General Store"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "200", "date": "2023-01-01", "time": "01:00:05",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
+
+        params = {"from": {"type": "company", "name": "Bobs General Store"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Bobs General Store",
+            "ammount": "1", "date": "2023-01-01", "time": "01:02:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "600", "date": "2023-01-01", "time": "01:00:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "person", "name": "Tim"}, 
+            "to": {"type": "company", "name": "Joes Construction"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "100", "date": "2023-01-01", "time": "01:01:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "400", "date": "2023-01-01", "time": "01:02:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "1", "date": "2023-01-01", "time": "01:03:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
+
+        params = {"from": {"type": "person", "name": "Tim"}, 
+            "to": {"type": "company", "name": "Joes Construction"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "900", "date": "2023-01-01", "time": "01:00:30",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
+
+        params = {"from": {"type": "person", "name": "Tim"}, 
+            "to": {"type": "company", "name": "Joes Construction"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "900", "date": "2023-01-01", "time": "01:04:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Transfer Saved")
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "1", "date": "2023-01-01", "time": "01:05:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(response.context["alert"], "Not enough shares!")
+        self.assertEqual(len_before, len_after)
 
     def test_t(self):
         self.construct_people_company_links()
+
+        params = {"company": "Joes Construction", "ammount": 1000, 
+                "date": "2023-02-01", "time": "12:0:0", "shareClass": "Class A Preferred"}
+        self.construct_authorize(params)
+
         joes_construction = Company.objects.get(Name="Joes Construction")
         tim = Person.objects.get(Name = "Tim")
-        abby = Person.objects.get(Name = "Abby")
+        Sarah = Person.objects.get(Name = "Sarah")
         class_a = ShareClass.objects.get(Name = "Class A Preferred")
         date = "2023-02-01"
         time = "13:0:0"

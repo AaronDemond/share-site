@@ -10,15 +10,20 @@
     </div>
 </div>
 
+{% if edit %}
+<form  method ="POST" action="/entities/" />
+{% else %}
 <form  method ="POST" />
+{% endif %}
     <div class="row">
-
+        <input type="hidden" name="entity_id" value="{{entity.pk}}">
+        <input type="hidden" name="type" value="{{type}}">
         {% csrf_token %}
         <div class="col-sm-6" style="margin: 0px;">
-            <input type="text" class="form-control" name = "Name" id = "Name" value="" placeholder="Name of Person">
+            <input type="text" class="form-control" name = "Name" id = "Name" value="{{entity}}" placeholder="Name of Person">
         </div>
         <div class="col-sm-6">
-            <input type="text" class="form-control" name = "Address" id = "Name" value="" placeholder="Address">
+            <input type="text" class="form-control" name = "Address" id = "Name" value="{{entity.Address}}" placeholder="Address">
         </div>
         <div class="col-sm-12">
             <span class="input-group-btn">
