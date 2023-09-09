@@ -174,30 +174,46 @@ def issue_shares(request, company_id=None):
         authorized = company.AuthorizedShares.all()
         share_classes_authorized = {}
         shareClassSet = set()
+        #initalize dict with share classes as key
         for t in authorized:
             if t.ShareClass not in share_classes_authorized.keys():
                 share_classes_authorized[str(t.ShareClass)] = [0]
+        #Increment the corrosponding dict by the authorized ammount and append Document
+        #if needed
         for t in authorized:
             share_classes_authorized[str(t.ShareClass)][0] += t.Ammount
             shareClassSet.add(t.ShareClass)
             if t.Document:
-                share_classes_authorized[str(t.ShareClass)].append(t.Document)
+                if len(share_classes_authorized[str(t.ShareClass)]) == 2:
+                    share_classes_authorized[str(t.ShareClass)][1].append(t.Document)
+                else:
+                    share_classes_authorized[str(t.ShareClass)].append([t.Document])
             else:
-                share_classes_authorized[str(t.ShareClass)].append(None)
+                if len(share_classes_authorized[str(t.ShareClass)]) == 1:
+                    share_classes_authorized[str(t.ShareClass)].append([None])
+                else:
+                    share_classes_authorized[str(t.ShareClass)][1].append(None)
+
+        #Subtract transfers bought back by the company
         transfers = Transfer.objects.filter(Company=company, ToCompany=company)
         for t in transfers:
             if len(share_classes_authorized)>0:
                 share_classes_authorized[str(t.ShareClass)][0] -= t.Ammount
 
+        #initalize issued and remaining
         transfers = Transfer.objects.filter(Company=company)
         for t in authorized:
             share_classes_authorized[str(t.ShareClass)].append(0)
             share_classes_authorized[str(t.ShareClass)].append(0)
 
+        #calculate issued
         for t in transfers:
             if t.FromCompany == company:
                 share_classes_authorized[str(t.ShareClass)][2] += t.Ammount
+            if t.ToCompany == company:
+                share_classes_authorized[str(t.ShareClass)][2] -= t.Ammount
 
+        #calculate remaining
         for shareClass in shareClassSet:
             share_classes_authorized[str(shareClass)][3] = \
                     share_classes_authorized[str(shareClass)][0] - \
@@ -544,7 +560,6 @@ def enter_transfer(request, company_id=None):
 
             def checkEnoughShares(t):
                 if t == "person":
-                    print(fromPerson)
                     transfers = Transfer.objects.filter(Q(FromPerson \
                     = fromPerson, ShareClass=shareClass) |\
                     Q(ToPerson = fromPerson, ShareClass=shareClass)).order_by('Date')
@@ -574,9 +589,9 @@ def enter_transfer(request, company_id=None):
                         auth_shares = AuthorizedShares.objects.filter(Company=company,
                                 ShareClass=shareClass)
                         total = 0
-                        transfers = Transfer.objects.filter(Q(FromCompany \
-                        = company, ShareClass=shareClass, Company=company) | \
-                        Q(ToCompany = company, ShareClass=shareClass, Company=company)).order_by('Date')
+                        transfers = Transfer.objects.filter(FromCompany \
+                            = company, ShareClass=shareClass, 
+                            Company=company).order_by('Date')
                         all_tran = []
                         all_tran.extend(list(transfers))
                         all_tran.extend(list(auth_shares))
@@ -631,7 +646,7 @@ def enter_transfer(request, company_id=None):
             if enough:
                 transfer.save()
                 context['error_type'] = "success"
-                context['alert'] = "Transver Saved"
+                context['alert'] = "Transfer Saved"
                 transfer = Transfer.objects.all().latest("pk")
                 transfers = Transfer.objects.filter(ShareClass=shareClass,
                         Company=company).order_by("Date")
@@ -889,7 +904,6 @@ def create_certificates(transfer):
                 Date__lt = transfer.Date, Cancelled=False).order_by("-Date")
         if transfer.FromCompany == transfer.Company:
             fromTreasury = True
-    print(certificates)
     if fromTreasury == False:
         runningTotal = float(transfer.Ammount)
         for c in certificates:
@@ -1437,7 +1451,7 @@ def manager_role(request):
                 to_delete = ManagerRole.objects.get(pk=delete)
                 to_delete.delete()
                 context["alert_type"] = "success"
-                context["alert"] = "Managment Role Deleted"
+                context["alert"] = "Management Role Deleted"
             except Exception as e:
                 context["alert_type"] = "danger"
                 context["alert"] = str(e)
