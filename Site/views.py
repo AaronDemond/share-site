@@ -10,6 +10,7 @@ from django.urls import resolve
 
 PAGELENGTH = 5
 
+#Home page
 def index(request, **kwargs):
     if request.user.is_authenticated:
         return render(request, 'index.html', {})
