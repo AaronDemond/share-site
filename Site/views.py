@@ -61,7 +61,8 @@ def people(request, context={}):
     if request.user.is_authenticated:
         print(context)
         if "companyCreatedAlert" not in context.keys() \
-                and "personCreatedAlert" not in context.keys():
+                and "personCreatedAlert" not in context.keys() \
+                and "linkAlert" not in context.keys():
             context["alert_type"] = None
             context["alert"] = None
         if request.method == "POST":
@@ -181,6 +182,7 @@ def link(request, _id=None):
                 if len(q) > 0:
                     context["alert_type"] = "danger"
                     context["alert"] = "Link already exists"
+                    context["linkAlert"] = True
                     return people(request, context)
 
             elif _type == "company":
@@ -190,15 +192,19 @@ def link(request, _id=None):
                 if len(q) > 0:
                     context["alert_type"] = "danger"
                     context["alert"] = "Link already exists"
+                    context["linkAlert"] = True
                     return people(request, context)
             try:
                 companyParticipant.save()
                 context["alert_type"] = "success"
                 context["alert"] = "Entity Linked"
+                context["linkAlert"] = True
                 return people(request, context)
             except:
                 context["alert_type"] = "danger"
                 context["alert"] = "Error saving link"
+                context["linkAlert"] = True
+                return people(request, context)
         context["companies"] = companies 
         context["type"] = _type
 
