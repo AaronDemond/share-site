@@ -488,6 +488,81 @@ def create_person(request):
         return render(request, 'create_person.html', context)
     else:
         return HttpResponse("Please Login")
+def authorized(request, company_id=None, context={}):
+    company = Company.objects.get(pk=company_id)
+    authorizedShares = AuthorizedShares.objects.filter(Company=company).order_by("-Date")
+    context["authorizedShares"] = authorizedShares
+    context["company"] = company
+
+    if request.method == "POST":
+
+        authToDeleteId = request.POST.get("authToDelete")
+        tranToDeleteIds = request.POST.getlist("transfers")
+        tranToDelete = Transfer.objects.filter(pk__in=tranToDeleteIds)
+        authToDelete = AuthorizedShares.objects.get(pk=authToDeleteId)
+        shareClass = authToDelete.ShareClass
+        company = authToDelete.Company
+        tranToDelete.delete()
+        authToDelete.delete()
+
+        shareCerts = ShareCertificate.objects.filter(ShareClass=shareClass,
+                ReferenceCompany = company)
+        shareCerts.delete()
+        transfers = Transfer.objects.filter(ShareClass=shareClass, 
+                Company=company).order_by("Date")
+        for t in transfers:
+            create_certificates(t)
+
+
+        context['error_type'] = "success"
+        context['alert'] = "Authorization Deleted"
+
+        return companies(request, context = context)
+
+    if request.GET.get("delete") == "True":
+        authorizedToDelete = request.GET.get("auth_id")
+        authorizedToDelete = AuthorizedShares.objects.get(pk=authorizedToDelete)
+        shareClass = authorizedToDelete.ShareClass
+        all_auth = AuthorizedShares.objects.filter(Company=company)
+        transfers = Transfer.objects.filter(FromCompany=company, ShareClass=shareClass)
+
+        all_tran = [x for x in all_auth]
+        all_tran.extend([x for x in transfers])
+        all_tran.sort(key= lambda x: x.Date)
+        all_tran.remove(authorizedToDelete)
+
+        remaining = 0
+        toDelete = [authorizedToDelete]
+        print(all_tran)
+        for t in all_tran:
+            if isinstance(t, AuthorizedShares):
+                remaining += t.Ammount
+            else:
+                remaining -= t.Ammount
+            if remaining < 0:
+                toDelete.append(t)
+        toDelete.remove(authorizedToDelete)
+        context["authorizedToDelete"] = authorizedToDelete
+        context["toDelete"] = toDelete
+        return render(request, "authorizedDeleteConfirm.html", context)
+
+    if request.GET.get("page"):
+        page = int(request.GET.get("page"))
+    else:
+        page = 1
+    start = (page - 1) * PAGELENGTH
+    end = start + PAGELENGTH
+
+    if end < len(context['authorizedShares']):
+        context["hasNextPage"] = True
+    else:
+        context["hasNextPage"] = False
+
+    context['authorizedShares'] = context['authorizedShares'][start:end]
+    context['page'] = page
+
+    #show list of authorizations
+    return render(request, "authorized.html", context)
 
 def transfers(request, company_id=None, transfer_id=None,context={}):
     if request.user.is_authenticated:

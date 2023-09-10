@@ -11,6 +11,7 @@ urlpatterns = [
         path('companies/<int:company_id>/enterTransfer/', views.enter_transfer, name="enter_transfer"),
         path('companies/<int:company_id>/changeManagement/', views.management, name="management"),
         path('companies/<int:company_id>/transfers/', views.transfers, name="transfers"),
+        path('companies/<int:company_id>/authorized/', views.authorized, name="authorized"),
         path('companies/<int:company_id>/registers/', views.registers, name="registers"),
         path('companies/<int:company_id>/certificates/<int:transfer_id>/', views.transfers, name="certificate"),
         path('companies/create/', views.create_company, name="create_company"),

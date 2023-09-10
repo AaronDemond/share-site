@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load extras %}
+{% block main %}
+</style>
+<h1 style="text-align: center;">{{company}}</h1>
+<h3 style="text-align: center;">Find an Authorization</h3>
+<div class="row">
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / Authorized
+    </div>
+
+
+    <div class="col-lg-12">
+        <form method ="GET" />
+            <input type="hidden"  name="search_type" value="search">
+            <div class="col-xs-12">
+                <br />
+                <div class="input-group">
+                    <input type="text" style="margin-bottom: 20px"class="form-control" name = "query" id = "search_string" value="{{query}}" placeholder="Search for..">
+                    <span class="input-group-btn">
+                        <button class="btn btn-success browse-btn-fix" type="submit">Go!</button>
+                    </span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form method="post">
+    <input type="hidden" value="" name="selectedTransfer" id="selectedTransfer"/>
+    <input type="hidden" value="" name="selectedShareType" id="selectedShareType"/>
+    {% csrf_token %}
+    <div class="row">
+        <div class="row itemListContainer" id="transferContainer">
+            {% for auth in authorizedShares %}
+
+            <div class="row listItem">
+
+                <div class="col-sm-9 itemInList">
+                    {{auth}}
+
+                </div>
+                <div class="col-sm-3 buttonsInList">
+                    <a class="btn btn-danger" href="/companies/{{company.id}}/authorized?delete=True&auth_id={{auth.pk}}" >Delete</a>
+                </div>
+
+            </div> 
+            {% endfor %}
+
+        </div>
+    </div>	
+    <div class="row" id="pagenationHolder">
+        <div class="col-sm-3">
+            {% if page > 1 %}
+
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+            {% else %}
+            <button class="btn btn-primary disabled" type="button" style="margin-top: 20px;"><</button>
+            {% endif %}
+
+            {% if hasNextPage == True %}
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'1'}})" type="button">></button>
+            {% else %}
+            <button class="btn btn-primary disabled" style="margin-top: 20px;">></button>
+            {% endif %}
+        </div> 
+    </div>
+</form>
+{% endblock main %}
+{% block scripts %}
+<script type = "text/javascript">
+</script>
+{% endblock scripts %}

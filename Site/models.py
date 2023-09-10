@@ -92,7 +92,8 @@ class AuthorizedShares(models.Model):
             super(AuthorizedShares, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.Ammount) + " of " + str(self.ShareClass) + " for " + str(self.Company)
+        dt = self.Date.strftime("%Y-%m-%d %H:%M:%S")
+        return str(self.Ammount) + " of " + str(self.ShareClass) + " for " + str(self.Company) + " on " + dt
 
     class Meta:
         verbose_name_plural = "AuthorizedShares"
