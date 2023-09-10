@@ -76,7 +76,7 @@ class ShareClass(models.Model):
 class AuthorizedShares(models.Model):
     Company = models.ForeignKey(Company, on_delete=models.CASCADE,
             related_name = "AuthorizedShares")
-    Ammount = models.IntegerField()
+    Ammount = models.FloatField()
     ShareClass = models.ForeignKey(ShareClass, on_delete=models.CASCADE,
             related_name="AuthorizedShares")
     Date = models.DateTimeField()
@@ -147,7 +147,11 @@ class Transfer(models.Model):
     def __str__(self):
         _from = self.FromPerson or self.FromCompany
         _to = self.ToPerson or self.ToCompany
-        return str(self.Ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name
+        if self.Ammount.is_integer():
+            ammount = int(self.Ammount)
+        else:
+            ammount = self.Ammount
+        return str(ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name
 
 
 class ShareCertificate(models.Model):
@@ -180,7 +184,11 @@ class ShareCertificate(models.Model):
             _from = self.FromPerson or self.FromCompany
         _to = self.ToPerson or self.ToCompany
 
-        return str(self.Ammount) + " " + str(self.ShareClass) + " shares from " \
+        if self.Ammount.is_integer():
+            ammount = int(self.Ammount)
+        else:
+            ammount = self.Ammount
+        return str(ammount) + " " + str(self.ShareClass) + " shares from " \
                 +str(_from) + " to " + str(_to)
     
 

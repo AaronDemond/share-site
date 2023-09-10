@@ -757,6 +757,9 @@ def share_certificate(request, company_id = None):
             to = cert.ToPerson or cert.ToCompany
             _from = cert.FromPerson or cert.FromCompany
             date = cert.Date.date()
+
+            if cert.Ammount.is_integer():
+                cert.Ammount = int(cert.Ammount)
             context = {"cert" : cert, 'to': to, 'date': date, 'from': _from}
             context["company"] = company
             context["type"] = request.GET.get("type")
@@ -784,9 +787,9 @@ def share_certificate(request, company_id = None):
             #Removes bought back shares from the dict created above
             for auth_type in auth_types:
                 all_tran = Transfer.objects.filter(Company=company,
-                        ShareClass=auth_type,ToCompany=company)
+                        ShareClass=auth_type,ToCompany=company).order_by("Date")
                 all_auth = AuthorizedShares.objects.filter(Company=company,
-                        ShareClass=auth_type)
+                        ShareClass=auth_type).order_by("Date")
                 for tran in all_tran:
                     for index, auth in enumerate(all_auth):
                         if auth.Date > tran.Date:
@@ -798,8 +801,22 @@ def share_certificate(request, company_id = None):
                             auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
                             break
 
+            #Remove trailing zeros
+            auth_totals_truncated = {}
+            for key, value in auth_totals.items():
+                if value.is_integer():
+                    v = int(value)
+                else:
+                    v = value
+                if key[1].is_integer():
+                    k1 = int(key[1])
+                else:
+                    k1 = key[1]
+                auth_totals_truncated[(key[0],k1)] = v
+
+
             context["no_of_auth_types"] = len(auth_totals)
-            context["auth_totals"] = auth_totals 
+            context["auth_totals"] = auth_totals_truncated 
             #Specific Cert
             return render(request, "certificate.html", context)
 
@@ -1041,19 +1058,19 @@ def updateCertNos(certificate, transfer):
 #given a cert no and share class returns the next number
 def getNextCertificateNumber(shareClass, number=False, first=False):
     if first:
-        if shareClass.Name == "Common":
+        if shareClass.Name.lower() == "common":
             return "1"
         else:
             split = shareClass.Name.split()
-            s = split[2][0] + " - " + split[1] + " - " +str(1)
+            s = split[2][0].upper() + " - " + split[1] + " - " +str(1)
             return str(s)
     else:
-        if shareClass.Name == "Common":
+        if shareClass.Name.lower() == "common":
             return str(int(number) + 1)
         else:
             split = shareClass.Name.split()
             n = str(int(number.split()[-1]) + 1)
-            s = split[2][0] + " - " + split[1] + " - " + n
+            s = split[2][0].upper() + " - " + split[1] + " - " + n
             return str(s)
 
 
@@ -1205,10 +1222,20 @@ def shareholders_ledger(request, company_id=None):
                     total += t.Ammount
                     tt['total'] += t.Ammount
                     tt['acquired'] = t.Ammount
+                    #Truncate floats that are ints
+                    if tt['acquired'].is_integer():
+                        tt['acquired'] = int(tt['acquired'])
                 else:
                     total -= t.Ammount
                     tt['total'] -= t.Ammount
                     tt['transferred'] = t.Ammount
+                    #Truncate floats that are ints
+                    if tt['transferred'].is_integer():
+                        tt['transferred'] = int(tt['transferred'])
+
+                if tt['total'].is_integer():
+                    tt['total'] = int(tt['total'])
+
                 tt['transfer']=t
                 tt['date'] = t.Date.date()
                 cert=""
@@ -1452,29 +1479,27 @@ def registers(request, company_id=None):
             for key in to_delete:
                 del entityShareClass[key]
 
-            #Remove all entities who are not part of selected management
-            if role != "ShareHolder":
-                role = ManagerRole.objects.get(pk=role)
-                filteredManagers = company.Manager.filter(EndDate__isnull = True, Title=role)
-                entities = set()
-                for manager in filteredManagers:
-                    entities.add(manager.Person)
-                to_delete = []
-                for key, value in entityShareClass.items():
-                    if key[0] not in entities:
-                        to_delete.append(key)
-                for key in to_delete:
-                    del entityShareClass[key]
 
             #Sort by date
             entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
-
             #Convert datetime to date
             for key in entityShareClass:
                 entityShareClass[key][1] = entityShareClass[key][1].date()
 
+            #Truncate decimals if integer
+            truncatedDecimalEntityShareClass = {}
+            for entry in entityShareClass.items():
+                if entry[1][0].is_integer():
+                    truncatedDecimalEntityShareClass[entry[0]] = \
+                            [int(entry[1][0]), entry[1][1]]
+                else:
+                    truncatedDecimalEntityShareClass[entry[0]] = \
+                            [entry[1][0], entry[1][1]]
+
+
             context["entities"] = entities
-            context["entityShareClass"] = entityShareClass
+            #context["entityShareClass"] = entityShareClass
+            context["entityShareClass"] = truncatedDecimalEntityShareClass
             context["company"] = company
 
             #Specific register
