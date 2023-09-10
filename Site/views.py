@@ -76,9 +76,6 @@ def people(request, context={}):
                 if _type == "person":
                     person = Person.objects.get(pk=entity_id)
                     others = Person.objects.filter(Name=name)
-                    print(others)
-                    if len(others) > 0:
-                        raise Exception("Name already in use")
                     person.Name = name
                     person.Address = address
                     person.save()
@@ -86,10 +83,22 @@ def people(request, context={}):
                     context["alert"] = "Entity Updated"
                 elif _type == "company":
                     company = Company.objects.get(pk=entity_id)
-                    others = Company.objects.filter(Name = name)
-                    if len(others) > 0:
-                        raise Exception("Name already in use")
+                    date = request.POST.get("date")
+                    time = request.POST.get("time")
+                    dt = date + " " + time
+                    date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
+                    date = pytz.timezone("America/Halifax").localize(date)
                     company.Name = name
+                    company.Address = address
+                    company.IncorporationDate = date
+                    auth_shares = AuthorizedShares.objects.filter(Company=company)
+                    for auth in auth_shares:
+                        if auth.Date < date:
+                            raise Exception("Cannot incorporate after authorizing shares")
+                    managers = company.Manager.all()
+                    for manager in managers:
+                        if manager.StartDate < date:
+                            raise Exception("Cannot incorporate after management added")
                     company.save()
                     context["alert_type"] = "success"
                     context["alert"] = "Entity Updated"
@@ -112,7 +121,16 @@ def people(request, context={}):
                 context["alert"] = "Entity Deleted"
             if request.GET.get("edit") == "true":
                 context["edit"] = True
-                return render(request, "create_person.html", context)
+                if _type == "person":
+                    return render(request, "create_person.html", context)
+                if _type == "company":
+                    dt = entity.IncorporationDate
+
+                    date = dt.strftime("%Y-%m-%d")
+                    time = dt.strftime("%H:%M:%S")
+                    context["entity"].Date = date
+                    context["entity"].Time = time
+                    return render(request, "create_company.html", context)
 
 
                 
@@ -234,7 +252,7 @@ def issue_shares(request, company_id=None):
         share_classes = ShareClass.objects.all().order_by("Name")
         context = {'company' : company}
 
-        #Creates a dict of type {'Share Class' : [Ammount, Document, Issued, Remaining]}
+        #Creates a dict of type {'Share Class' : [Ammount, Document, Issued, Remaining, par value]}
         authorized = company.AuthorizedShares.all()
         share_classes_authorized = {}
         shareClassSet = set()
@@ -266,9 +284,10 @@ def issue_shares(request, company_id=None):
 
         #initalize issued and remaining
         transfers = Transfer.objects.filter(Company=company)
-        for t in authorized:
-            share_classes_authorized[str(t.ShareClass)].append(0)
-            share_classes_authorized[str(t.ShareClass)].append(0)
+        #for t in authorized:
+        for sc in shareClassSet:
+            share_classes_authorized[str(sc)].append(0)
+            share_classes_authorized[str(sc)].append(0)
 
         #calculate issued
         for t in transfers:
@@ -282,6 +301,32 @@ def issue_shares(request, company_id=None):
             share_classes_authorized[str(shareClass)][3] = \
                     share_classes_authorized[str(shareClass)][0] - \
                     share_classes_authorized[str(shareClass)][2]
+
+        print(share_classes_authorized)
+        for sc in shareClassSet:
+            auth = AuthorizedShares.objects.filter(ShareClass = sc, Company = company)[0]
+            share_classes_authorized[str(sc)].append(auth.Value)
+
+        for key, value in share_classes_authorized.items():
+            if value[0] != 0:
+                if value[0].is_integer():
+                    v = int(value[0])
+                    share_classes_authorized[key][0] = v
+            if value[2] != 0:
+                if value[2].is_integer():
+                    v = int(value[2])
+                    share_classes_authorized[key][2] = v
+            if value[3] != 0:
+                if value[3].is_integer():
+                    v = int(value[3])
+                    share_classes_authorized[key][3] = v
+            if value[4] != 4:
+                if value[4].is_integer():
+                    v = int(value[4])
+                    share_classes_authorized[key][4] = v
+
+
+                
 
         context['share_classes'] = share_classes
         context['share_classes_authorized'] = share_classes_authorized
@@ -346,6 +391,8 @@ def issue_shares(request, company_id=None):
                         authorized_shares = AuthorizedShares(Company=company,
                                 Ammount=ammount, ShareClass=share_class,
                                 Date=date, Value=value)
+                    if company.IncorporationDate > date:
+                        raise Exception("Company not yet incorporated")
                     authorized_shares.save()
                     context["error_type"] = "success"
                     context["alert"] = "Shares authorized"
@@ -367,10 +414,17 @@ def create_company(request):
         context = {}
         if request.method == "POST":
             name = request.POST.get("Name")
-            date = datetime.datetime.now()
+            modified = datetime.datetime.now()
+            modified = pytz.timezone("America/Halifax").localize(modified)
+            date = request.POST.get("date")
+            time = request.POST.get("time")
+            dt = date + " " + time
+            date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
             date = pytz.timezone("America/Halifax").localize(date)
+            address = request.POST.get("Address")
             try:
-                new_company = Company(Name=name, Modified=date)
+                new_company = Company(Name=name, Modified=modified,
+                        IncorporationDate=date, Address=address)
                 others = Company.objects.filter(Name=name)
                 if len(others) > 0:
                     context["alert_type"] = "danger"
@@ -1374,6 +1428,8 @@ def management(request, company_id = None):
                     role = ManagerRole.objects.get(pk=role)
                     existing = Manager.objects.filter(Person=person, Title=role,
                             Company=company)
+                    if company.IncorporationDate > date:
+                        raise Exception("Company not yet incorporated")
                     if len(existing) > 0 and existing[0].EndDate is None:
                         context["error_type"] = "danger"
                         context["alert"] = "Already exists"

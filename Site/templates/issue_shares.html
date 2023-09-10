@@ -33,7 +33,7 @@ body {
                 </div>
             </div>
             {% if alert %}
-            <div class="row">
+            <div class="row" style="padding-top: 20px;">
                 <div class="col-sm-5">
 
                     <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
@@ -55,12 +55,32 @@ body {
                 </div>
             </div>
             <div class="row">
+                <div class="col-sm-6">
+                    <table class="table">
+                        <tr>
+                            <th>Type</th>
+                            <th>Authorized</th>
+                            <th>Issued</th>
+                            <th>Remaining</th>
+                            <th>Par Value</th>
+                        </tr>
+                        {% for key, value in share_classes_authorized.items %}
+                        <tr>
+                            <td>{{key}}</td>
+                            <td>{{value.0}}</td>
+                            <td>{{value.2}}</td>
+                            <td>{{value.3}}</td>
+                            <td>{{value.4}}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                                
+                </div>
 
                 <div class="col-lg-12">
                     {% for key, value in share_classes_authorized.items %}
-                    {{key}} <b>Authorized:</b> {{value.0}} <b>Issued:</b> {{value.2}} <b>Remaining:</b> {{value.3}} {% for doc in value.1 %}{% if doc != None %} <a href="{{doc.url}}">{{doc}}</a>{% endif %}{% endfor %} 
+                    {% for doc in value.1 %}{% if doc != None %} {{key}} <a href="{{doc.url}}">{{doc}}</a>{% endif %}{% endfor %} {% endfor %}
                     </br>
-                    {% endfor %}
                     <button type="button" class="btn btn-primary"
                         style="margin-top:20px;" 
                         onclick="authorizeShares()">Authorize Shares</button>

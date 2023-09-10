@@ -24,6 +24,8 @@ class Person(models.Model):
 class Company(models.Model):
     Name = models.CharField(max_length=500)
     Modified= models.DateTimeField()
+    IncorporationDate = models.DateTimeField()
+    Address = models.CharField(max_length=500)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
