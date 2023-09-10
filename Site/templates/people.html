@@ -98,21 +98,30 @@ body {
             </div>
             </div>
             <div class="row">
+                <div class="col-sm-12" style="margin-top: 15px;">
+                    <p>Filter by</p>
+                    <button class = "btn btn-primary {% if filteredBy == "person" %}disabled{% endif %}" onclick = "filter('person')">People</button>
+                    <button class = "btn btn-primary {% if filteredBy == "company" %}disabled{% endif %}"onclick = "filter('company')">Companies</button>
+                    <a href = "/entities/" class = "btn btn-primary {% if filteredBy == False %}disabled{% endif %}">All</a>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-sm-3">
                 {% if page > 1 %}
-                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
+                <button class="btn btn-primary" style="margin-top: 15px;" onclick="search({{page|changeValue:'-1'}}, {% if filteredBy %}'{{filteredBy}}'{% endif %})" type="button"><</button>
                 {% else %}
-                    <button class="btn btn-primary disabled" style="margin-top: 20px;"  type="button"><</button>
+                    <button class="btn btn-primary disabled" style="margin-top: 15px;"  type="button"><</button>
                 {% endif %}
                 {% if hasNextPage == True %}
-                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'1'}})" type="button">></button>
+                <button class="btn btn-primary" style="margin-top: 15px;" onclick="search({{page|changeValue:'1'}}, {% if filteredBy %}'{{filteredBy}}'{% endif %})" type="button">></button>
                     {% else %}
-                    <button class="btn btn-primary disabled" style="margin-top: 20px;" type="button">></button>
+                    <button class="btn btn-primary disabled" style="margin-top: 15px;" type="button">></button>
                 {% endif %}
                 </div> 
                 
                  
             </div>
+            
         </main>
         <footer>
 
@@ -128,17 +137,33 @@ body {
                 //$(".alert-button").hide();
                 $("#alertHolder").remove();
             });
-
-    function search(page) {
+    function filter(type) {
         search_txt = $("#search_string").val();
+
         if (search_txt) {
-        href = "/entities?page="+page+"&query="+search_txt;
+        href = "/entities?"+"query="+search_txt+"&type="+type;
         } else {
-        href = "/entities?page="+page;
+        href = "/entities?type="+type;
         }
         console.log(href);
         window.location = href;
-        console.log(href);
+
+    }
+
+    function search(page, filteredBy=false) {
+        search_txt = $("#search_string").val();
+        if (filteredBy != false) {
+            var txt = "&type=" + filteredBy;
+        } else {
+            var txt = "";
+        }
+        if (search_txt) {
+        href = "/entities?page="+page+"&query="+search_txt+txt;
+        } else {
+        href = "/entities?page="+page+txt;
+        }
+        window.location = href;
+        console.log(filteredBy)
     }
             
         </script>

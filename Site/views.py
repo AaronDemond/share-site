@@ -136,6 +136,7 @@ def people(request, context={}):
                 
 
         query = request.GET.get('query', None)
+        context["filteredBy"] = False
         ql = []
         if query:
             people = Person.objects.filter(Name__icontains=query).order_by("-pk")
@@ -151,6 +152,22 @@ def people(request, context={}):
         for c in companies:
             ql.append([c, "company"])
         ql.sort(key=lambda x: x[0].Name)
+
+        if request.GET.get("type"):
+            filtered_ql = []
+            if request.GET.get("type") == "person":
+                context["filteredBy"] = "person"
+                for entity in ql:
+                    print(entity)
+                    if isinstance(entity[0], Person):
+                        filtered_ql.append([entity[0], "person"])
+            if request.GET.get("type") == "company":
+                context["filteredBy"] = "company"
+                for entity in ql:
+                    if isinstance(entity[0], Company):
+                        filtered_ql.append([entity[0], "company"])
+            ql = filtered_ql
+
 
         if request.GET.get("page"):
             page = int(request.GET.get("page"))
@@ -183,10 +200,10 @@ def link(request, _id=None):
             context["entity"] = Company.objects.get(pk=_id)
         if request.GET.get("search"):
             query = request.GET.get("query")
-            companies = Company.objects.filter(Name__icontains=query).order_by("-pk")
+            companies = Company.objects.filter(Name__icontains=query).order_by("Name")
             context["query"] = query
         else:
-            companies = Company.objects.all().order_by("-pk")
+            companies = Company.objects.all().order_by("Name")
             context["query"] = ""
 
         if request.GET.get("company_id"):
