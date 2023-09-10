@@ -756,7 +756,7 @@ def share_certificate(request, company_id = None):
             cert = ShareCertificate.objects.get(pk=request.GET.get("certId"))
             to = cert.ToPerson or cert.ToCompany
             _from = cert.FromPerson or cert.FromCompany
-            date = cert.Date.date()
+            date = cert.Date.strftime("%Y-%m-%d")
 
             if cert.Ammount.is_integer():
                 cert.Ammount = int(cert.Ammount)
@@ -1237,7 +1237,7 @@ def shareholders_ledger(request, company_id=None):
                     tt['total'] = int(tt['total'])
 
                 tt['transfer']=t
-                tt['date'] = t.Date.date()
+                tt['date'] = t.Date.strftime("%Y-%m-%d")
                 cert=""
                 for c in t.ShareCertificate.all():
                     if c.FromRemainder == True:
@@ -1417,9 +1417,9 @@ def registers(request, company_id=None):
                 else:
                     plural_name = "Secretaries"
                 for m in _managers:
-                    m.StartDate = m.StartDate.date()
+                    m.StartDate = m.StartDate.strftime("%Y-%m-%d")
                     if m.EndDate is not None:
-                        m.EndDate = m.EndDate.date()
+                        m.EndDate = m.EndDate.strftime("%Y-%m-%d")
                 context['managers'] = _managers
                 context['plural'] = plural_name
                 context['title'] = r.Title
@@ -1482,9 +1482,10 @@ def registers(request, company_id=None):
 
             #Sort by date
             entityShareClass=dict(sorted(entityShareClass.items(), key = lambda x: x[1][1]))
-            #Convert datetime to date
+            #Convert datetime to metric
             for key in entityShareClass:
-                entityShareClass[key][1] = entityShareClass[key][1].date()
+                entityShareClass[key][1] = \
+                    entityShareClass[key][1].strftime("%Y-%m-%d")
 
             #Truncate decimals if integer
             truncatedDecimalEntityShareClass = {}

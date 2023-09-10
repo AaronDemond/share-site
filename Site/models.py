@@ -151,7 +151,8 @@ class Transfer(models.Model):
             ammount = int(self.Ammount)
         else:
             ammount = self.Ammount
-        return str(ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name
+        dt = self.Date.strftime("%Y-%m-%d %H:%M:%S")
+        return str(ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name + " on (" + dt + ")"
 
 
 class ShareCertificate(models.Model):
