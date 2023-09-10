@@ -1,15 +1,15 @@
 {% load extras %}
 </style>
-<div class="input-group" style="padding-bottom: 20px;">
-    <input type="text" class="form-control" name = "query" 
-        id = "participantSearchString{% if direction == 'To' %}2{% endif %}" 
-                       value="{{query}}" placeholder="Search for..">
-    <span class="input-group-btn">
-        <button class="btn btn-success" 
-                {% if direction == 'From' %} id="fromSearch" {% else %} id="toSearch" {% endif %} onclick="search('{{targetDiv}}','{{direction}}',1)"
-            type="button">Go!</button>
-    </span>
-</div>
+        <div class="col-sm-12">
+            <input type="text" class="form-control" name = "query" 
+                id = "participantSearchString{% if direction == 'To' %}2{% endif %}" 
+                               value="{{query}}" placeholder="Search for..">
+        </div>
+        <div class="col-sm-12" style="margin-top:15px; margin-bottom: 15px;">
+            <button class="btn btn-success" 
+                    {% if direction == 'From' %} id="fromSearch" {% else %} id="toSearch" {% endif %} onclick="search('{{targetDiv}}','{{direction}}',1)"
+                type="button">Go!</button>
+        </div>
 <div id="participants{{direction}}Holder" class="row itemListContainer">
 {% for participant in participants %}
 <div class="row listItem">
@@ -22,13 +22,19 @@
     </div>    
     <div class="col-sm-9 buttonsInList">
         {% if participant.LinkedPerson %}
-        <button class="btn btn-primary"  
+        <!--<button class="btn btn-primary"  
                 onclick="select{{direction}}({{participant.LinkedPerson.id}},
-                '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                '{{participant.LinkedPerson}}','Person')" type="button">select</button> -->
+
+            <button class = "choose{{direction}} btn btn-primary" linkedid = "{{participant.LinkedPerson.id}}" linkedEntity = "{% for char in participant.LinkedPerson.Name %}{%if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}" entityType="Person" class="btn btn-primary" type="button">
+                                select </button>
         {% else %}
-        <button class="btn btn-primary"  
+        <!--<button class="btn btn-primary"  
                 onclick="select{{direction}}({{participant.LinkedCompany.id}}, 
-                '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> 
+                '{{participant.LinkedCompany}}', 'Company')" type="button">select</button> -->
+
+            <button class = "choose{{direction}} btn btn-primary" linkedid = "{{participant.LinkedCompany.id}}" linkedEntity = "{% for char in participant.LinkedCompany.Name %}{%if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}" entityType="Company" class="btn btn-primary" type="button">
+                                select </button>
         {% endif %}
     </div>
 </div>
@@ -49,3 +55,55 @@
         {% endif %}
     </div> 
 </div>
+<script type="text/javascript">
+    function selectFrom(participant_id, participant_name, type){
+        document.removeEventListener("keypress", enterSearchFrom);
+        doc.addEventListener("keypress", enterSearchTo);
+        console.log("TEST")
+        let fromHolderText = `<input type="hidden" name="from${type}",
+                value="${participant_id}"> <p> ${participant_name} </p>`;
+        $("#fromHolder").html(fromHolderText);
+        $("#q2title").toggle();
+        $("#toHolder").toggle();
+
+    }
+function selectTo(participant_id, participant_name, type){
+    document.removeEventListener("keypress", enterSearchTo);
+    doc.addEventListener("keypress", submitForm);
+    let toHolderText = `<input type="hidden" name="to${type}",
+                value="${participant_id}"> <p> ${participant_name} </p>`;
+    $("#toHolder").html(toHolderText);
+
+}
+
+function search(target_div,direction,page){
+    console.log(page);
+
+    if (direction == "From") {
+        var search_string = $("#participantSearchString").val();
+    } else {
+
+        var search_string = $("#participantSearchString2").val();
+    }
+    url = "/companies/{{company.id}}/enterTransfer/?type=search&targetDiv="+target_div+"&direction="+direction+"&query="+search_string+"&page="+page;
+    t_div = '#' + target_div;
+    $.ajax({url: url, async:false, success: function(result){
+        $(t_div).html(result);
+    }});
+}
+
+$(".chooseFrom").click(function(e){
+    var linkedEntity = $(this).attr("linkedEntity");
+    var id = $(this).attr("linkedid");
+    var entityType = $(this).attr("entityType");
+    console.log("TEST");
+    selectFrom(id,linkedEntity, entityType);
+});
+$(".chooseTo").click(function(e){
+    var linkedEntity = $(this).attr("linkedEntity");
+    var id = $(this).attr("linkedid");
+    var entityType = $(this).attr("entityType");
+    console.log("TEST");
+    selectTo(id,linkedEntity, entityType);
+});
+</script>

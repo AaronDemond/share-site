@@ -23,10 +23,10 @@ def companies(request, company_id=None, context=None):
             context = {}
         query = request.GET.get('query', None)
         if query:
-            ql = Company.objects.filter(Name__icontains=query).order_by("-Modified")
+            ql = Company.objects.filter(Name__icontains=query).order_by("Name")
             context['query'] = query
         else:
-            ql = Company.objects.all().order_by("-Modified")
+            ql = Company.objects.all().order_by("Name")
             context['query'] = ""
 
         context['companies'] = ql
@@ -268,6 +268,8 @@ def issue_shares(request, company_id=None):
         company = Company.objects.get(pk=int(company_id))
         share_classes = ShareClass.objects.all().order_by("Name")
         context = {'company' : company}
+        incorpDate = company.IncorporationDate.strftime("%Y-%m-%d %H:%M:%S")
+        context["incorporationDate"] = incorpDate
 
         #Creates a dict of type {'Share Class' : [Ammount, Document, Issued, Remaining, par value]}
         authorized = company.AuthorizedShares.all()
@@ -681,6 +683,12 @@ def enter_transfer(request, company_id=None):
         company = Company.objects.get(pk=int(company_id))
         participants = company.Participant.all()
         share_classes = ShareClass.objects.all().order_by("Name")
+        auth_shares = AuthorizedShares.objects.filter(Company=company)
+        share_classes_set = set()
+        for a in auth_shares:
+            share_classes_set.add(a.ShareClass)
+        share_classes = list(share_classes_set)
+        share_classes.sort(key = lambda x: x.Name)
         context = {}
         context['company']=company
         context['share_classes']=share_classes
@@ -745,53 +753,55 @@ def enter_transfer(request, company_id=None):
             return render(request, 'enter_transfer_search.html', context)
 
         if request.method=="POST":
+            try:
+                date = request.POST.get("date")
+                time = request.POST.get("time")
+                dt = date + " " + time
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
+                date = pytz.timezone("America/Halifax").localize(date)
+                price = request.POST.get("price")
+                ammount = request.POST.get("ammount")
+                shareClass = request.POST.get("shareClass")
+                shareClass = ShareClass.objects.get(pk=shareClass)
 
-            date = request.POST.get("date")
-            time = request.POST.get("time")
-            dt = date + " " + time
-            date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-            date = pytz.timezone("America/Halifax").localize(date)
-            price = request.POST.get("price")
-            ammount = request.POST.get("ammount")
-            shareClass = request.POST.get("shareClass")
-            shareClass = ShareClass.objects.get(pk=shareClass)
-
-            transfer = Transfer(Date=date,Price=price,Ammount=ammount,
-                    Company=company,ShareClass=shareClass)
-
-            fromCompany = request.POST.get("fromCompany")
-            fromPerson = request.POST.get("fromPerson")
-            toPerson = request.POST.get("toPerson")
-            toCompany = request.POST.get("toCompany")
-            if fromCompany and toCompany:
-                if fromCompany == toCompany:
+                other = Transfer.objects.filter(Date=date)
+                if len(other) > 0 :
                     context['error_type'] = "danger"
-                    context['alert'] = "Origin same as destination"
+                    context['alert'] = "Transaction exists at this time"
                     return companies(request, context=context)
-            if fromPerson and toPerson:
-                if fromPerson == toPerson:
-                    context['error_type'] = "danger"
-                    context['alert'] = "Origin same as destination"
-                    return companies(request, context=context)
-            if fromPerson:
-                fromPerson = Person.objects.get(pk=fromPerson)
-                transfer.FromPerson = fromPerson
-            elif fromCompany:
-                fromCompany = Company.objects.get(pk=fromCompany)
-                transfer.FromCompany = fromCompany
-            else:
+
+                transfer = Transfer(Date=date,Price=price,Ammount=ammount,
+                        Company=company,ShareClass=shareClass)
+
+                fromCompany = request.POST.get("fromCompany")
+                fromPerson = request.POST.get("fromPerson")
+                toPerson = request.POST.get("toPerson")
+                toCompany = request.POST.get("toCompany")
+                if fromCompany and toCompany:
+                    if fromCompany == toCompany:
+                        raise Exception("Origin same as destination")
+                if fromPerson and toPerson:
+                    if fromPerson == toPerson:
+                        raise Exception("Origin same as destination")
+                if fromPerson:
+                    fromPerson = Person.objects.get(pk=fromPerson)
+                    transfer.FromPerson = fromPerson
+                elif fromCompany:
+                    fromCompany = Company.objects.get(pk=fromCompany)
+                    transfer.FromCompany = fromCompany
+                else:
+                    raise Exception("Select an origin")
+                if toPerson:
+                    toPerson = Person.objects.get(pk=toPerson)
+                    transfer.ToPerson = toPerson
+                elif toCompany:
+                    toCompany = Company.objects.get(pk=toCompany)
+                    transfer.ToCompany = toCompany
+                else:
+                    raise Exception("Select a destination")
+            except Exception as e:
                 context['error_type'] = "danger"
-                context['alert'] = "Select an origin"
-                return companies(request, context=context)
-            if toPerson:
-                toPerson = Person.objects.get(pk=toPerson)
-                transfer.ToPerson = toPerson
-            elif toCompany:
-                toCompany = Company.objects.get(pk=toCompany)
-                transfer.ToCompany = toCompany
-            else:
-                context['error_type'] = "danger"
-                context['alert'] = "Select a destination"
+                context['alert'] = str(e)
                 return companies(request, context=context)
 
             def checkEnoughShares(t):
@@ -877,10 +887,16 @@ def enter_transfer(request, company_id=None):
                                 return False
                         return True
 
-            if fromCompany:
-                enough = checkEnoughShares("company")
-            elif fromPerson:
-                enough = checkEnoughShares("person")
+            try:
+                if fromCompany:
+                    enough = checkEnoughShares("company")
+                elif fromPerson:
+                    enough = checkEnoughShares("person")
+            except Exception as e:
+                context['error_type'] = "danger"
+                context['alert'] = str(e)
+                return companies(request, context=context)
+
             if enough:
                 transfer.save()
                 context['error_type'] = "success"
@@ -897,8 +913,6 @@ def enter_transfer(request, company_id=None):
                 context['error_type'] = "danger"
                 context['alert'] = "Not enough shares!"
             return companies(request, context=context)
-
-
         return render(request, 'enter_transfer.html', context)
     else:
         return HttpResponse("Please login")
@@ -1428,6 +1442,12 @@ def management(request, company_id = None):
         context['company'] = company
         managers = Manager.objects.filter(Company=company,EndDate__isnull=True).order_by("Person")
         context["managers"] = managers
+        managers_fixed = []
+        for m in context["managers"]:
+            m.str = m.__str__()
+            managers_fixed.append(m)
+        context["managers"] = managers_fixed
+
         if request.GET.get("type") == "search":
             delete = request.GET.get("delete")
             if delete == "True":

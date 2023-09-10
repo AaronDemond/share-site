@@ -15,8 +15,11 @@
                            {{m}} 
                        </div> 
                        <div class="col-sm-8 buttonsInList">
-                          <button type="button" class="btn btn-primary" 
-                                                 onclick="selectDeletion({{m.id}},'{{m}}')">Select</button> 
+<button class="selectRemove btn btn-primary"  
+                                        linkedId="{{m.id}}"
+                                        linkedManager="{% for char in m.str %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
+                                     type="button">select</button>
+                           
                        </div> 
                    </div>
                {% endfor %}
@@ -37,3 +40,12 @@
                     {% endif %}
                 </div> 
             </div>
+            <script type="text/javascript">
+
+        $(".selectRemove").click(function(e){
+           console.log("TEST");
+            var linkedId = $(this).attr("linkedId");
+            var linkedManager = $(this).attr("linkedManager");
+            selectDeletion(linkedId, linkedManager);
+        });
+            </script>

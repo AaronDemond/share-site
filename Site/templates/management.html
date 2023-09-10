@@ -40,8 +40,11 @@
                            {{m}} 
                         </div> 
                         <div class="col-sm-8 buttonsInList">
-                          <button type="button" class="btn btn-primary" 
-                                                 onclick="selectDeletion({{m.id}},'{{m}}')">Select</button> 
+<button class="selectRemove btn btn-primary"  
+                                        linkedId="{{m.id}}"
+                                        linkedManager="{% for char in m.str %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
+                                     type="button">select</button>
+                           
                         </div> 
                     </div>
                     {% endfor %}
@@ -107,9 +110,10 @@
                             </div>    
                             
                             <div class="col-sm-9 buttonsInList">
-                                <button class="btn btn-primary"  
-                                        onclick="selectPerson({{participant.LinkedPerson.id}},
-                                        '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
+                                <button class="selectAdd btn btn-primary"  
+                                        linkedId="{{participant.LinkedPerson.id}}"
+                                        linkedPerson="{% for char in participant.LinkedPerson.Name %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
+                                        _type = "Person" type="button">select</button> 
                             </div>
                         </div>
                     {% endif %}
@@ -179,6 +183,19 @@
     {% block scripts %}
 
     <script type="text/javascript">
+        $(".selectAdd").click(function(e){
+           console.log("TEST");
+            var linkedId = $(this).attr("linkedId");
+            var linkedPerson = $(this).attr("linkedPerson");
+            var type = $(this).attr("_type");
+            selectPerson(linkedId, linkedPerson, type);
+        });
+        $(".selectRemove").click(function(e){
+           console.log("TEST");
+            var linkedId = $(this).attr("linkedId");
+            var linkedManager = $(this).attr("linkedManager");
+            selectDeletion(linkedId, linkedManager);
+        });
         $("#addManagementHolder").hide();
         $("#removeManagementHolder").hide();
         function addManagement() {
