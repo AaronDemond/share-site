@@ -476,8 +476,21 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
     if request.user.is_authenticated:
         company = Company.objects.get(pk=company_id)
         _transfers = list(Transfer.objects.filter(Company=company).order_by("-Date"))
-        context["transfers"] = _transfers
+        context["transfers"] = []
         context["company"] = company
+
+        #escape quotes for html
+        for t in _transfers:
+            t.str = t.__str__()
+            s = ""
+            for char in t.str:
+                if char =='"' :
+                    s += "&quot;"
+                else:
+                    s += char
+            t.str = s
+            context["transfers"].append(t)
+
         tt=[]
         if request.GET.get("query"):
             query = request.GET.get("query").lower()

@@ -41,7 +41,11 @@
 
                 </div>
                 <div class="col-sm-3 buttonsInList">
-                    <button type="button" class="btn btn-primary" onclick="selectTransfer('{{transfer}}','{{transfer.id}}','{{transfer.ShareClass.id}}')">Delete</button>
+                    <button type="button" class="deleteBtn btn btn-primary" 
+                                          transfer = "{{transfer.str}}"
+                                          transferId = "{{transfer.id}}"
+                                          transferShareClassId = "{{transfer.ShareClass.id}}"
+                                          >Delete</button>
 
                 </div>
 
@@ -70,6 +74,12 @@
 {% endblock main %}
 {% block scripts %}
 <script type = "text/javascript">
+    $(".deleteBtn").click(function(e) {
+        var transfer = $(this).attr("transfer");
+        var transferId = $(this).attr("transferId");
+        var transferShareClassId = $(this).attr("transferShareClassId");
+        selectTransfer(transfer, transferId, transferShareClassId);
+    });
     $("#deleteButtonHolder").hide();
 function selectTransfer(text, id, share_type){
     $("#pagenationHolder").hide();
