@@ -51,7 +51,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
                                         onclick="selectFrom({{participant.LinkedPerson.id}},
                                         '{{participant.LinkedPerson}}','Person')" type="button">select</button> 
                             -->
-<button class = "chooseFrom btn btn-primary" linkedid = "{{participant.LinkedCompany.id}}" linkedEntity = "{% for char in participant.LinkedPerson.Name %}{%if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}" entityType="Person" class="btn btn-primary" type="button">
+<button class = "chooseFrom btn btn-primary" linkedid = "{{participant.LinkedPerson.id}}" linkedEntity = "{% for char in participant.LinkedPerson.Name %}{%if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}" entityType="Person" class="btn btn-primary" type="button">
                                 select </button>
 
                             {% else %}
