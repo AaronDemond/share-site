@@ -657,20 +657,41 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
             _transfers.sort(key= lambda x: x.Date)
             print(_transfers)
 
+            #authorized, issued, remaining
+            register[company] = [0,0,0]
             for t in _transfers:
+                print(register[company])
                 if isinstance(t, AuthorizedShares):
-                    register[company] += t.Ammount
+                    register[company][0] += t.Ammount
+                    register[company][2] += t.Ammount
                 else:
                     receiver = t.ToPerson or t.ToCompany
                     sender = t.FromPerson or t.FromCompany
-                    if register[sender] >= t.Ammount:
-                        register[sender] -= t.Ammount
-                        if receiver != company:
+                    if receiver == company:
+                        if register[sender] >= t.Ammount:
+                            register[company][0] -= t.Ammount
+                            register[company][1] -= t.Ammount
+                            register[company][2] = register[company][0] - \
+                                    register[company][1]
+                            register[sender] -= t.Ammount
+                        else:
+                            to_be_deleted.append(t)
+
+                    elif sender == company:
+                        if register[company][2] >= t.Ammount:
+                            register[company][1] += t.Ammount
+                            register[company][2] = register[company][0] - \
+                                    register[company][1]
                             register[receiver] += t.Ammount
                         else:
-                            register[receiver] -= t.Ammount
+                            to_be_deleted.append(t)
                     else:
-                        to_be_deleted.append(t)
+                        if register[sender] >= t.Ammount:
+                            register[sender] -= t.Ammount
+                            register[receiver] += t.Ammount
+                        else:
+                            to_be_deleted.append(t)
+
             context["transfers"] = to_be_deleted
             return render(request, 'transfers_confirm.html', context)
 
