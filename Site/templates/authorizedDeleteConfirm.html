@@ -43,23 +43,25 @@
 
             </div> 
             {% endfor %}
-            <div class="row">
+            
+
+            
+
+        </div>
+        <div class="row">
             <div class="col-sm-12" style="margin-top: 15px;">
                 <button class="btn btn-danger" type="submit">Delete</a> 
             </div>
-            </div>
-
-            <div id="selectHolder">
-                <select name="transfers" multiple>
-                    {% for transfer in toDelete %}
-                    <option selected value="{{transfer.id}}"</option>
-                    {% endfor %}
-                </select>
-                <input type="hidden" name="authToDelete" value="{{authorizedToDelete.pk}}">
-            </div>
-
         </div>
     </div>	
+    <div id="selectHolder">
+        <select name="transfers" multiple>
+            {% for transfer in toDelete %}
+            <option selected value="{{transfer.id}}"</option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="authToDelete" value="{{authorizedToDelete.pk}}">
+    </div>
 </form>
 {% endblock main %}
 {% block scripts %}

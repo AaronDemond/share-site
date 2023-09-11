@@ -2,13 +2,17 @@
 {% block main %}
 <div class="row"id="linkHolder">
     <div class="col-sm-12">
-        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / <a href="/companies/{{company.id}}/registers/">Registers</a> / {{ role }}
+        <a href="/" >Home</a> / <a href="/companies/">Companies</a> / <a href="/companies/{{company.id}}/registers/">Registers</a> / {{ plural }} Register
     </div>
 </div>
 <div class="row">
    <div class="col-sm-12" style="text-align: center">
        <h3>{{company}}</h3> 
+       {% if OfficerSelected == True %}
+       <p>Officers Register</p>
+       {% else %}
        <p>{{plural}} Register</p>
+       {% endif %}
    </div> 
 </div>
 <div class="row">
@@ -17,6 +21,9 @@
             <tr>
                 <th class="tableHeader" style="vertical-align: middle; text-align:center;">Name</th>
                 <th class="tableHeader" style="vertical-align: middle; text-align:center;">Address</th>
+                {% if OfficerSelected == True %}
+                <th class="tableHeader" style="vertical-align: middle; text-align:center;">Officer Type</th>
+                {% endif %}
                 <th class="tableHeader" style="text-align:center;">Date became a(n) {{title}}</th>
                 <th class="tableHeader" style="text-align:center">Date ceased to be a {{title}}</th>
             </tr>
@@ -24,6 +31,9 @@
             <tr class="boldBorder boldBottom quarterWidth">
                 <td>{{manager.Person.Name}}</td>
                 <td>{{manager.Person.Address}}</td>
+                {% if OfficerSelected %}
+                <td>{{manager.Title}}</td>
+                {% endif %}
                 <td style="width: 20%; text-align: center;">{{manager.StartDate}}</td>
                 <td style="width: 20%; text-align: center;">{{manger.EndDate}}</td>
             </tr>

@@ -32,14 +32,14 @@
         <a href="/companies/{{company.id}}/registers/?role=ShareHolder"
            class = "btn btn-primary">Shareholders</a>
         {% for role in roles %}
-            {% if role == "Secretary" %}
-                <a href="/companies/{{company.id}}/registers/?role={{role.pk}}"
-                   class = "btn btn-primary">Secretaries</a>
-            {% else %}
             <a href="/companies/{{company.id}}/registers/?role={{role.pk}}"
                class = "btn btn-primary">{{role}}s</a>
-            {% endif %}
         {% endfor %}
+
+        {% if Officer == True %}
+        <a href="/companies/{{company.id}}/registers/?role=Officer"
+           class = "btn btn-primary">Officers</a>
+        {% endif %}
     </div>
 </div>	
 {% endblock main %}

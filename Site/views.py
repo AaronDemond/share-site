@@ -1605,12 +1605,38 @@ def management(request, company_id = None):
     
 def registers(request, company_id=None):
     if request.user.is_authenticated:
+        context = {}
         company = Company.objects.get(pk=company_id)
         managers = company.Manager.filter(EndDate__isnull=True)
         filled_roles = set([x.Title for x in managers])
-        context = {'roles' : filled_roles, 'company' : company}
+        context["roles"] = filled_roles
+        print(context["roles"])
+        director = ManagerRole.objects.get(Title="Director")
+        context["roles"] = []
+        if director in filled_roles:
+            context["roles"].append(director)
+            filled_roles.remove(director)
+        context["company"] = company
+        if len(filled_roles) > 0:
+            context["Officer"] = True
+            officersList = [m for m in managers if m.Title.Title != "Director" \
+                    and m.EndDate == None]
+            context["Officer"] = True
+            print(officersList)
+
         if request.GET.get("role"):
             role = request.GET.get("role")
+            if role == "Officer":
+                context["OfficerSelected"] = True
+                context['plural'] = "Officers"
+                context['title'] = "Officer"
+                officersList.sort(key = lambda x: x.StartDate)
+                for m in officersList:
+                    m.StartDate = m.StartDate.strftime("%Y-%m-%d")
+                    if m.EndDate is not None:
+                        m.EndDate = m.EndDate.strftime("%Y-%m-%d")
+                context["managers"] = officersList
+                return render(request, "managementRegister.html", context)
             if role != "ShareHolder":
                 r = ManagerRole.objects.get(pk=role)
                 _managers = Manager.objects.filter(Company=company, Title=r).order_by("StartDate")
@@ -1626,11 +1652,7 @@ def registers(request, company_id=None):
                 context['plural'] = plural_name
                 context['title'] = r.Title
                 return render(request, "managementRegister.html", context)
-            if role != "ShareHolder":
-                context["role"] = ManagerRole.objects.get(pk=role).__str__() + "s" + " Register"
-            if role == "Secretary":
-                context["role"] = "Secretaries Register"
-            
+
             if role == "ShareHolder":
                 context["role"] = "Shareholder's Register"
 
