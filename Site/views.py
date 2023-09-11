@@ -1611,10 +1611,8 @@ def registers(request, company_id=None):
         filled_roles = set([x.Title for x in managers])
         context["roles"] = filled_roles
         print(context["roles"])
-        try:
-            director = ManagerRole.objects.get(Title="Director")
-        except:
-            director = None
+
+        director = ManagerRole.objects.get(Title="Director")
         context["roles"] = []
         if director in filled_roles:
             context["roles"].append(director)
