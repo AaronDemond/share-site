@@ -7,8 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect 
 from Site.models import Company, ShareClass, AuthorizedShares, Person, Transfer, CompanyParticipant, Manager, ManagerRole, ShareCertificate
 from django.urls import resolve
+from django.utils import timezone
+
 
 PAGELENGTH = 5
+
 
 #Home page
 def index(request, **kwargs):
@@ -59,7 +62,6 @@ def shareholders_register(request, company_id=None):
     
 def people(request, context={}):
     if request.user.is_authenticated:
-        print(context)
         if "companyCreatedAlert" not in context.keys() \
                 and "personCreatedAlert" not in context.keys() \
                 and "linkAlert" not in context.keys():
@@ -70,29 +72,37 @@ def people(request, context={}):
             entity_id = request.POST.get("entity_id")
             address = request.POST.get("Address")
             name = request.POST.get("Name")
-            print(name)
 
             try:
                 if _type == "person":
                     person = Person.objects.get(pk=entity_id)
                     others = Person.objects.filter(Name=name)
+                    others = [x for x in others if int(x.pk) != int(entity_id)]
+                    if len(others) > 0:
+                        raise Exception("Person Already Exists")
                     person.Name = name
                     person.Address = address
                     person.save()
-                    context["alert_type"] = "success"
-                    context["alert"] = "Entity Updated"
                 elif _type == "company":
                     company = Company.objects.get(pk=entity_id)
                     date = request.POST.get("date")
                     time = request.POST.get("time")
                     dt = date + " " + time
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    date = pytz.timezone("America/Halifax").localize(date)
+                    #date = pytz.timezone("America/Halifax").localize(date)
                     company.Name = name
                     company.Address = address
                     company.IncorporationDate = date
                     auth_shares = AuthorizedShares.objects.filter(Company=company)
+                    others = Company.objects.filter(Name=name)
+                    others = [x for x in others if int(x.pk) != int(entity_id)]
+                    if len(others) > 0:
+                        raise Exception("Company Already Exists")
                     for auth in auth_shares:
+                        print("auth date")
+                        print(auth.Date)
+                        print("Incorp date")
+                        print(date)
                         if auth.Date < date:
                             raise Exception("Cannot incorporate after authorizing shares")
                     managers = company.Manager.all()
@@ -100,11 +110,12 @@ def people(request, context={}):
                         if manager.StartDate < date:
                             raise Exception("Cannot incorporate after management added")
                     company.save()
-                    context["alert_type"] = "success"
-                    context["alert"] = "Entity Updated"
+                return HttpResponseRedirect("/entities/" + \
+                    "?alert=Entity%20Updated&alertType=success")
             except Exception as e:
-                context["alert_type"] = "danger"
-                context["alert"] = "ERROR! " + str(e)
+                error = str(e).replace(" ", "%20")
+                return HttpResponseRedirect("/entities/" + \
+                    "?alert="+error+"&alertType=danger")
         if request.GET.get("entity_id"):
             _type = request.GET.get("type")
             _id = request.GET.get("entity_id")
@@ -117,14 +128,15 @@ def people(request, context={}):
 
             if request.GET.get("delete") == "true":
                 entity.delete()
-                context["alert_type"] = "success"
-                context["alert"] = "Entity Deleted"
+                return HttpResponseRedirect("/entities/" + \
+                    "?alert=Entity%20Deleted&alertType=success")
             if request.GET.get("edit") == "true":
                 context["edit"] = True
                 if _type == "person":
                     return render(request, "create_person.html", context)
                 if _type == "company":
                     dt = entity.IncorporationDate
+                    print(dt)
 
                     date = dt.strftime("%Y-%m-%d")
                     time = dt.strftime("%H:%M:%S")
@@ -186,6 +198,10 @@ def people(request, context={}):
         context['entities'] = ql
         context['page'] = page
 
+        if request.GET.get("alert"):
+            context["alert"] = request.GET.get("alert")
+            context["alert_type"] = request.GET.get("alertType")
+
         return render(request, 'people.html', context)
     else:
         return HttpResponse("Please Login")
@@ -215,26 +231,20 @@ def link(request, _id=None):
                 q = CompanyParticipant.objects.filter(CompanyReference = company,
                         LinkedPerson = context["entity"])
                 if len(q) > 0:
-                    context["alert_type"] = "danger"
-                    context["alert"] = "Link already exists"
-                    context["linkAlert"] = True
-                    return people(request, context)
+                    return HttpResponseRedirect("/entities/" + \
+                        "?alert=Link%20Already%20Exists&alertType=danger")
 
             elif _type == "company":
                 companyParticipant.LinkedCompany = context["entity"]
                 q = CompanyParticipant.objects.filter(CompanyReference = company,
                         LinkedCompany = context["entity"])
                 if len(q) > 0:
-                    context["alert_type"] = "danger"
-                    context["alert"] = "Link already exists"
-                    context["linkAlert"] = True
-                    return people(request, context)
+                    return HttpResponseRedirect("/entities/" + \
+                        "?alert=Link%20Already%20Exists&alertType=danger")
             try:
                 companyParticipant.save()
-                context["alert_type"] = "success"
-                context["alert"] = "Entity Linked"
-                context["linkAlert"] = True
-                return people(request, context)
+                return HttpResponseRedirect("/entities/" + \
+                        "?alert=Entity%20Linked&alertType=success")
             except:
                 context["alert_type"] = "danger"
                 context["alert"] = "Error saving link"
@@ -401,7 +411,7 @@ def issue_shares(request, company_id=None):
                 try:
                     share_class = ShareClass.objects.get(pk=share_class)
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    date = pytz.timezone("America/Halifax").localize(date)
+                    #date = pytz.timezone("America/Halifax").localize(date)
                     if _file:
                         authorized_shares = AuthorizedShares(Company=company,
                                 Ammount=ammount, ShareClass=share_class,
@@ -410,6 +420,10 @@ def issue_shares(request, company_id=None):
                         authorized_shares = AuthorizedShares(Company=company,
                                 Ammount=ammount, ShareClass=share_class,
                                 Date=date, Value=value)
+                    print("AUTH DATE")
+                    print(date)
+                    print("INCORP DATE")
+                    print(company.IncorporationDate)
                     if company.IncorporationDate > date:
                         raise Exception("Company not yet incorporated")
                     authorized_shares.save()
@@ -434,27 +448,26 @@ def create_company(request):
         if request.method == "POST":
             name = request.POST.get("Name")
             modified = datetime.datetime.now()
-            modified = pytz.timezone("America/Halifax").localize(modified)
+            #modified = pytz.timezone("America/Halifax").localize(modified)
             date = request.POST.get("date")
             time = request.POST.get("time")
             dt = date + " " + time
             date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-            date = pytz.timezone("America/Halifax").localize(date)
+            #date = pytz.timezone("America/Halifax").localize(date)
             address = request.POST.get("Address")
             try:
                 new_company = Company(Name=name, Modified=modified,
                         IncorporationDate=date, Address=address)
                 others = Company.objects.filter(Name=name)
                 if len(others) > 0:
-                    context["alert_type"] = "danger"
-                    context["alert"] = "ERROR! Name already in use"
+                    return HttpResponseRedirect("/entities/" + \
+                        "?alert=Company%20Exists&alertType=danger")
                 else:
                     new_company.save()
-                    context["alert_type"] = "success"
-                    context["alert"] = "Company created"
-                context["companyCreatedAlert"] = True
-                return people(request=request, context = context)
+                    return HttpResponseRedirect("/entities/" + \
+                        "?alert=Company%20Created&alertType=success")
             except Exception as e:
+                return HttpResponse(str(e))
                 context["alert_type"] = "danger"
                 context["alert"] = "ERROR! " + str(e)
                 context["companyCreatedAlert"] = True
@@ -475,7 +488,8 @@ def create_person(request):
                     raise Exception("Name already in use")
                 address = request.POST.get("Address")
                 date = datetime.datetime.now()
-                date = pytz.timezone("America/Halifax").localize(date)
+                print(date)
+                #date = pytz.timezone("America/Halifax").localize(date)
                 new_person = Person(Name = name, Address = address, Modified = date)
                 new_person.save()
                 context["alert_type"] = "success"
@@ -779,7 +793,7 @@ def enter_transfer(request, company_id=None):
                 time = request.POST.get("time")
                 dt = date + " " + time
                 date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                date = pytz.timezone("America/Halifax").localize(date)
+                #date = pytz.timezone("America/Halifax").localize(date)
                 price = request.POST.get("price")
                 ammount = request.POST.get("ammount")
                 shareClass = request.POST.get("shareClass")
@@ -1550,7 +1564,7 @@ def management(request, company_id = None):
                     time = request.POST.get("time")
                     dt = date + " " + time
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    date = pytz.timezone("America/Halifax").localize(date)
+                    #date = pytz.timezone("America/Halifax").localize(date)
                     deletedManager.EndDate = date
                     deletedManager.save()
                     context["error_type"] = "success"
@@ -1567,7 +1581,7 @@ def management(request, company_id = None):
                     time = request.POST.get("time")
                     dt = date + " " + time
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    date = pytz.timezone("America/Halifax").localize(date)
+                    #date = pytz.timezone("America/Halifax").localize(date)
                     person_id = request.POST.get("person_id")
                     person = Person.objects.get(pk=person_id)
                     role = request.POST.get("role")
