@@ -14,8 +14,8 @@ class Person(models.Model):
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         modified = datetime.datetime.now()
-        #date = pytz.timezone("America/Halifax").localize(modified)
-        self.Modified = modified
+        date = pytz.timezone("America/Halifax").localize(modified)
+        self.Modified = date
         return super(Person, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -30,8 +30,8 @@ class Company(models.Model):
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         modified = datetime.datetime.now()
-        #date = pytz.timezone("America/Halifax").localize(modified)
-        self.Modified = modified
+        date = pytz.timezone("America/Halifax").localize(modified)
+        self.Modified = date
         if self.Name == "":
             raise Exception("Can't be a blank name")
         else:
@@ -92,7 +92,8 @@ class AuthorizedShares(models.Model):
             super(AuthorizedShares, self).save(*args, **kwargs)
 
     def __str__(self):
-        dt = self.Date.strftime("%Y-%m-%d %H:%M:%S")
+        dt = self.Date - datetime.timedelta(hours=3)
+        dt = dt.strftime("%Y-%m-%d %H:%M:%S")
         return str(self.Ammount) + " of " + str(self.ShareClass) + " for " + str(self.Company) + " on " + dt
 
     class Meta:
@@ -154,7 +155,8 @@ class Transfer(models.Model):
             ammount = int(self.Ammount)
         else:
             ammount = self.Ammount
-        dt = self.Date.strftime("%Y-%m-%d %H:%M:%S")
+        dt = self.Date - datetime.timedelta(hours=3)
+        dt = dt.strftime("%Y-%m-%d %H:%M:%S")
         return str(ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name + " on (" + dt + ")"
 
 

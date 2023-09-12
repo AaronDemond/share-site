@@ -89,7 +89,7 @@ def people(request, context={}):
                     time = request.POST.get("time")
                     dt = date + " " + time
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    #date = pytz.timezone("America/Halifax").localize(date)
+                    date = pytz.timezone("America/Halifax").localize(date)
                     company.Name = name
                     company.Address = address
                     company.IncorporationDate = date
@@ -201,8 +201,8 @@ def people(request, context={}):
                                         else:
                                             to_be_deleted.append(t)
 
-                for t in to_be_deleted:
-                    t.delete()
+                    for t in to_be_deleted:
+                        t.delete()
                 entity.delete()
                 return HttpResponseRedirect("/entities/" + \
                     "?alert=Entity%20Deleted&alertType=success")
@@ -212,8 +212,7 @@ def people(request, context={}):
                     return render(request, "create_person.html", context)
                 if _type == "company":
                     dt = entity.IncorporationDate
-                    print(dt)
-
+                    dt = dt - datetime.timedelta(hours=3)
                     date = dt.strftime("%Y-%m-%d")
                     time = dt.strftime("%H:%M:%S")
                     context["entity"].Date = date
@@ -351,7 +350,9 @@ def issue_shares(request, company_id=None):
         company = Company.objects.get(pk=int(company_id))
         share_classes = ShareClass.objects.all().order_by("Name")
         context = {'company' : company}
-        incorpDate = company.IncorporationDate.strftime("%Y-%m-%d %H:%M:%S")
+        incorpDate = company.IncorporationDate
+        incorpDate = incorpDate - datetime.timedelta(hours=3)
+        incorpDate = incorpDate.strftime("%Y-%m-%d %H:%M:%S")
         context["incorporationDate"] = incorpDate
 
         #Creates a dict of type {'Share Class' : [Ammount, Document, Issued, Remaining, par value]}
@@ -404,11 +405,12 @@ def issue_shares(request, company_id=None):
                     share_classes_authorized[str(shareClass)][0] - \
                     share_classes_authorized[str(shareClass)][2]
 
-        print(share_classes_authorized)
         for sc in shareClassSet:
             auth = AuthorizedShares.objects.filter(ShareClass = sc, Company = company)[0]
             share_classes_authorized[str(sc)].append(auth.Value)
 
+        print("===============share classes authorized===============")
+        print(share_classes_authorized)
         for key, value in share_classes_authorized.items():
             if value[0] != 0:
                 if value[0].is_integer():
@@ -422,7 +424,7 @@ def issue_shares(request, company_id=None):
                 if value[3].is_integer():
                     v = int(value[3])
                     share_classes_authorized[key][3] = v
-            if value[4] != 4:
+            if value[4] != 0:
                 if value[4].is_integer():
                     v = int(value[4])
                     share_classes_authorized[key][4] = v
@@ -484,7 +486,7 @@ def issue_shares(request, company_id=None):
                 try:
                     share_class = ShareClass.objects.get(pk=share_class)
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    #date = pytz.timezone("America/Halifax").localize(date)
+                    date = pytz.timezone("America/Halifax").localize(date)
                     if _file:
                         authorized_shares = AuthorizedShares(Company=company,
                                 Ammount=ammount, ShareClass=share_class,
@@ -520,17 +522,19 @@ def create_company(request):
         context = {}
         if request.method == "POST":
             name = request.POST.get("Name")
-            modified = datetime.datetime.now()
-            #modified = pytz.timezone("America/Halifax").localize(modified)
+            modified = datetime.datetime.now(tz=None)
+            modified = pytz.timezone("America/Halifax").localize(modified)
             date = request.POST.get("date")
             time = request.POST.get("time")
             dt = date + " " + time
             date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-            #date = pytz.timezone("America/Halifax").localize(date)
+            date.replace(tzinfo=None)
+            date = pytz.timezone("America/Halifax").localize(date)
             address = request.POST.get("Address")
             try:
-                new_company = Company(Name=name, Modified=modified,
-                        IncorporationDate=date, Address=address)
+                new_company = Company(Name=name,
+                        IncorporationDate=date, Address=address,
+                        Modified=modified)
                 others = Company.objects.filter(Name=name)
                 if len(others) > 0:
                     return HttpResponseRedirect("/entities/" + \
@@ -559,9 +563,9 @@ def create_person(request):
                     raise Exception("Name already in use")
                 address = request.POST.get("Address")
                 date = datetime.datetime.now()
-                print(date)
-                #date = pytz.timezone("America/Halifax").localize(date)
-                new_person = Person(Name = name, Address = address, Modified = date)
+                date = pytz.timezone("America/Halifax").localize(date)
+                new_person = Person(Name = name, Address = address, 
+                        Modified=date)
                 new_person.save()
                 return HttpResponseRedirect("/entities/" + \
                         "?alert=Person%20Created&alertType=success")
@@ -609,7 +613,8 @@ def authorized(request, company_id=None, context={}):
         authorizedToDelete = AuthorizedShares.objects.get(pk=authorizedToDelete)
         shareClass = authorizedToDelete.ShareClass
         all_auth = AuthorizedShares.objects.filter(Company=company)
-        transfers = Transfer.objects.filter(FromCompany=company, ShareClass=shareClass)
+        transfers = Transfer.objects.filter(Company = company,
+                FromCompany=company, ShareClass=shareClass)
 
         all_tran = [x for x in all_auth]
         all_tran.extend([x for x in transfers])
@@ -624,7 +629,7 @@ def authorized(request, company_id=None, context={}):
                 remaining += t.Ammount
             else:
                 remaining -= t.Ammount
-            if remaining < 0:
+            if remaining <= 0:
                 toDelete.append(t)
         toDelete.remove(authorizedToDelete)
         context["authorizedToDelete"] = authorizedToDelete
@@ -855,7 +860,7 @@ def enter_transfer(request, company_id=None):
                 time = request.POST.get("time")
                 dt = date + " " + time
                 date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                #date = pytz.timezone("America/Halifax").localize(date)
+                date = pytz.timezone("America/Halifax").localize(date)
                 price = request.POST.get("price")
                 ammount = request.POST.get("ammount")
                 shareClass = request.POST.get("shareClass")
@@ -1634,7 +1639,7 @@ def management(request, company_id = None):
                     time = request.POST.get("time")
                     dt = date + " " + time
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    #date = pytz.timezone("America/Halifax").localize(date)
+                    date = pytz.timezone("America/Halifax").localize(date)
                     deletedManager.EndDate = date
                     deletedManager.save()
                     return HttpResponseRedirect("/companies/" + str(company.id) + \
@@ -1650,7 +1655,7 @@ def management(request, company_id = None):
                     time = request.POST.get("time")
                     dt = date + " " + time
                     date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                    #date = pytz.timezone("America/Halifax").localize(date)
+                    date = pytz.timezone("America/Halifax").localize(date)
                     person_id = request.POST.get("person_id")
                     person = Person.objects.get(pk=person_id)
                     role = request.POST.get("role")
