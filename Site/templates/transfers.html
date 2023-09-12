@@ -8,8 +8,25 @@
     <div class="col-sm-12">
         <a href="/" >Home</a> / <a href="/companies/">Companies</a> / Transfers
     </div>
+</div>
+ {% if alert %}
+                    <div class="row" id="alertHolder">
+                        <div class="col-sm-5" style="padding-top: 20px">
 
+                            <div class="alert alert-{{ alert_type }} alert-dismissible fade show" style="margin-bottom: 0px" role="alert">
 
+                                {{alert}}
+
+                            </div>
+                        </div>
+                        <div class="col-sm-7" style="padding-top: 20px">
+                            <button type="button" class="btn btn-danger close alert-button">Close</button>
+
+                        </div>
+                    </div>
+                {% endif %}
+
+<div class="row">
     <div class="col-lg-12">
         <form method ="GET" />
             <input type="hidden"  name="search_type" value="search">
@@ -74,6 +91,12 @@
 {% endblock main %}
 {% block scripts %}
 <script type = "text/javascript">
+            $(".close").click(function(){
+                //$(".alert").hide();
+                //$(".alert-button").hide();
+                $("#alertHolder").remove();
+            });
+
     $(".deleteBtn").click(function(e) {
         var transfer = $(this).attr("transfer");
         var transferId = $(this).attr("transferId");

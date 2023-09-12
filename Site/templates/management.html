@@ -10,6 +10,23 @@
         <hr>
     </div>
 </div>
+{% if alert %}
+                    <div class="row" id="alertHolder" style= "padding-bottom: 15px;">
+                        <div class="col-sm-5">
+
+                            <div class="alert alert-{{ alert_type }} alert-dismissible fade show" style="margin-bottom: 0px" role="alert">
+
+                                {{alert}}
+
+                            </div>
+                        </div>
+                        <div class="col-sm-7">
+                            <button type="button" class="btn btn-danger close alert-button">Close</button>
+
+                        </div>
+                    </div>
+                {% endif %}
+
 <div class="row">
    <div class="col-sm-12">
       <button type="button" class="btn btn-primary"
@@ -183,6 +200,12 @@
     {% block scripts %}
 
     <script type="text/javascript">
+            $(".close").click(function(){
+                //$(".alert").hide();
+                //$(".alert-button").hide();
+                $("#alertHolder").remove();
+            });
+
         $(".selectAdd").click(function(e){
            console.log("TEST");
             var linkedId = $(this).attr("linkedId");

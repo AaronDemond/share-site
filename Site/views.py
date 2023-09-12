@@ -127,6 +127,82 @@ def people(request, context={}):
             context["type"] = _type
 
             if request.GET.get("delete") == "true":
+                #Delete all transfers that become impossible if person is deleted
+                if _type == "person":
+                    companies = set()
+                    transfers = Transfer.objects.filter(Q(ToPerson = entity) | \
+                            Q(FromPerson = entity))
+                    for t in transfers:
+                        companies.add(t.Company)
+                    to_be_deleted = []
+                    for company in companies:
+
+                        #get share classes for each company
+                        _transfers = Transfer.objects.filter(Company = company)
+                        _transfers = [x for x in _transfers if x.ToPerson != entity \
+                                and x.FromPerson != entity]
+                        _transfers.sort(key= lambda x: x.Date)
+                        shareClassSet = set([x.ShareClass for x in _transfers])
+
+                        #get sorted transfers not linked to selected entity 
+                        #and initalize their register to 0
+                        for shareClass in shareClassSet:
+                            auth_shares = list(AuthorizedShares.objects.filter( \
+                                    Company=company, ShareClass=shareClass))
+                            _transfers = Transfer.objects.filter(Company = company, \
+                                    ShareClass = shareClass)
+                            _transfers = [x for x in _transfers if x.ToPerson != entity \
+                                    and x.FromPerson != entity]
+
+                            participants = company.Participant.all()
+                            register = {}
+                            for p in participants:
+                                if p.LinkedPerson:
+                                    register[p.LinkedPerson] = 0
+                                if p.LinkedCompany:
+                                    register[p.LinkedCompany] = 0
+                            _transfers.extend(auth_shares)
+                            _transfers.sort(key= lambda x: x.Date)
+
+                            #authorized, issued, remaining
+                            register[company] = [0,0,0]
+
+                            #loop through each transfer and check that their is enough
+                            #shares in the register to make the transaction
+                            for t in _transfers:
+                                if isinstance(t, AuthorizedShares):
+                                    register[company][0] += t.Ammount
+                                    register[company][2] += t.Ammount
+                                else:
+                                    receiver = t.ToPerson or t.ToCompany
+                                    sender = t.FromPerson or t.FromCompany
+                                    if receiver == company:
+                                        if register[sender] >= t.Ammount:
+                                            register[company][0] -= t.Ammount
+                                            register[company][1] -= t.Ammount
+                                            register[company][2] = register[company][0] - \
+                                                    register[company][1]
+                                            register[sender] -= t.Ammount
+                                        else:
+                                            to_be_deleted.append(t)
+
+                                    elif sender == company:
+                                        if register[company][2] >= t.Ammount:
+                                            register[company][1] += t.Ammount
+                                            register[company][2] = register[company][0] - \
+                                                    register[company][1]
+                                            register[receiver] += t.Ammount
+                                        else:
+                                            to_be_deleted.append(t)
+                                    else:
+                                        if register[sender] >= t.Ammount:
+                                            register[sender] -= t.Ammount
+                                            register[receiver] += t.Ammount
+                                        else:
+                                            to_be_deleted.append(t)
+
+                for t in to_be_deleted:
+                    t.delete()
                 entity.delete()
                 return HttpResponseRedirect("/entities/" + \
                     "?alert=Entity%20Deleted&alertType=success")
@@ -143,9 +219,6 @@ def people(request, context={}):
                     context["entity"].Date = date
                     context["entity"].Time = time
                     return render(request, "create_company.html", context)
-
-
-                
 
         query = request.GET.get('query', None)
         context["filteredBy"] = False
@@ -467,11 +540,9 @@ def create_company(request):
                     return HttpResponseRedirect("/entities/" + \
                         "?alert=Company%20Created&alertType=success")
             except Exception as e:
-                return HttpResponse(str(e))
-                context["alert_type"] = "danger"
-                context["alert"] = "ERROR! " + str(e)
-                context["companyCreatedAlert"] = True
-                return people(request=request, context = context)
+                error = str(e)
+                return HttpResponseRedirect("/entities/" + \
+                        "?alert="+error+"&alertType=danger")
 
         return render(request, 'create_company.html', context)
     else:
@@ -492,15 +563,13 @@ def create_person(request):
                 #date = pytz.timezone("America/Halifax").localize(date)
                 new_person = Person(Name = name, Address = address, Modified = date)
                 new_person.save()
-                context["alert_type"] = "success"
-                context["alert"] = "Person created"
-                context["personCreatedAlert"] = True
-                return people(request=request, context = context)
+                return HttpResponseRedirect("/entities/" + \
+                        "?alert=Person%20Created&alertType=success")
             except Exception as e:
-                context["alert_type"] = "danger"
-                context["alert"] = "ERROR! " + str(e)
-                context["personCreatedAlert"] = True
-                return people(request=request, context = context)
+                error = str(e)
+                return HttpResponseRedirect("/entities/" + \
+                        "?alert="+error+"&alertType=danger")
+
         return render(request, 'create_person.html', context)
     else:
         return HttpResponse("Please Login")
@@ -643,11 +712,13 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
                 for t in transfers:
                     create_certificates(t)
 
-            except Exception as e:
-                context['error_type'] = "danger"
-                context['alert'] = "Problem deleting transfers: " + str(e)
+                return HttpResponseRedirect("/companies/" +str(company.id) + \
+                    "/transfers/?alert=Transfer(s)%20Deleted&alertType=success")
 
-            return companies(request, context = context)
+            except Exception as e:
+                error = str(e)
+                return HttpResponseRedirect("/companies/" +str(company.id) + \
+                    "/transfers/?alert="+error+"&alertType=danger")
 
         #Get list of impossible transfers
         if request.POST.get("selectedTransfer"):
@@ -708,7 +779,9 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
 
             context["transfers"] = to_be_deleted
             return render(request, 'transfers_confirm.html', context)
-
+        if request.GET.get("alert"):
+            context["alert"] = request.GET.get("alert")
+            context["alert_type"] = request.GET.get("alertType")
         return render(request, 'transfers.html', context)
     else:
         return HttpResponse("Please Login")
@@ -727,17 +800,6 @@ def enter_transfer(request, company_id=None):
         context = {}
         context['company']=company
         context['share_classes']=share_classes
-        '''
-        def compare(item1, item2):
-            item1 = item1.LinkedPerson or item1.LinkedCompany
-            item2 = item2.LinkedPerson or item2.LinkedCompany
-            if item1.Modified < item2.Modified:
-                return -1
-            elif item1.Modified > item2.Modified:
-                return 1
-            else:
-                return 0
-        '''
         def compare(item1, item2):
             item1 = item1.LinkedPerson or item1.LinkedCompany
             item2 = item2.LinkedPerson or item2.LinkedCompany
@@ -801,9 +863,7 @@ def enter_transfer(request, company_id=None):
 
                 other = Transfer.objects.filter(Date=date)
                 if len(other) > 0 :
-                    context['error_type'] = "danger"
-                    context['alert'] = "Transaction exists at this time"
-                    return companies(request, context=context)
+                    raise Exception("Transaction Exists at This Time")
 
                 transfer = Transfer(Date=date,Price=price,Ammount=ammount,
                         Company=company,ShareClass=shareClass)
@@ -835,9 +895,9 @@ def enter_transfer(request, company_id=None):
                 else:
                     raise Exception("Select a destination")
             except Exception as e:
-                context['error_type'] = "danger"
-                context['alert'] = str(e)
-                return companies(request, context=context)
+                error = str(e)
+                return HttpResponseRedirect("/companies/" +str(company.id) + \
+                    "/enterTransfer/?alert="+error+"&alertType=danger")
 
             def checkEnoughShares(t):
                 if t == "person":
@@ -928,26 +988,36 @@ def enter_transfer(request, company_id=None):
                 elif fromPerson:
                     enough = checkEnoughShares("person")
             except Exception as e:
-                context['error_type'] = "danger"
-                context['alert'] = str(e)
-                return companies(request, context=context)
+                error = str(e)
+                return HttpResponseRedirect("/companies/" +str(company.id) + \
+                    "/enterTransfer/?alert="+error+"&alertType=danger")
 
             if enough:
-                transfer.save()
-                context['error_type'] = "success"
-                context['alert'] = "Transfer Saved"
-                transfer = Transfer.objects.all().latest("pk")
-                transfers = Transfer.objects.filter(ShareClass=shareClass,
-                        Company=company).order_by("Date")
-                certs = ShareCertificate.objects.filter(ShareClass=shareClass, 
-                        ReferenceCompany = company)
-                certs.delete()
-                for t in transfers:
-                    create_certificates(t)
+                try:
+                    transfer.save()
+                    context['alert_type'] = "success"
+                    context['alert'] = "Transfer Saved"
+                    transfer = Transfer.objects.all().latest("pk")
+                    transfers = Transfer.objects.filter(ShareClass=shareClass,
+                            Company=company).order_by("Date")
+                    certs = ShareCertificate.objects.filter(ShareClass=shareClass, 
+                            ReferenceCompany = company)
+                    certs.delete()
+                    for t in transfers:
+                        create_certificates(t)
+                    return HttpResponseRedirect("/companies/" +str(company.id) + \
+                        "/enterTransfer/?alert=Transfer%20Saved&alertType=success")
+                except Exception as e:
+                    error = str(e)
+                    return HttpResponseRedirect("/companies/" +str(company.id) + \
+                        "/enterTransfer/?alert="+error+"&alertType=danger")
             else:
-                context['error_type'] = "danger"
-                context['alert'] = "Not enough shares!"
-            return companies(request, context=context)
+                return HttpResponseRedirect("/companies/" +str(company.id) + \
+                    "/enterTransfer/?alert=Not%20Enough%20Shares&alertType=danger")
+
+        if request.GET.get("alert"):
+            context["alert"] = request.GET.get("alert")
+            context["alert_type"] = request.GET.get("alertType")
         return render(request, 'enter_transfer.html', context)
     else:
         return HttpResponse("Please login")
@@ -1567,13 +1637,12 @@ def management(request, company_id = None):
                     #date = pytz.timezone("America/Halifax").localize(date)
                     deletedManager.EndDate = date
                     deletedManager.save()
-                    context["error_type"] = "success"
-                    context["alert"] = "Management updated"
+                    return HttpResponseRedirect("/companies/" + str(company.id) + \
+                        "/changeManagement/?alert=Management%20Updated&alertType=success")
                 except Exception as e:
-                    context["error_type"] = "danger"
-                    context["alert"] = str(e)
-
-                return companies(request, context = context)
+                    error = str(e)
+                    return HttpResponseRedirect("/companies/" + str(company.id) + \
+                        "/changeManagement/?alert="+error+"&alertType=danger")
 
             if _type == "add":
                 try:
@@ -1591,28 +1660,26 @@ def management(request, company_id = None):
                     if company.IncorporationDate > date:
                         raise Exception("Company not yet incorporated")
                     if len(existing) > 0 and existing[0].EndDate is None:
-                        context["error_type"] = "danger"
-                        context["alert"] = "Already exists"
-                        return companies(request, context = context)
+                        raise Exception("Manager Already exists")
                     if len(existing) > 0:
                         manager = existing[0]
                         manager.StartDate = date
                         manager.EndDate = None
                         manager.save()
-                        context["error_type"] = "success"
-                        context["alert"] = "Management updated"
-                        return companies(request, context = context)
+                    else:
+                        new_management = Manager(Person=person, Title=role, 
+                                Company=company, StartDate=date)
+                        new_management.save()
 
-                    new_management = Manager(Person=person, Title=role, 
-                            Company=company, StartDate=date)
-                    new_management.save()
-
-                    context["error_type"] = "success"
-                    context["alert"] = "Management updated"
+                    return HttpResponseRedirect("/companies/" + str(company.id) + \
+                        "/changeManagement/?alert=Management%20Updated&alertType=success")
                 except Exception as e:
-                    context["error_type"] = "danger"
-                    context["alert"] = str(e)
-                return companies(request, context = context)
+                    error = str(e)
+                    return HttpResponseRedirect("/companies/" + str(company.id) + \
+                        "/changeManagement/?alert="+error+"&alertType=danger")
+        if request.GET.get("alert"):
+            context["alert"] = request.GET.get("alert")
+            context["alert_type"] = request.GET.get("alertType")
         return render(request, 'management.html', context)
     else:
         return HttpResponse("Please Login")
