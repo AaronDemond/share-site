@@ -99,10 +99,6 @@ def people(request, context={}):
                     if len(others) > 0:
                         raise Exception("Company Already Exists")
                     for auth in auth_shares:
-                        print("auth date")
-                        print(auth.Date)
-                        print("Incorp date")
-                        print(date)
                         if auth.Date < date:
                             raise Exception("Cannot incorporate after authorizing shares")
                     managers = company.Manager.all()
@@ -248,7 +244,6 @@ def people(request, context={}):
             if request.GET.get("type") == "person":
                 context["filteredBy"] = "person"
                 for entity in ql:
-                    print(entity)
                     if isinstance(entity[0], Person):
                         filtered_ql.append([entity[0], "person"])
             if request.GET.get("type") == "company":
@@ -296,8 +291,6 @@ def delete_entity(request):
             companies = set()
             for x in to_delete:
                 companies.add(x.Company)
-            print("COMPANIES")
-            print(companies)
             to_delete.delete()
             entity.delete()
             for company in companies:
@@ -453,8 +446,6 @@ def issue_shares(request, company_id=None):
             auth = AuthorizedShares.objects.filter(ShareClass = sc, Company = company)[0]
             share_classes_authorized[str(sc)].append(auth.Value)
 
-        print("===============share classes authorized===============")
-        print(share_classes_authorized)
         for key, value in share_classes_authorized.items():
             if value[0] != 0:
                 if value[0].is_integer():
@@ -478,7 +469,6 @@ def issue_shares(request, company_id=None):
 
         context['share_classes'] = share_classes
         context['share_classes_authorized'] = share_classes_authorized
-        print(share_classes_authorized)
 
 
         #Either a share issue request or a file upload
@@ -539,10 +529,6 @@ def issue_shares(request, company_id=None):
                         authorized_shares = AuthorizedShares(Company=company,
                                 Ammount=ammount, ShareClass=share_class,
                                 Date=date, Value=value)
-                    print("AUTH DATE")
-                    print(date)
-                    print("INCORP DATE")
-                    print(company.IncorporationDate)
                     if company.IncorporationDate > date:
                         raise Exception("Company not yet incorporated")
                     authorized_shares.save()
@@ -638,7 +624,6 @@ def getToBeDeletedTransfers(_transfers, company):
     #authorized, issued, remaining
     register[company] = [0,0,0]
     for t in _transfers:
-        print(register[company])
         if isinstance(t, AuthorizedShares):
             register[company][0] += t.Ammount
             register[company][2] += t.Ammount
@@ -1108,7 +1093,6 @@ def share_certificate(request, company_id = None):
             for a in auth_shares:
                 auth_types_value[a.ShareClass].add(a.Value)
             auth_totals = {}
-            print(auth_types_value)
             for a in auth_types:
                 for value in auth_types_value[a]:
                     auth_totals[(a,value)] = 0
@@ -1228,7 +1212,6 @@ def share_certificate(request, company_id = None):
 
 
             if request.GET.get("shareClassId"):
-                print("HIT")
                 shareClass = ShareClass.objects.get(pk=request.GET.get("shareClassId"))
                 if _type == "company":
                     owner = Company.objects.get(pk=request.GET.get("id"))
@@ -1745,7 +1728,6 @@ def registers(request, company_id=None):
         managers = company.Manager.filter(EndDate__isnull=True)
         filled_roles = set([x.Title for x in managers])
         context["roles"] = filled_roles
-        print(context["roles"])
 
         try:
             director = ManagerRole.objects.get(Title="Director")
@@ -1761,7 +1743,6 @@ def registers(request, company_id=None):
             officersList = [m for m in managers if m.Title.Title != "Director" \
                     and m.EndDate == None]
             context["Officer"] = True
-            print(officersList)
 
         if request.GET.get("role"):
             role = request.GET.get("role")

@@ -73,7 +73,11 @@
                 Acquired from: 
             </div> 
             <div class="col-sm-12 darkBack">
+                {% if cert.FromRemainder %} 
+                Remainder
+                {% else %}
                 {{from}}
+                {% endif %}
             </div>
         </div> 
     </div>

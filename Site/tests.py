@@ -3,7 +3,7 @@ import pytz
 import datetime
 from datetime import timedelta
 from Site.models import Person, Manager, ManagerRole, Company, CompanyParticipant, \
-        ShareClass, Transfer
+        ShareClass, Transfer, ShareCertificate
 from django.test import Client
 from django.contrib.auth.models import User
 import unittest
@@ -94,8 +94,81 @@ class SimpleTest(TestCase):
         self.construct_people_company_links()
         self.assertEqual(1,1)
 
+    def test_person_delete(self):
+        #John Tim Amy Sarah
+        self.construct_people_company_links()
+        params = {"company": "Joes Construction", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred",
+                "parValue": 1}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        params = {"company": "Bobs General Store", "ammount": 1000, 
+                "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred",
+                "parValue": 1}
+        response = self.construct_authorize(params)
+        self.assertEqual(response.context["alert"], "Shares authorized")
+
+        #Sarah has 100
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Sarah"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "100", "date": "2023-01-01", "time": "01:00:00",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(len_before + 1, len_after)
+
+        
+        params = {"from": {"type": "person", "name": "Sarah"}, 
+            "to": {"type": "person", "name": "John"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "100", "date": "2023-01-01", "time": "01:00:01",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(len_before + 1, len_after)
+
+        params = {"from": {"type": "person", "name": "John"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "100", "date": "2023-01-01", "time": "01:00:02",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(len_before + 1, len_after)
+
+        entity = Person.objects.get(Name="Sarah")
+        response = self.client.get("/entities/?entity_id="+str(entity.pk)+"&type=person"+\
+                "&delete=true")
+        self.assertEqual(len(response.context["transfers"]), 3)
+
+
+        trans = Transfer.objects.all()
+        params = {"entity": entity.pk, "type": "person", 'confirm': [x.pk for x in trans]}
+        response = self.client.post("/deleteEntity/", params)
+
+        self.assertEqual(len(Transfer.objects.all()), 0)
+
+        params = {"from": {"type": "company", "name": "Joes Construction"}, 
+            "to": {"type": "person", "name": "Tim"},
+            "shareClass": "Class A Preferred", "company": "Joes Construction",
+            "ammount": "100", "date": "2023-01-01", "time": "01:00:03",
+            "price": "1",}
+        len_before = len(Transfer.objects.all())
+        response = self.construct_transfer(params)
+        len_after = len(Transfer.objects.all())
+        self.assertEqual(len_before + 1, len_after)
+
+        shareCerts = ShareCertificate.objects.all()
+        self.assertEqual(len(shareCerts), 1)
+        print(shareCerts[0].CertificateNumber)
+        self.assertEqual(shareCerts[0].CertificateNumber, "P - A - 1")
+
     def test_registers(self):
-        pass
         self.construct_people_company_links()
         params = {"company": "Joes Construction", "ammount": 1000, 
                 "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred",
@@ -203,7 +276,6 @@ class SimpleTest(TestCase):
 
         
     def test_enough_company(self):
-        pass
         self.construct_people_company_links()
         params = {"company": "Joes Construction", "ammount": 1000, 
                 "date": "2023-01-01", "time": "00:00:00", "shareClass": "Class A Preferred",
@@ -354,7 +426,6 @@ class SimpleTest(TestCase):
 
 
     def test_create_manager(self):
-        pass
         response = self.client.post("/managerRole/", {"title": "CEO"})
         created = response.context["alert"]
         self.assertEqual(response.status_code, 200)
@@ -363,7 +434,6 @@ class SimpleTest(TestCase):
         self.assertEqual(l, 1)
 
     def test_manager_delete(self):
-        pass
         response = self.client.post("/managerRole/", {"title": "CEO"})
         role = ManagerRole.objects.all()[0]
         pk = role.pk
