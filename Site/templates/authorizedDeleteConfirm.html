@@ -24,19 +24,29 @@
     <div class="row">
         <div class="row itemListContainer" id="transferContainer">
 
+                <div class="row listItem">
+<div class="col-sm-12">
+                    <h3>Authorized to be Deleted</h3>
+                </div></div>
             <div class="row listItem">
-
-                <div class="col-sm-9 itemInList">
+                <div class="col-sm-12 itemInList">
                     {{authorizedToDelete}}
 
                 </div>
 
             </div> 
+            {% if toDelete %}
+
+                <div class="row listItem">
+<div class="col-sm-12">
+                    <h3>Transfers to be Deleted</h3>
+                </div></div>
+            {% endif %}
             {% for item in toDelete %}
 
             <div class="row listItem">
 
-                <div class="col-sm-9 itemInList">
+                <div class="col-sm-12 itemInList">
                     {{item}}
 
                 </div>

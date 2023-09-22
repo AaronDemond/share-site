@@ -94,7 +94,7 @@ class AuthorizedShares(models.Model):
     def __str__(self):
         dt = self.Date - datetime.timedelta(hours=3)
         dt = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return str(self.Ammount) + " of " + str(self.ShareClass) + " for " + str(self.Company) + " on " + dt
+        return str(self.Ammount) + " authorized of " + str(self.ShareClass) + " for " + str(self.Company) + " on " + dt
 
     class Meta:
         verbose_name_plural = "AuthorizedShares"
@@ -157,7 +157,7 @@ class Transfer(models.Model):
             ammount = self.Ammount
         dt = self.Date - datetime.timedelta(hours=3)
         dt = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return str(ammount) + " " + str(self.ShareClass) + " shares from " + _from.Name + " to " + _to.Name + " on (" + dt + ")"
+        return str(ammount) + " " + str(self.ShareClass) +" "+ str(self.Company) + " shares from " + _from.Name + " to " + _to.Name + " on (" + dt + ")"
 
 
 class ShareCertificate(models.Model):

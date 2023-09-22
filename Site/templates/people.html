@@ -9,7 +9,6 @@
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
         <!-- CSS here -->
-        <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="/static/styles.css">
         <style type="text/css" media="screen">
 body {
@@ -81,14 +80,14 @@ body {
                                     href="/link/{{e.0.id}}/?type=person">Link to Company</a>
                                 <a class="btn btn-primary" role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=person&edit=true">Edit</a>
-                                <a class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this person?')" role="button" 
+                                <a class="btn btn-danger"  role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=person&delete=true">Delete</a>
                             {% else %}
                                 <a class="btn btn-primary" role="button"
                                     href="/link/{{e.0.id}}/?type=company">Link to Company</a>
                                 <a class="btn btn-primary" role="button" 
                                     href="/entities/?entity_id={{e.0.id}}&type=company&edit=true">Edit</a>
-                                <a class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this company?')" role="button" 
+                                <a class="btn btn-danger"  role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=company&delete=true">Delete</a>
                             {% endif %}
                         

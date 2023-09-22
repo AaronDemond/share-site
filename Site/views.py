@@ -128,10 +128,15 @@ def people(request, context={}):
 
             if request.GET.get("delete") == "true":
                 #Delete all transfers that become impossible if person is deleted
-                if _type == "person":
+                #if _type == "person":
+                if _type:
                     companies = set()
-                    transfers = Transfer.objects.filter(Q(ToPerson = entity) | \
-                            Q(FromPerson = entity))
+                    if _type == "person":
+                        transfers = Transfer.objects.filter(Q(ToPerson = entity) | \
+                                Q(FromPerson = entity))
+                    else:
+                        transfers = Transfer.objects.filter(Q(ToCompany = entity) | \
+                                Q(FromCompany = entity))
                     for t in transfers:
                         companies.add(t.Company)
                     to_be_deleted = []
@@ -139,8 +144,12 @@ def people(request, context={}):
 
                         #get share classes for each company
                         _transfers = Transfer.objects.filter(Company = company)
-                        _transfers = [x for x in _transfers if x.ToPerson != entity \
-                                and x.FromPerson != entity]
+                        if _type == "person":
+                            _transfers = [x for x in _transfers if x.ToPerson != entity \
+                                    and x.FromPerson != entity]
+                        else:
+                            _transfers = [x for x in _transfers if x.ToCompany != entity \
+                                    and x.FromCompany != entity]
                         _transfers.sort(key= lambda x: x.Date)
                         shareClassSet = set([x.ShareClass for x in _transfers])
 
@@ -151,59 +160,56 @@ def people(request, context={}):
                                     Company=company, ShareClass=shareClass))
                             _transfers = Transfer.objects.filter(Company = company, \
                                     ShareClass = shareClass)
-                            _transfers = [x for x in _transfers if x.ToPerson != entity \
-                                    and x.FromPerson != entity]
-
-                            participants = company.Participant.all()
-                            register = {}
-                            for p in participants:
-                                if p.LinkedPerson:
-                                    register[p.LinkedPerson] = 0
-                                if p.LinkedCompany:
-                                    register[p.LinkedCompany] = 0
+                            if _type == "person":
+                                _transfers = [x for x in _transfers if x.ToPerson != entity \
+                                        and x.FromPerson != entity]
+                            else:
+                                _transfers = [x for x in _transfers if x.ToCompany != entity \
+                                        and x.FromCompany != entity]
+                                
                             _transfers.extend(auth_shares)
                             _transfers.sort(key= lambda x: x.Date)
 
-                            #authorized, issued, remaining
-                            register[company] = [0,0,0]
+                            to_be_deleted.extend(getToBeDeletedTransfers(_transfers,
+                                company))
 
-                            #loop through each transfer and check that their is enough
-                            #shares in the register to make the transaction
-                            for t in _transfers:
-                                if isinstance(t, AuthorizedShares):
-                                    register[company][0] += t.Ammount
-                                    register[company][2] += t.Ammount
-                                else:
-                                    receiver = t.ToPerson or t.ToCompany
-                                    sender = t.FromPerson or t.FromCompany
-                                    if receiver == company:
-                                        if register[sender] >= t.Ammount:
-                                            register[company][0] -= t.Ammount
-                                            register[company][1] -= t.Ammount
-                                            register[company][2] = register[company][0] - \
-                                                    register[company][1]
-                                            register[sender] -= t.Ammount
-                                        else:
-                                            to_be_deleted.append(t)
+                    context["transfers"] = to_be_deleted
 
-                                    elif sender == company:
-                                        if register[company][2] >= t.Ammount:
-                                            register[company][1] += t.Ammount
-                                            register[company][2] = register[company][0] - \
-                                                    register[company][1]
-                                            register[receiver] += t.Ammount
-                                        else:
-                                            to_be_deleted.append(t)
-                                    else:
-                                        if register[sender] >= t.Ammount:
-                                            register[sender] -= t.Ammount
-                                            register[receiver] += t.Ammount
-                                        else:
-                                            to_be_deleted.append(t)
+                    #Add back transfers that are selected for deletion
+                    _transfers = Transfer.objects.filter(Company__in = companies)
+                    if _type == "person":
+                        context["transfers"].extend([x for x in _transfers if \
+                                x.ToPerson == entity or x.FromPerson == entity])
+                    else:
+                        context["transfers"].extend([x for x in _transfers if \
+                                x.ToCompany == entity or x.FromCompany == entity])
 
-                    for t in to_be_deleted:
-                        t.delete()
-                entity.delete()
+                    #Sort by name and then time
+                    context["transfers"].sort(key= lambda x: x.Date)
+                    sorted_transfers = []
+                    companies = list(companies)
+                    companies.sort(key = lambda x: x.Name)
+                    for company in companies:
+                        transfer_list = []
+                        for transfer in context["transfers"]:
+                            if transfer.Company == company:
+                                transfer_list.append(transfer)
+                        transfer_list.sort(key = lambda x: x.Date, reverse = True)
+                        sorted_transfers.append(transfer_list)
+                    sorted_transfers_flat = []
+                    for row in sorted_transfers:
+                        sorted_transfers_flat.extend(row)
+
+                    context["transfers"] = sorted_transfers_flat
+
+                    #context["transfers"].append(entity)
+                    if _type == "person":
+                        context["type"] = "person"
+                    else:
+                        context["type"] = "company"
+
+                context["entity"] = entity
+                return render(request, "delete_person_confirm.html", context)
                 return HttpResponseRedirect("/entities/" + \
                     "?alert=Entity%20Deleted&alertType=success")
             if request.GET.get("edit") == "true":
@@ -275,6 +281,44 @@ def people(request, context={}):
             context["alert_type"] = request.GET.get("alertType")
 
         return render(request, 'people.html', context)
+    else:
+        return HttpResponse("Please Login")
+
+def delete_entity(request):
+    if request.user.is_authenticated:
+        selected = request.POST.getlist("confirm")
+        if request.POST.get("type") == "person":
+            entity = Person.objects.get(pk=request.POST.get("entity"))
+        else:
+            entity = Company.objects.get(pk=request.POST.get("entity"))
+        try:
+            to_delete = Transfer.objects.filter(pk__in = selected)
+            companies = set()
+            for x in to_delete:
+                companies.add(x.Company)
+            print("COMPANIES")
+            print(companies)
+            to_delete.delete()
+            entity.delete()
+            for company in companies:
+                transfers = Transfer.objects.filter(Company = \
+                        company).order_by("Date")
+                shareClasses = set([x.ShareClass for x in transfers])
+                for shareClass in shareClasses:
+                    shareCerts = ShareCertificate.objects.filter(ShareClass = \
+                            shareClass, ReferenceCompany = company)
+                    shareCerts.delete()
+                    t = Transfer.objects.filter(Company = company,
+                            ShareClass = shareClass).order_by("Date")
+                    for tran in t:
+                        create_certificates(tran)
+            return HttpResponseRedirect("/entities/" + \
+                "?alert=Entity%20Deleted&alertType=success")
+
+        except Exception as e:
+            error = str(e).replace(" ", "%20")
+            return HttpResponseRedirect("/entities/" + \
+                "?alert="+error+"&alertType=danger")
     else:
         return HttpResponse("Please Login")
 
@@ -577,6 +621,57 @@ def create_person(request):
         return render(request, 'create_person.html', context)
     else:
         return HttpResponse("Please Login")
+
+#Accepts date sorted transfer list that includes authorizations
+#and a target company and returns a list of all transfers that are
+#impossible
+def getToBeDeletedTransfers(_transfers, company):
+    to_be_deleted = []
+    participants = company.Participant.all()
+    register = {}
+    for p in participants:
+        if p.LinkedPerson:
+            register[p.LinkedPerson] = 0
+        if p.LinkedCompany:
+            register[p.LinkedCompany] = 0
+
+    #authorized, issued, remaining
+    register[company] = [0,0,0]
+    for t in _transfers:
+        print(register[company])
+        if isinstance(t, AuthorizedShares):
+            register[company][0] += t.Ammount
+            register[company][2] += t.Ammount
+        else:
+            receiver = t.ToPerson or t.ToCompany
+            sender = t.FromPerson or t.FromCompany
+            if receiver == company:
+                if register[sender] >= t.Ammount:
+                    register[company][0] -= t.Ammount
+                    register[company][1] -= t.Ammount
+                    register[company][2] = register[company][0] - \
+                            register[company][1]
+                    register[sender] -= t.Ammount
+                else:
+                    to_be_deleted.append(t)
+
+            elif sender == company:
+                if register[company][2] >= t.Ammount:
+                    register[company][1] += t.Ammount
+                    register[company][2] = register[company][0] - \
+                            register[company][1]
+                    register[receiver] += t.Ammount
+                else:
+                    to_be_deleted.append(t)
+            else:
+                if register[sender] >= t.Ammount:
+                    register[sender] -= t.Ammount
+                    register[receiver] += t.Ammount
+                else:
+                    to_be_deleted.append(t)
+    to_be_deleted.sort(key = lambda x: x.Date, reverse = True)
+    return to_be_deleted
+
 def authorized(request, company_id=None, context={}):
     company = Company.objects.get(pk=company_id)
     authorizedShares = AuthorizedShares.objects.filter(Company=company).order_by("-Date")
@@ -612,28 +707,20 @@ def authorized(request, company_id=None, context={}):
         authorizedToDelete = request.GET.get("auth_id")
         authorizedToDelete = AuthorizedShares.objects.get(pk=authorizedToDelete)
         shareClass = authorizedToDelete.ShareClass
-        all_auth = AuthorizedShares.objects.filter(Company=company)
-        transfers = Transfer.objects.filter(Company = company,
-                FromCompany=company, ShareClass=shareClass)
-
-        all_tran = [x for x in all_auth]
-        all_tran.extend([x for x in transfers])
-        all_tran.sort(key= lambda x: x.Date)
-        all_tran.remove(authorizedToDelete)
-
-        remaining = 0
-        toDelete = [authorizedToDelete]
-        print(all_tran)
-        for t in all_tran:
-            if isinstance(t, AuthorizedShares):
-                remaining += t.Ammount
-            else:
-                remaining -= t.Ammount
-            if remaining <= 0:
-                toDelete.append(t)
-        toDelete.remove(authorizedToDelete)
+        company = authorizedToDelete.Company
         context["authorizedToDelete"] = authorizedToDelete
-        context["toDelete"] = toDelete
+
+        _transfers = list(Transfer.objects.filter(Company=company, 
+            ShareClass=shareClass).order_by("Date"))
+        auth_shares = list(AuthorizedShares.objects.filter(Company=company, 
+            ShareClass=shareClass))
+        auth_shares.remove(authorizedToDelete)
+        _transfers.extend(auth_shares)
+        _transfers.sort(key= lambda x: x.Date)
+
+        
+        context["toDelete"] = getToBeDeletedTransfers(_transfers, company)
+
         return render(request, "authorizedDeleteConfirm.html", context)
 
     if request.GET.get("page"):
@@ -656,6 +743,9 @@ def authorized(request, company_id=None, context={}):
 
 def transfers(request, company_id=None, transfer_id=None,context={}):
     if request.user.is_authenticated:
+
+        context["alert"] = None
+        context["alert_type"] = None
         company = Company.objects.get(pk=company_id)
         _transfers = list(Transfer.objects.filter(Company=company).order_by("-Date"))
         context["transfers"] = []
@@ -733,54 +823,13 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
             _transfers = list(Transfer.objects.filter(Company=company, ShareClass=shareClass).order_by("Date"))
             transfer = Transfer.objects.get(pk=transfer_id)
             _transfers.remove(transfer)
-            to_be_deleted = []
-            to_be_deleted.append(transfer)
-            participants = company.Participant.all()
-            register = {}
-            for p in participants:
-                if p.LinkedPerson:
-                    register[p.LinkedPerson] = 0
-                if p.LinkedCompany:
-                    register[p.LinkedCompany] = 0
             auth_shares = list(AuthorizedShares.objects.filter(Company=company, ShareClass=shareClass))
             _transfers.extend(auth_shares)
             _transfers.sort(key= lambda x: x.Date)
-            print(_transfers)
 
-            #authorized, issued, remaining
-            register[company] = [0,0,0]
-            for t in _transfers:
-                print(register[company])
-                if isinstance(t, AuthorizedShares):
-                    register[company][0] += t.Ammount
-                    register[company][2] += t.Ammount
-                else:
-                    receiver = t.ToPerson or t.ToCompany
-                    sender = t.FromPerson or t.FromCompany
-                    if receiver == company:
-                        if register[sender] >= t.Ammount:
-                            register[company][0] -= t.Ammount
-                            register[company][1] -= t.Ammount
-                            register[company][2] = register[company][0] - \
-                                    register[company][1]
-                            register[sender] -= t.Ammount
-                        else:
-                            to_be_deleted.append(t)
+            to_be_deleted = getToBeDeletedTransfers(_transfers, company)
+            to_be_deleted.append(transfer)
 
-                    elif sender == company:
-                        if register[company][2] >= t.Ammount:
-                            register[company][1] += t.Ammount
-                            register[company][2] = register[company][0] - \
-                                    register[company][1]
-                            register[receiver] += t.Ammount
-                        else:
-                            to_be_deleted.append(t)
-                    else:
-                        if register[sender] >= t.Ammount:
-                            register[sender] -= t.Ammount
-                            register[receiver] += t.Ammount
-                        else:
-                            to_be_deleted.append(t)
 
             context["transfers"] = to_be_deleted
             return render(request, 'transfers_confirm.html', context)

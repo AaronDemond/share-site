@@ -22,5 +22,6 @@ urlpatterns = [
         path("certificates/<int:company_id>/", views.share_certificate, name="share_certificate_single"),
         path("shareClass/", views.share_class, name="share_class"),
         path("managerRole/", views.manager_role, name="manager_role"),
+        path("deleteEntity/", views.delete_entity, name="delete_entity"),
         path('link/<int:_id>/', views.link, name="link"),
 ]

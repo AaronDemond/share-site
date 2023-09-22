@@ -24,8 +24,12 @@
                 {% if OfficerSelected == True %}
                 <th class="tableHeader" style="vertical-align: middle; text-align:center;">Officer Type</th>
                 {% endif %}
-                <th class="tableHeader" style="text-align:center;">Date became a(n) {{title}}</th>
-                <th class="tableHeader" style="text-align:center">Date ceased to be a {{title}}</th>
+                {% if plural == "Directors" %}
+                <th class="tableHeader" style="text-align:center; vertical-align: middle;">Date became a {{title}}</th>
+                {% else %}
+                <th class="tableHeader" style="text-align:center; vertical-align: middle;">Date became an {{title}}</th>
+                {% endif %}
+                <th class="tableHeader" style="text-align:center; vertical-align: middle;">Date ceased to be a {{title}}</th>
             </tr>
             {% for manager in managers %}
             <tr class="boldBorder boldBottom quarterWidth">
