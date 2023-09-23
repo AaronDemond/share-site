@@ -1,6 +1,13 @@
 
 {% extends 'base.html' %}
 {% block main %}
+<style type="text/css">
+body {
+    background: white;
+    height: 100%;
+}
+</style>
+
 <div class="row"id="linkHolder">
     <div class="col-sm-12">
         <a href="/" >Home</a> / <a href="/companies/">Companies</a> / <a href="/companies/{{company.id}}/registers/">Registers</a> / {{ role }}
