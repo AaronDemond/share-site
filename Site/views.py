@@ -1757,7 +1757,7 @@ def registers(request, company_id=None):
     if request.user.is_authenticated:
         context = {}
         company = Company.objects.get(pk=company_id)
-        managers = company.Manager.filter(EndDate__isnull=True)
+        managers = company.Manager.all()
         filled_roles = set([x.Title for x in managers])
         context["roles"] = filled_roles
         transfers = company.Transfer.all()
@@ -1780,8 +1780,7 @@ def registers(request, company_id=None):
         context["company"] = company
         if len(filled_roles) > 0:
             context["Officer"] = True
-            officersList = [m for m in managers if m.Title.Title != "Director" \
-                    and m.EndDate == None]
+            officersList = [m for m in managers if m.Title.Title != "Director"]
             context["Officer"] = True
         else:
             context["Officer"] = False
