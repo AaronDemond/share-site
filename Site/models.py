@@ -14,8 +14,8 @@ class Person(models.Model):
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         modified = datetime.datetime.now()
-        date = pytz.timezone("America/Halifax").localize(modified)
-        self.Modified = date
+        #date = pytz.timezone("America/Halifax").localize(modified)
+        self.Modified = modified
         return super(Person, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -30,8 +30,8 @@ class Company(models.Model):
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         modified = datetime.datetime.now()
-        date = pytz.timezone("America/Halifax").localize(modified)
-        self.Modified = date
+        #date = pytz.timezone("America/Halifax").localize(modified)
+        self.Modified = modified
         if self.Name == "":
             raise Exception("Can't be a blank name")
         else:
