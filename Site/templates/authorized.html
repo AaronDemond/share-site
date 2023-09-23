@@ -85,11 +85,17 @@
 {% endblock main %}
 {% block scripts %}
 <script type = "text/javascript">
+
+            $(".close").click(function(){
+                //$(".alert").hide();
+                //$(".alert-button").hide();
+                $("#alertHolder").remove();
+            });
             setTimeout(function(){
                 $(".alert").css("background", "#f0f5f3");
                 $(".alert").css("border-color", "black");
                 $(".alert").css("color", "black");
             }, 7000);
-window.history.pushState(null, '', '/companies/{{company.pk}}/transfers/');
+window.history.pushState(null, '', '/companies/{{company.pk}}/authorized/');
 </script>
 {% endblock scripts %}

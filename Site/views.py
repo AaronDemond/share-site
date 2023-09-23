@@ -684,6 +684,9 @@ def authorized(request, company_id=None, context={}):
     context["authorizedShares"] = authorizedShares
     context["company"] = company
 
+    context["error_type"] = None
+    context["alert"] = None
+
     if request.method == "POST":
 
         try:
@@ -705,11 +708,11 @@ def authorized(request, company_id=None, context={}):
                 create_certificates(t)
 
 
-            return HttpResponseRedirect("/companies/" + str(company.pk) + "/transfers/" + \
-                    "alertType=success&alert=Authorization Deleted")
+            return HttpResponseRedirect("/companies/" + str(company.pk) + "/authorized/" + \
+                    "?alertType=success&alert=Authorization Deleted")
         except Exception as e:
             error = str(e)
-            return HttpResponseRedirect("/companies/" + str(company.pk) + "/transfers/" + \
+            return HttpResponseRedirect("/companies/" + str(company.pk) + "/authorized/" + \
                     "?alert=ERROR: "+error+"&alertType=danger")
 
         return companies(request, context = context)

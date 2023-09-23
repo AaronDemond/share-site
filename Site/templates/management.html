@@ -100,6 +100,7 @@
            <div class="col-sm-12"> 
                 <button id = "removeBtn" class="btn btn-danger browse-btn-fix" 
                     style="margin-top: 20px" type="submit" >Remove</button>
+                <a class="btn btn-warning browse-btn-fix" href="/companies/" style="margin-top: 20px;" >Cancel</a>
            </div> 
         </div>
     </form>
@@ -157,12 +158,10 @@
             </div>
             </div>
         </div>
-        <div class="row">
-            <div id="selectedHolder" class="col-lg-12">
+            <div id="selectedHolder" class="row">
 
             </div>
 
-        </div>
 
         <div class="row" style="">
             <div class="col-sm-12">
@@ -195,6 +194,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <button id="submitBtnAdd" class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
+                <a class="btn btn-warning browse-btn-fix" href="/companies/"  >Cancel</a>
             </div> 
         </div>
     </form>
@@ -288,8 +288,7 @@ doc.addEventListener("keypress", enterSearch)
             document.removeEventListener("keypress", enterSearch);
             doc.addEventListener("keypress", submitAdd)
             let txt = `<input type = "hidden" 
-            name = "person_id" value = "${participant_id}"><p>${participant_name}
-                selected</p>`;
+            name = "person_id" value = "${participant_id}"><div class="row itemListContainer"><div class="row listItem"><div class="col-sm-12 itemInList" >${participant_name} selected</div></div></div>`;
             $("#selectedHolder").html(txt);
             $(".entityHolder").toggle();
         }

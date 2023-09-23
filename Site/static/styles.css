@@ -12,6 +12,8 @@ div.itemListContainer>div:nth-of-type(even) {
 
 } 
 
+
+
 .listItem {
     margin-left: 10px;
     padding-left: 0px;
@@ -111,4 +113,8 @@ body {
     float:right;
 }
 
+
+.btn-warning {
+    margin-left: 15px;
+}
 
