@@ -56,7 +56,7 @@
                     {{auth}}
 
                 </div>
-                <div class="col-sm-3 buttonsInList">
+                <div class="col-sm-3 buttonsInList btnsFloatRightContainer">
                     <a class="btn btn-danger" href="/companies/{{company.id}}/authorized?delete=True&auth_id={{auth.pk}}" >Delete</a>
                 </div>
 
@@ -90,6 +90,6 @@
                 $(".alert").css("border-color", "black");
                 $(".alert").css("color", "black");
             }, 7000);
-window.history.pushState(null, '', '/companie/{{company.pk}}/transfers/');
+window.history.pushState(null, '', '/companies/{{company.pk}}/transfers/');
 </script>
 {% endblock scripts %}

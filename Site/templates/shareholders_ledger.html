@@ -31,10 +31,10 @@ div#entityContainer>div:nth-of-type(odd) {
         {% for entry in mixed2 %}
             <div class="row personRow listItem">
     
-                <div class="col-sm-4 itemInList">
+                <div class="col-sm-9 itemInList">
                     {{entry.entity}} {{entry.shareClass}}
                 </div>
-                <div class="col-sm-8 buttonsInList">
+                <div class="col-sm-3 buttonsInList btnsFloatRightContainer">
     
                         <a class="btn btn-primary" role="button" 
                             href="?type={{entry.type}}&id={{entry.entity.id}}&shareClass={{entry.shareClass.pk}}">View Ledger</a>

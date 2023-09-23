@@ -50,7 +50,11 @@ body {
                 <td>{{manager.Title}}</td>
                 {% endif %}
                 <td style="width: 20%; text-align: center;">{{manager.StartDate}}</td>
-                <td style="width: 20%; text-align: center;">{{manger.EndDate}}</td>
+                {% if manager.EndDate != None %}
+                <td style="width: 20%; text-align: center;">{{manager.EndDate}}</td>
+                {% else %}
+                <td style="width: 20%; text-align: center;"></td>
+                {% endif %}
             </tr>
             {% endfor %}
         </table>

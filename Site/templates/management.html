@@ -54,10 +54,10 @@
                 <div class="row itemListContainer">
                     {% for m in managers %}
                     <div class="row listItem">
-                        <div class="col-sm-4 itemInList">
+                        <div class="col-sm-10 itemInList">
                            {{m}} 
                         </div> 
-                        <div class="col-sm-8 buttonsInList">
+                        <div class="col-sm-2 buttonsInList btnsFloatRightContainer">
 <button class="selectRemove btn btn-primary"  
                                         linkedId="{{m.id}}"
                                         linkedManager="{% for char in m.str %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
@@ -67,7 +67,7 @@
                     </div>
                     {% endfor %}
                 </div>
-<div class="row" style="background-color: white">
+<div class="row">
                 <div class="col-sm-3">
                     {% if page > 1 %}
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="searchRemove({{page|changeValue:'-1'}})" type="button"><</button>
@@ -119,15 +119,16 @@
                 </div>
 
             </div>
-            <div class="row itemListContainer entityHolder" id = "searchHolder" >
+            <div style="padding-right: 36px;" id="searchHolder">
+<div class="row itemListContainer entityHolder"  >
                 {% for participant in participants %}
                     {% if participant.LinkedPerson %}
                         <div class="row listItem">
-                            <div class="col-sm-3 itemInList">
+                            <div class="col-sm-10 itemInList">
                                 {{participant.LinkedPerson}}
                             </div>    
                             
-                            <div class="col-sm-9 buttonsInList">
+                            <div class="col-sm-2 buttonsInList btnsFloatRightContainer">
                                 <button class="selectAdd btn btn-primary"  
                                         linkedId="{{participant.LinkedPerson.id}}"
                                         linkedPerson="{% for char in participant.LinkedPerson.Name %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
@@ -136,7 +137,9 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-            <div class="row" style="background-color: white">
+            
+            </div>
+            <div class="row">
                 <div class="col-sm-3">
                     {% if page > 1 %}
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
@@ -153,7 +156,6 @@
                 </div> 
             </div>
             </div>
-            
         </div>
         <div class="row">
             <div id="selectedHolder" class="col-lg-12">
@@ -277,8 +279,8 @@ doc.addEventListener("keypress", enterSearch)
         function selectDeletion(m_id, m){
             document.removeEventListener("keypress", enterSearch);
             doc.addEventListener("keypress", submitRemove)
-            let txt = `<input type="hidden" name="deletedManager" value="${m_id}">
-                        <p>${m} selected</p>`;
+             let txt = `<input type="hidden" name="deletedManager" value="${m_id}">
+                        <div class="row itemListContainer"><div class="row listItem"><div class="col-sm-12 itemInList" >${m} selected</div></div></div>`;
             $("#selectDeleteHolder").html(txt);
         }
         function selectPerson(participant_id, participant_name, type){

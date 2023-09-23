@@ -13,7 +13,20 @@ div.itemListContainer>div:nth-of-type(even) {
 } 
 
 .listItem {
-border-radius: 15px;
+    margin-left: 10px;
+    padding-left: 0px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+}
+
+.itemInList {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.buttonsInList {
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 table {
@@ -46,21 +59,16 @@ tr.boldBottom:last-child > td { border-bottom: 2px solid black; }
 }
 
 
-.itemInList {
-    padding-top: 15px;
-    padding-bottom: 15px;
-}
 
-.buttonsInList {
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
-
-.listItem {
+.btnsFloatRightContainer > a {
+    float: right;
     margin-left: 10px;
-    padding-left: 0px;
-    margin-bottom: 10px;
 }
+.btnsFloatRightContainer > button {
+    float: right;
+    margin-left: 10px;
+}
+
 
 .alert {
             /* background: linear-gradient(to top right, #1abc9c, #3498db); */

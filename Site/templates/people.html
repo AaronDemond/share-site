@@ -79,21 +79,21 @@ body {
                             {{e.0}}
                         
                         </div>
-                        <div class="col-sm-8 buttonsInList" >
+                        <div class="col-sm-8 buttonsInList btnsFloatRightContainer" >
                             {% if e.1 == "person" %}
-                                <a class="btn btn-primary" role="button" 
-                                    href="/link/{{e.0.id}}/?type=person">Link to Company</a>
-                                <a class="btn btn-primary" role="button" 
-                                    href="/entities/?entity_id={{e.0.pk}}&type=person&edit=true">Edit</a>
                                 <a class="btn btn-danger"  role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=person&delete=true">Delete</a>
-                            {% else %}
-                                <a class="btn btn-primary" role="button"
-                                    href="/link/{{e.0.id}}/?type=company">Link to Company</a>
                                 <a class="btn btn-primary" role="button" 
-                                    href="/entities/?entity_id={{e.0.id}}&type=company&edit=true">Edit</a>
+                                    href="/entities/?entity_id={{e.0.pk}}&type=person&edit=true">Edit</a>
+                                <a class="btn btn-primary" role="button" 
+                                    href="/link/{{e.0.id}}/?type=person">Link to Company</a>
+                            {% else %}
                                 <a class="btn btn-danger"  role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=company&delete=true">Delete</a>
+                                <a class="btn btn-primary" role="button" 
+                                    href="/entities/?entity_id={{e.0.id}}&type=company&edit=true">Edit</a>
+                                <a class="btn btn-primary" role="button"
+                                    href="/link/{{e.0.id}}/?type=company">Link to Company</a>
                             {% endif %}
                         
                         </div>

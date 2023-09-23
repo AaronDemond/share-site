@@ -13,14 +13,14 @@
 <div id="participants{{direction}}Holder" class="row itemListContainer">
 {% for participant in participants %}
 <div class="row listItem">
-    <div class="col-sm-3 itemInList">
+    <div class="col-sm-9 itemInList">
         {% if participant.LinkedPerson %}
         {{participant.LinkedPerson}}
         {% else %}
         {{participant.LinkedCompany}}
         {% endif %}
     </div>    
-    <div class="col-sm-9 buttonsInList">
+    <div class="col-sm-3 buttonsInList btnsFloatRightContainer">
         {% if participant.LinkedPerson %}
         <!--<button class="btn btn-primary"  
                 onclick="select{{direction}}({{participant.LinkedPerson.id}},

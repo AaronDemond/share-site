@@ -54,14 +54,14 @@ div#participantsToHolder>div:nth-of-type(odd) {
             <div id="participantsFromHolder" class="row itemListContainer">
             {% for participant in participants %}
                     <div class="row listItem">
-                        <div class="col-sm-3 itemInList" >
+                        <div class="col-sm-9 itemInList" >
                             {% if participant.LinkedPerson %}
                                 {{participant.LinkedPerson}}
                             {% else %}
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-9 buttonsInList" style="padding-top: 10px; padding-bottom: 10px;">
+                        <div class="col-sm-3 buttonsInList btnsFloatRightContainer" style="padding-top: 10px; padding-bottom: 10px;">
                             {% if participant.LinkedPerson %}
                             <!--
                                 <button class="btn btn-primary" 
@@ -115,14 +115,14 @@ div#participantsToHolder>div:nth-of-type(odd) {
                 <div class="row itemListContainer" id="participantsToHolder">
                 {% for participant in participants %}
                     <div class="row listItem">
-                        <div class="col-sm-3 itemInList">
+                        <div class="col-sm-9 itemInList">
                             {% if participant.LinkedPerson %}
                                 {{participant.LinkedPerson}}
                             {% else %}
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-9 buttonsInList" style="padding-top: 10px; padding-bottom: 10px;">
+                        <div class="col-sm-3 buttonsInList btnsFloatRightContainer" style="padding-top: 10px; padding-bottom: 10px;">
                             {% if participant.LinkedPerson %}
                                 <!--<button class="btn btn-primary"  
                                         onclick="selectTo({{participant.LinkedPerson.id}},

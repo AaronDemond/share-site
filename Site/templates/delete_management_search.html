@@ -7,7 +7,7 @@
                        <div class="col-sm-4 itemInList">
                            {{m}} 
                        </div> 
-                       <div class="col-sm-8 buttonsInList">
+                       <div class="col-sm-8 buttonsInList btnsFloatRightContainer">
 <button class="selectRemove btn btn-primary"  
                                         linkedId="{{m.id}}"
                                         linkedManager="{% for char in m.str %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
@@ -17,7 +17,7 @@
                    </div>
                {% endfor %}
                 </div>
-<div class="row" style="background-color: white">
+<div class="row">
                 <div class="col-sm-3">
                     {% if page > 1 %}
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="searchRemove({{page|changeValue:'-1'}})" type="button"><</button>

@@ -1638,6 +1638,8 @@ def management(request, company_id = None):
             for p in participants:
                 if p.LinkedPerson:
                     context['participants'].append(p)
+        context['participants'].sort(key= lambda x: x.__str__())
+        context['managers'].sort(key= lambda x: x.Person.Name)
 
         if request.GET.get("page"):
             page = int(request.GET.get("page"))
@@ -1807,7 +1809,9 @@ def registers(request, company_id=None):
                 for m in _managers:
                     m.StartDate = m.StartDate.strftime("%Y-%m-%d")
                     if m.EndDate is not None:
+                        print("HIT================================")
                         m.EndDate = m.EndDate.strftime("%Y-%m-%d")
+                        print(m.EndDate)
                 context['managers'] = _managers
                 context['plural'] = plural_name
                 context['title'] = r.Title

@@ -1,12 +1,13 @@
 {% load extras %}
+<div class="row itemListContainer">
     {% for participant in participants %}
         {% if participant.LinkedPerson %}
             <div class="row listItem">
-                <div class="col-sm-3 itemInList">
+                <div class="col-sm-9 itemInList">
                     {{participant.LinkedPerson}}
                 </div>    
                 
-                <div class="col-sm-9 buttonsInList">
+                <div class="col-sm-3 buttonsInList btnsFloatRightContainer">
 
 <button class="selectAdd btn btn-primary"  
                                         linkedId="{{participant.LinkedPerson.id}}"
@@ -18,7 +19,9 @@
             </div>
         {% endif %}
     {% endfor %}
-<div class="row" style="background-color: white">
+</div>
+
+<div class="row">
                 <div class="col-sm-3">
                     {% if page > 1 %}
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="search({{page|changeValue:'-1'}})" type="button"><</button>
@@ -33,8 +36,7 @@
                     <button class="btn btn-primary disabled" style="margin-top: 20px;">></button>
                     {% endif %}
                 </div> 
-            </div>
-
+</div> 
 
     <script type="text/javascript">
         $(".selectAdd").click(function(e){

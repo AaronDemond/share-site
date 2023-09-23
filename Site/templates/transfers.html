@@ -47,8 +47,8 @@
     <input type="hidden" value="" name="selectedTransfer" id="selectedTransfer"/>
     <input type="hidden" value="" name="selectedShareType" id="selectedShareType"/>
     {% csrf_token %}
-    <div class="row">
-        <div class="row itemListContainer" id="transferContainer">
+        <div class="row" id="transferContainer">
+<div class="row itemListContainer">
             {% for transfer in transfers %}
 
             <div class="row listItem">
@@ -69,8 +69,7 @@
             </div> 
             {% endfor %}
 
-        </div>
-    </div>	
+        </div></div>
     <div class="row" id="pagenationHolder">
         <div class="col-sm-3">
             {% if page > 1 %}
@@ -108,7 +107,7 @@ function selectTransfer(text, id, share_type){
     $("#pagenationHolder").hide();
     $("#deleteButtonHolder").show();
     console.log(text);
-    let txt = `<div class="row listItem"><div class="col-lg-12 itemInList">${text} selected</div></div>
+    let txt = `<div class="row itemListContainer"><div class="row listItem"><div class="col-lg-12 itemInList">${text} selected</div></div></div>
 
         <div class="row" id="deleteButtonHolder">
             <div class="col-lg-12">
