@@ -10,7 +10,7 @@ from django.urls import resolve
 from django.utils import timezone
 
 
-PAGELENGTH = 10
+PAGELENGTH = 5
 
 
 #Home page
