@@ -684,26 +684,29 @@ def authorized(request, company_id=None, context={}):
 
     if request.method == "POST":
 
-        authToDeleteId = request.POST.get("authToDelete")
-        tranToDeleteIds = request.POST.getlist("transfers")
-        tranToDelete = Transfer.objects.filter(pk__in=tranToDeleteIds)
-        authToDelete = AuthorizedShares.objects.get(pk=authToDeleteId)
-        shareClass = authToDelete.ShareClass
-        company = authToDelete.Company
-        tranToDelete.delete()
-        authToDelete.delete()
+        try:
+            authToDeleteId = request.POST.get("authToDelete")
+            tranToDeleteIds = request.POST.getlist("transfers")
+            tranToDelete = Transfer.objects.filter(pk__in=tranToDeleteIds)
+            authToDelete = AuthorizedShares.objects.get(pk=authToDeleteId)
+            shareClass = authToDelete.ShareClass
+            company = authToDelete.Company
+            tranToDelete.delete()
+            authToDelete.delete()
 
-        shareCerts = ShareCertificate.objects.filter(ShareClass=shareClass,
-                ReferenceCompany = company)
-        shareCerts.delete()
-        transfers = Transfer.objects.filter(ShareClass=shareClass, 
-                Company=company).order_by("Date")
-        for t in transfers:
-            create_certificates(t)
+            shareCerts = ShareCertificate.objects.filter(ShareClass=shareClass,
+                    ReferenceCompany = company)
+            shareCerts.delete()
+            transfers = Transfer.objects.filter(ShareClass=shareClass, 
+                    Company=company).order_by("Date")
+            for t in transfers:
+                create_certificates(t)
 
 
-        context['error_type'] = "success"
-        context['alert'] = "Authorization Deleted"
+            return HttpResponseRedirect("/companies/?alertType=success&alert=Authorization Deleted")
+        except Exception as e:
+            error = str(e)
+            return HttpResponseRedirect("/companies/?alert=ERROR: "+error+"&alertType=danger")
 
         return companies(request, context = context)
 
