@@ -6,10 +6,15 @@ div.itemListContainer>div:nth-of-type(odd) {
 } 
 div.itemListContainer>div:nth-of-type(even) {
     /* background: #e6e1e1; */
-    background: #e3e1e1;
+    background: #f0f0f0;
+    background: #faf9ed;
 
 
 } 
+
+.listItem {
+border-radius: 15px;
+}
 
 table {
     width: 100%;
