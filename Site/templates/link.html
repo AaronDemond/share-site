@@ -26,11 +26,11 @@
     <div class="row itemListContainer" id="peopleList">
         {% for e in companies %}
             <div class="row listItem">
-                <div class="col-sm-4 itemInList">
+                <div class="col-sm-9 col-9 itemInList">
                     {{e}}
                 
                 </div>
-                <div class="col-sm-8 buttonsInList">
+                <div class="col-sm-3 col-3 buttonsInList btnsFloatRightContainer">
                     <a class="btn btn-primary" role="button" href="/link/{{entity.id}}/?company_id={{e.id}}&type={{type}}">Link</a>
                 
                 </div>

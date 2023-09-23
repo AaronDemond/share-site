@@ -4,10 +4,10 @@
                 <div class="row itemListContainer">
                 {% for m in managers %}
                    <div class="row listItem">
-                       <div class="col-sm-4 itemInList">
+                       <div class="col-sm-9 col-9 itemInList">
                            {{m}} 
                        </div> 
-                       <div class="col-sm-8 buttonsInList btnsFloatRightContainer">
+                       <div class="col-sm-3 col-3 buttonsInList btnsFloatRightContainer">
 <button class="selectRemove btn btn-primary"  
                                         linkedId="{{m.id}}"
                                         linkedManager="{% for char in m.str %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"

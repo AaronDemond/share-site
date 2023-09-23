@@ -47,7 +47,7 @@
     <div class="row itemListContainer" id="peopleList">
         {% for p in participants %}
         <div class="row listItem">
-            <div class="col-sm-9 itemInList">
+            <div class="col-sm-9 col-9 itemInList">
                 {% if p.LinkedPerson%}
                 {{p.LinkedPerson.Name}}
                 {% else %}
@@ -55,7 +55,7 @@
                 {% endif %}
 
             </div>
-            <div class="col-sm-3 buttonsInList btnsFloatRightContainer" >
+            <div class="col-sm-3 col-3 buttonsInList btnsFloatRightContainer" >
                 {% if p.LinkedPerson%}
                 <a class="btn btn-primary" role="button" 
                                            href="/certificates/{{company.pk}}/?type=person&id={{p.LinkedPerson.pk}}">Select</a>

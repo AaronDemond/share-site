@@ -54,10 +54,10 @@
                 <div class="row itemListContainer">
                     {% for m in managers %}
                     <div class="row listItem">
-                        <div class="col-sm-10 itemInList">
+                        <div class="col-sm-10 col-10 itemInList">
                            {{m}} 
                         </div> 
-                        <div class="col-sm-2 buttonsInList btnsFloatRightContainer">
+                        <div class="col-sm-2 col-2 buttonsInList btnsFloatRightContainer">
 <button class="selectRemove btn btn-primary"  
                                         linkedId="{{m.id}}"
                                         linkedManager="{% for char in m.str %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
@@ -125,11 +125,11 @@
                 {% for participant in participants %}
                     {% if participant.LinkedPerson %}
                         <div class="row listItem">
-                            <div class="col-sm-10 itemInList">
+                            <div class="col-sm-10 col-10 itemInList">
                                 {{participant.LinkedPerson}}
                             </div>    
                             
-                            <div class="col-sm-2 buttonsInList btnsFloatRightContainer">
+                            <div class="col-sm-2 col-2 buttonsInList btnsFloatRightContainer">
                                 <button class="selectAdd btn btn-primary"  
                                         linkedId="{{participant.LinkedPerson.id}}"
                                         linkedPerson="{% for char in participant.LinkedPerson.Name %}{% if char == '"' %}&quot;{% else %}{{char}}{% endif %}{% endfor %}"
@@ -192,9 +192,10 @@
 
         </div>
         <div class="row">
-            <div class="col-lg-12">
-                <button id="submitBtnAdd" class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
-                <a class="btn btn-warning browse-btn-fix" href="/companies/"  >Cancel</a>
+            <div class="col-sm-12 col-12">
+                        
+                <button id="submitBtnAdd" class="btn btn-success " type="submit" >Submit</button>
+                <a id="cancelAdd" class="btn btn-warning " href="/companies/"  >Cancel</a>
             </div> 
         </div>
     </form>
@@ -211,6 +212,15 @@
                // $(".alert").fadeOut(500);
                 //$(".alert-button").fadeOut(500);
             });
+$(document).ready(function() {
+                var screenWidth = $(window).width(); // window height
+                if (screenWidth < 571) {
+                    $("#submitBtnAdd").css("margin-top", "15px");
+                    $("#cancelAdd").css("margin-top", "15px");
+                }
+
+            });
+
 var doc = document;
 var type = "";
 function enterSearch(event){

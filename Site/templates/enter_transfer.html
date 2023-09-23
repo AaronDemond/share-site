@@ -54,14 +54,14 @@ div#participantsToHolder>div:nth-of-type(odd) {
             <div id="participantsFromHolder" class="row itemListContainer">
             {% for participant in participants %}
                     <div class="row listItem">
-                        <div class="col-sm-9 itemInList" >
+                        <div class="col-sm-9 col-7 itemInList" >
                             {% if participant.LinkedPerson %}
                                 {{participant.LinkedPerson}}
                             {% else %}
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-3 buttonsInList btnsFloatRightContainer" style="padding-top: 10px; padding-bottom: 10px;">
+                        <div class="col-sm-3 col-5 buttonsInList btnsFloatRightContainer" style="padding-top: 10px; padding-bottom: 10px;">
                             {% if participant.LinkedPerson %}
                             <!--
                                 <button class="btn btn-primary" 
@@ -115,14 +115,14 @@ div#participantsToHolder>div:nth-of-type(odd) {
                 <div class="row itemListContainer" id="participantsToHolder">
                 {% for participant in participants %}
                     <div class="row listItem">
-                        <div class="col-sm-9 itemInList">
+                        <div class="col-sm-9 col-9 itemInList">
                             {% if participant.LinkedPerson %}
                                 {{participant.LinkedPerson}}
                             {% else %}
                                 {{participant.LinkedCompany}}
                             {% endif %}
                         </div>    
-                        <div class="col-sm-3 buttonsInList btnsFloatRightContainer" style="padding-top: 10px; padding-bottom: 10px;">
+                        <div class="col-sm-3 col-3 buttonsInList btnsFloatRightContainer" style="padding-top: 10px; padding-bottom: 10px;">
                             {% if participant.LinkedPerson %}
                                 <!--<button class="btn btn-primary"  
                                         onclick="selectTo({{participant.LinkedPerson.id}},
@@ -189,7 +189,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
         </div>
         <div class="row">
             <div class="col-sm-4">
-                <div class="input-group mb-3" style="padding-top: 20px;">
+                <div class="input-group" style="padding-top: 20px;">
                         <span class="input-group-text">Quantity</span>
                         <input type="text" autocomplete="off" class="form-control" placeholder= "Enter Quantity" name="ammount" id=""/>
                 
@@ -199,7 +199,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
             </div>
             <div class="col-sm-4">
                 
-                <div class="input-group mb-3" style="padding-top: 20px;">
+                <div class="input-group" style="padding-top: 20px;">
                     <span class="input-group-text">Price</span>
                     <input type="text" autocomplete="off" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
 
@@ -209,10 +209,10 @@ div#participantsToHolder>div:nth-of-type(odd) {
         </div>
 
         <div class="row">
-            <div class="col-sm-12">
+            <div class="col-sm-12;">
 
-                <button class="btn btn-success browse-btn-fix" type="submit" id="submitForm" >Submit</button>
-                                    <a class="btn btn-warning"  href="/companies/"  >Cancel</a>
+                <button class="btn btn-success browse-btn-fix" style="margin-top: 20px;" type="submit" id="submitForm" >Submit</button>
+                                    <a class="btn btn-warning" style="margin-top: 20px;"  href="/companies/"  >Cancel</a>
             </div>
 
     </form>

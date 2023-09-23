@@ -52,10 +52,10 @@
     <div class="row itemListContainer" id="peopleList">
         {% for cert in certs %}
         <div class="row listItem">
-            <div class="col-sm-9 itemInList">
+            <div class="col-sm-9 col-9 itemInList">
                 {{cert}} {% if cert.Cancelled %}<span class="text-danger">Cancelled</span>{% endif %}
             </div>
-            <div class="col-sm-3 buttonsInList btnsFloatRightContainer" >
+            <div class="col-sm-3 col-3 buttonsInList btnsFloatRightContainer" >
                 <a class="btn btn-primary" role="button" 
                                            href="/certificates/{{company.pk}}/?type={{type}}&id={{id}}&shareClassId={{shareClassId}}&certId={{cert.pk}}">Select</a>
 

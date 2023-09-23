@@ -10,7 +10,7 @@ from django.urls import resolve
 from django.utils import timezone
 
 
-PAGELENGTH = 5
+PAGELENGTH = 7
 
 
 #Home page
@@ -1634,7 +1634,7 @@ def management(request, company_id = None):
             context['participants'] = []
             for p in participants:
                 if p.LinkedPerson:
-                    if request.GET.get("query") in p.LinkedPerson.Name.lower():
+                    if request.GET.get("query").lower() in p.LinkedPerson.Name.lower():
                         context['participants'].append(p)
         else:
             context['participants'] = []
