@@ -703,10 +703,12 @@ def authorized(request, company_id=None, context={}):
                 create_certificates(t)
 
 
-            return HttpResponseRedirect("/companies/?alertType=success&alert=Authorization Deleted")
+            return HttpResponseRedirect("/companies/" + str(company.pk) + "/transfers/" + \
+                    "alertType=success&alert=Authorization Deleted")
         except Exception as e:
             error = str(e)
-            return HttpResponseRedirect("/companies/?alert=ERROR: "+error+"&alertType=danger")
+            return HttpResponseRedirect("/companies/" + str(company.pk) + "/transfers/" + \
+                    "?alert=ERROR: "+error+"&alertType=danger")
 
         return companies(request, context = context)
 
@@ -741,6 +743,10 @@ def authorized(request, company_id=None, context={}):
         context["hasNextPage"] = True
     else:
         context["hasNextPage"] = False
+
+    if request.GET.get("alertType"):
+        context["error_type"] = request.GET.get("alertType")
+        context["alert"] = request.GET.get("alert")
 
     context['authorizedShares'] = context['authorizedShares'][start:end]
     context['page'] = page

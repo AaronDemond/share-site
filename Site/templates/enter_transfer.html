@@ -45,7 +45,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
         <h3>Select where the shares are originating</h3>
         <div id="fromHolder" class="row">
             <div class="input-group" style="padding-bottom: 15px;">
-                <input type="text" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
+                <input type="text" autocomplete="off" class="form-control" name = "query" id = "participantSearchString" value="" placeholder="Search for..">
             </div>
             <div class="col-sm-12" style="padding-bottom: 15px;">
                     <button class="btn btn-success" onclick="search('fromHolder','From',1)" type="button" id="fromSearch" >Search</button>
@@ -107,7 +107,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
             <h3 id="q2title" style="display: none">Select where the shares are going</h3>
             <div id="toHolder" class="row" style="display: none">
                 <div class="input-group" style="padding-bottom: 15px;">
-                    <input type="text" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
+                    <input type="text" autocomplete="off" class="form-control" name = "query2" id = "participantSearchString2" value="" placeholder="Search for..">
                 </div>
                 <div class="col-sm-12" style="padding-bottom: 15px;">
                         <button class="btn btn-success" id="toSearch" onclick="search('toHolder','To',1)" type="button">Search</button>
@@ -191,7 +191,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
             <div class="col-sm-4">
                 <div class="input-group mb-3" style="padding-top: 20px;">
                         <span class="input-group-text">Quantity</span>
-                        <input type="text" class="form-control" placeholder= "Enter Quantity" name="ammount" id=""/>
+                        <input type="text" autocomplete="off" class="form-control" placeholder= "Enter Quantity" name="ammount" id=""/>
                 
                     </div>
                 
@@ -201,7 +201,7 @@ div#participantsToHolder>div:nth-of-type(odd) {
                 
                 <div class="input-group mb-3" style="padding-top: 20px;">
                     <span class="input-group-text">Price</span>
-                    <input type="text" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
+                    <input type="text" autocomplete="off" class="form-control" value="" placeholder= "Enter price" name="price" id=""/>
 
                 </div>
 

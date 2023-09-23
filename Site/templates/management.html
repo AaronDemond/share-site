@@ -41,15 +41,16 @@
 
         {% csrf_token %}
         <input type="hidden" value="delete" name="type" id=""/>
-        <div class="row" id="selectDeleteHolder">
-                <div class="col-sm-12">
+                <div class="row">
+<div class="col-sm-12">
                     <div class="input-group" style="padding-bottom: 20px;">
-                        <input type="text" class="form-control" name = "query" id = "deleteQuery" value="" placeholder="Search for..">
+                        <input type="text" autocomplete="off" autocomplete="off" class="form-control" name = "query" id = "deleteQuery" value="" placeholder="Search for..">
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-success" onclick="searchRemove(1)" type="button">Go!</button>
+                            <button id="searchRemoveBtn" type="button" class="btn btn-success" onclick="searchRemove(1)" type="button">Go!</button>
                         </span>
                     </div>
-                </div>
+                </div></div>
+        <div class="row" id="selectDeleteHolder">
                 <div class="row itemListContainer">
                     {% for m in managers %}
                     <div class="row listItem">
@@ -97,7 +98,7 @@
         </div>
         <div class="row">
            <div class="col-sm-12"> 
-                <button class="btn btn-danger browse-btn-fix" 
+                <button id = "removeBtn" class="btn btn-danger browse-btn-fix" 
                     style="margin-top: 20px" type="submit" >Remove</button>
            </div> 
         </div>
@@ -111,9 +112,9 @@
         <div class = "row entityHolder" id="entityHolder">
             <div class="col-sm-12">
                 <div class="input-group" style="padding-bottom: 20px;">
-                    <input type="text" class="form-control" name = "query" id = "query_text" value="" placeholder="Search for..">
+                    <input type="text" autocomplete="off" autocomplete="off" class="form-control" name = "query" id = "query_text" value="" placeholder="Search for..">
                     <span class="input-group-btn">
-                        <button class="btn btn-success" onclick="search(1)" type="button">Go!</button>
+                        <button id = "searchBtn" class="btn btn-success" onclick="search(1)" type="button">Go!</button>
                     </span>
                 </div>
 
@@ -191,7 +192,7 @@
         </div>
         <div class="row">
             <div class="col-lg-12">
-                <button class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
+                <button id="submitBtnAdd" class="btn btn-success browse-btn-fix" type="submit" >Submit</button>
             </div> 
         </div>
     </form>
@@ -208,9 +209,34 @@
                // $(".alert").fadeOut(500);
                 //$(".alert-button").fadeOut(500);
             });
+var doc = document;
+var type = "";
+function enterSearch(event){
+    if (event.key === "Enter"){
+        event.preventDefault();
+        if (type == "add") {
+        document.getElementById("searchBtn").click();
+        } else {
+        document.getElementById("searchRemoveBtn").click();
+        }
+    }
+}
+function submitAdd(event) {
+    if (event.key === "Enter"){
+        event.preventDefault();
+        document.getElementById("submitBtnAdd").click();
+    }
+}
+function submitRemove(event) {
+    if (event.key === "Enter"){
+        event.preventDefault();
+        document.getElementById("removeBtn").click();
+    }
+}
+
+doc.addEventListener("keypress", enterSearch)
 
         $(".selectAdd").click(function(e){
-
            console.log("TEST");
             var linkedId = $(this).attr("linkedId");
             var linkedPerson = $(this).attr("linkedPerson");
@@ -227,6 +253,7 @@
         $("#removeManagementHolder").hide();
         function addManagement() {
 
+            type = "add";
             $("#alertHolder").remove();
             $("#addManagementHolder").show();
             var visible = $("removeManagementHolder").is(":hidden");
@@ -238,6 +265,7 @@
         }
         function removeManagement() {
 
+            type="remove";
             $("#alertHolder").remove();
             $("#removeManagementHolder").show();
             var visible = $("addManagementHolder").is(":hidden");
@@ -247,11 +275,16 @@
             }
         }
         function selectDeletion(m_id, m){
+            document.removeEventListener("keypress", enterSearch);
+            doc.addEventListener("keypress", submitRemove)
             let txt = `<input type="hidden" name="deletedManager" value="${m_id}">
                         <p>${m} selected</p>`;
             $("#selectDeleteHolder").html(txt);
         }
         function selectPerson(participant_id, participant_name, type){
+
+            document.removeEventListener("keypress", enterSearch);
+            doc.addEventListener("keypress", submitAdd)
             let txt = `<input type = "hidden" 
             name = "person_id" value = "${participant_id}"><p>${participant_name}
                 selected</p>`;
