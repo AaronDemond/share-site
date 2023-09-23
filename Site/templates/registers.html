@@ -29,8 +29,15 @@
 {{people}}
 <div class="row" id="registerList">
     <div class="col-sm-12" style="padding-top: 20px">
+        <hr>
+        
+        {% if hasShareholders == False and hasDirectors == False and Officer == False %}
+        <p>No registers to display.</p>
+        {% endif %}
+        {% if hasShareholders == True %}
         <a href="/companies/{{company.id}}/registers/?role=ShareHolder"
            class = "btn btn-primary">Shareholders</a>
+        {% endif %}
         {% for role in roles %}
             <a href="/companies/{{company.id}}/registers/?role={{role.pk}}"
                class = "btn btn-primary">{{role}}s</a>

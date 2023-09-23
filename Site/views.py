@@ -10,7 +10,7 @@ from django.urls import resolve
 from django.utils import timezone
 
 
-PAGELENGTH = 5
+PAGELENGTH = 10
 
 
 #Home page
@@ -1758,6 +1758,11 @@ def registers(request, company_id=None):
         managers = company.Manager.filter(EndDate__isnull=True)
         filled_roles = set([x.Title for x in managers])
         context["roles"] = filled_roles
+        transfers = company.Transfer.all()
+        if len(transfers) > 0:
+            context["hasShareholders"] = True
+        else:
+            context["hasShareholders"] = False
 
         try:
             director = ManagerRole.objects.get(Title="Director")
@@ -1766,13 +1771,18 @@ def registers(request, company_id=None):
         context["roles"] = []
         if director in filled_roles:
             context["roles"].append(director)
+            context["hasDirectors"] = True
             filled_roles.remove(director)
+        else:
+            context["hasDirectors"] = False
         context["company"] = company
         if len(filled_roles) > 0:
             context["Officer"] = True
             officersList = [m for m in managers if m.Title.Title != "Director" \
                     and m.EndDate == None]
             context["Officer"] = True
+        else:
+            context["Officer"] = False
 
         if request.GET.get("role"):
             role = request.GET.get("role")
