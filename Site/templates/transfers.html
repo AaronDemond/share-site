@@ -138,5 +138,7 @@ $(".close").click(function(){
     $(".alert-button").hide();
 });
 
+window.history.pushState(null, '', '/companies/{{company.id}}/transfers/');
+
 </script>
 {% endblock scripts %}

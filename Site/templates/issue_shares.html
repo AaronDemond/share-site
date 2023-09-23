@@ -14,6 +14,20 @@
 body {
     padding: 4%
 }
+.close {
+    margin-top: 10px;
+}
+            .alert {
+-moz-transition: background 5s ease-out;
+    -o-transition: background 5s ease-out;
+    -webkit-transition: background 5s ease-out;    
+    transition: background 5s ease-out;    
+    -moz-transition: border 5s ease-out;
+    -moz-transition: 5s ease-out;
+    -o-transition:  5s ease-out;
+    -webkit-transition:  5s ease-out;    
+    transition:  5s ease-out;   
+            }
 
         </style>
     </head>
@@ -79,7 +93,7 @@ body {
 
                 <div class="col-lg-12">
                     {% for key, value in share_classes_authorized.items %}
-                    {% for doc in value.1 %}{% if doc != None %} {{key}} <a href="{{doc.url}}">{{doc}}</a>{% endif %}{% endfor %} {% endfor %}
+                    {% for doc in value.1 %}{% if doc != None %}<div class="col-sm-12"> {{key}} <a href="{{doc.url}}">{{doc}}</a></div>{% endif %}{% endfor %} {% endfor %}
                     </br>
                     <button type="button" class="btn btn-primary"
                         onclick="authorizeShares()">Authorize Shares</button>
@@ -217,7 +231,14 @@ body {
                     $("#appendFileHolder").hide();
                 }
             }
+
+            setTimeout(function(){
+                $(".alert").css("background", "#f0f5f3");
+                $(".alert").css("border-color", "black");
+                $(".alert").css("color", "black");
+            }, 7000);
                     
+window.history.pushState(null, '', '/companies/{{company.id}}/issue/');
         </script>
     </body>
 </html>

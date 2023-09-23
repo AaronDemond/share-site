@@ -49,6 +49,9 @@ def companies(request, company_id=None, context=None):
         context['companies'] = context['companies'][start:end]
         context['page'] = page
 
+        context["error_type"] = request.GET.get("alertType")
+        context["alert"] = request.GET.get("alert")
+
         return render(request, 'companies.html', context)
     else:
         return HttpResponse("Please Login")
@@ -490,13 +493,20 @@ def issue_shares(request, company_id=None):
                     authorized_shares_obj = authorized_shares[0]
                     authorized_shares_obj.Document = _file
                     authorized_shares_obj.save()
-                    context["error_type"] = "success"
-                    context["alert"] = "Document Appended"
-                    return companies(request=request,context=context)
+                    return HttpResponseRedirect("/companies/" + str(company.pk)  + \
+                    "/issue/?alert=Document Appended&alertType=success")
                 except Exception as e:
-                    context["error_type"] = "danger"
-                    context["alert"] = "ERROR! " + str(e)
-                    return companies(request=request,context=context)
+                    if str(e) == "'appendedFile'":
+                        return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                        "/issue/?alert=No File Attached&alertType=danger")
+                    if str(e) == "invalid literal for int() with base 10: 'Choose...'":
+                        return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                        "/issue/?alert=No Share Class Selected&alertType=danger")
+                    if str(e) == "list index out of range":
+                        return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                        "/issue/?alert=No Shares Of That Type Authorized&alertType=danger")
+                    return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                    "/issue/?alert=" + str(e) + "&alertType=danger")
 
             #Authorize shares request
             share_class = request.POST.get('ShareClass')
@@ -513,9 +523,8 @@ def issue_shares(request, company_id=None):
 
             if share_class and ammount and date and time:
                 if float(ammount) < 0:
-                    context["error_type"] = "danger"
-                    context["alert"] = "ERROR! Cannot issue negative share"
-                    return render(request, 'issue_shares.html', context)
+                    return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                    "/issue/?alert=Cannot Issue Negative Shares&alertType=danger")
 
                 try:
                     share_class = ShareClass.objects.get(pk=share_class)
@@ -531,18 +540,21 @@ def issue_shares(request, company_id=None):
                                 Date=date, Value=value)
                     if company.IncorporationDate > date:
                         raise Exception("Company not yet incorporated")
-                    authorized_shares.save()
-                    context["error_type"] = "success"
-                    context["alert"] = "Shares authorized"
 
-                    return companies(request=request,context=context)
+                    authorized_shares.save()
+                    return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                    "/issue/?alert=Shares%20Authorized&alertType=success")
+
                 except Exception as e:
-                    context["error_type"] = "danger"
-                    context["alert"] = "ERROR! " + str(e)
+                    return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                    "/issue/?alert=" + str(e) + "&alertType=danger")
             else:
                 context["error_type"] = "danger"
                 context["alert"] = "ERROR! Please fill the entire form"
 
+        if request.GET.get("alertType"):
+            context["error_type"] = request.GET.get("alertType")
+            context["alert"] = request.GET.get("alert")
         return render(request, 'issue_shares.html', context)
     else:
         return HttpResponse("Please Login")
@@ -551,16 +563,23 @@ def create_company(request):
     if request.user.is_authenticated:
         context = {}
         if request.method == "POST":
-            name = request.POST.get("Name")
-            modified = datetime.datetime.now(tz=None)
-            modified = pytz.timezone("America/Halifax").localize(modified)
-            date = request.POST.get("date")
-            time = request.POST.get("time")
-            dt = date + " " + time
-            date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-            date.replace(tzinfo=None)
-            date = pytz.timezone("America/Halifax").localize(date)
-            address = request.POST.get("Address")
+            try:
+                name = request.POST.get("Name")
+                modified = datetime.datetime.now(tz=None)
+                modified = pytz.timezone("America/Halifax").localize(modified)
+                date = request.POST.get("date")
+                time = request.POST.get("time")
+                address = request.POST.get("Address")
+                if not name or not date or not time or not address:
+                    raise Exception("Fill Out Entire Form")
+                dt = date + " " + time
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
+                date.replace(tzinfo=None)
+                date = pytz.timezone("America/Halifax").localize(date)
+            except Exception as e:
+                error = str(e)
+                return HttpResponseRedirect("/entities/" + \
+                        "?alert="+error+"&alertType=danger")
             try:
                 new_company = Company(Name=name,
                         IncorporationDate=date, Address=address,

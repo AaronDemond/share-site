@@ -295,6 +295,8 @@ $(".chooseTo").click(function(e){
     console.log("TEST");
     selectTo(id,linkedEntity, entityType);
 });
+
+window.history.pushState(null, '', '/companies/{{company.id}}/enterTransfer/');
 </script>
 {% endblock scripts %}
 

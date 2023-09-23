@@ -271,5 +271,6 @@ function search(page=1) {
         $("#searchHolder").html(result);
     }});
 }
+window.history.pushState(null, '', '/companies/{{company.id}}/changeManagement/');
     </script>
     {% endblock scripts %}

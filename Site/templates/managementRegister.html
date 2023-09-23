@@ -29,7 +29,11 @@
                 {% else %}
                 <th class="tableHeader" style="text-align:center; vertical-align: middle;">Date became an {{title}}</th>
                 {% endif %}
+                {% if plural == "Directors" %}
                 <th class="tableHeader" style="text-align:center; vertical-align: middle;">Date ceased to be a {{title}}</th>
+                {% else %}
+                <th class="tableHeader" style="text-align:center; vertical-align: middle;">Date ceased to be an {{title}}</th>
+                {% endif %}
             </tr>
             {% for manager in managers %}
             <tr class="boldBorder boldBottom quarterWidth">
