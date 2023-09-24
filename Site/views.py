@@ -386,8 +386,23 @@ def link(request, _id=None):
 
 def issue_shares(request, company_id=None):
     if request.user.is_authenticated:
-        current_url = resolve(request.path_info).url_name
         company = Company.objects.get(pk=int(company_id))
+
+        #Handle request to delete document
+        if request.GET.get("deleteDocument"):
+            shareClassToDeleteDocument = request.GET.get("shareClass")
+            shareClassToDeleteDocument = ShareClass.objects.get(Name = \
+                    shareClassToDeleteDocument)
+            authorized = AuthorizedShares.objects.filter(ShareClass = \
+                    shareClassToDeleteDocument)
+            for a in authorized:
+                if a.Document is not None:
+                    a.Document = None
+                    a.save()
+                    return HttpResponseRedirect("/companies/" + str(company.pk)  + \
+                    "/issue/?alert=Document Deleted&alertType=success")
+
+        current_url = resolve(request.path_info).url_name
         share_classes = ShareClass.objects.all().order_by("Name")
         context = {'company' : company}
         incorpDate = company.IncorporationDate
@@ -451,7 +466,7 @@ def issue_shares(request, company_id=None):
             share_classes_authorized[str(sc)].append(auth.Value)
 
 
-        #Truncate trailing zeros
+        #Truncate trailing zeros and format
         for key, value in share_classes_authorized.items():
             try:
                 v = float(value[0])
@@ -502,7 +517,6 @@ def issue_shares(request, company_id=None):
                 share_classes_authorized[key][4] = v
 
 
-                
 
         context['share_classes'] = share_classes
         context['share_classes_authorized'] = share_classes_authorized
@@ -556,6 +570,12 @@ def issue_shares(request, company_id=None):
                 _file = request.FILES["uploadedFile"]
             else:
                 _file = False
+
+            try:
+                float(ammount)
+            except Exception as e:
+                return HttpResponseRedirect("/companies/" + str(company.pk) + \
+                "/issue/?alert=Do Not Enter Non Numeric Characters&alertType=danger")
             
 
             if share_class and ammount and date and time:
@@ -978,16 +998,30 @@ def enter_transfer(request, company_id=None):
             return render(request, 'enter_transfer_search.html', context)
 
         if request.method=="POST":
+            price = request.POST.get("price")
+            ammount = request.POST.get("ammount")
+            try:
+                float(price)
+                float(ammount)
+            except:
+                return HttpResponseRedirect("/companies/" +str(company.id) + \
+                        "/enterTransfer/?alert=Do Not Enter Non Numeric " + \
+                        "Characters&alertType=danger")
             try:
                 date = request.POST.get("date")
                 time = request.POST.get("time")
                 dt = date + " " + time
-                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-                #date = pytz.timezone("America/Halifax").localize(date)
-                price = request.POST.get("price")
-                ammount = request.POST.get("ammount")
                 shareClass = request.POST.get("shareClass")
                 shareClass = ShareClass.objects.get(pk=shareClass)
+
+                if not price or not ammount or \
+                        not date or not time or not shareClass:
+                            raise Exception("Must Fill Entire Form")
+
+                
+                date = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
+                #date = pytz.timezone("America/Halifax").localize(date)
+
 
                 other = Transfer.objects.filter(Date=date)
                 if len(other) > 0 :
@@ -1184,6 +1218,7 @@ def share_certificate(request, company_id = None):
                     v = float(a.Value)
                     if v.is_integer():
                         v = int(v)
+                    v = f'{v:,}'
                 except:
                     v = a.Value
                 auth_types_value[a.ShareClass] = v
@@ -1194,7 +1229,6 @@ def share_certificate(request, company_id = None):
                 for auth in auth_shares:
                     if auth.ShareClass == a:
                         auth_totals[(a,value)] += auth.Ammount
-            print(auth_totals)
 
             #Removes bought back shares from the dict created above
             for auth_type in auth_types:
@@ -1207,13 +1241,13 @@ def share_certificate(request, company_id = None):
                     v = float(parValue)
                     if v.is_integer():
                         v = int(v)
+                    v = f'{v:,}'
                 except:
                     v = parValue
-
                 for tran in all_tran:
                     auth_totals[auth_type, v] -= tran.Ammount
 
-            #Remove trailing zeros
+            #Remove trailing zeros and format
             auth_totals_truncated = {}
             for key, value in auth_totals.items():
                 print(value)
@@ -1221,6 +1255,7 @@ def share_certificate(request, company_id = None):
                     v = int(value)
                 else:
                     v = value
+                v = f'{v:,}'
                 auth_totals_truncated[(key[0],key[1])] = v
 
 
@@ -1354,7 +1389,8 @@ def share_certificate(request, company_id = None):
             filteredParticipants = []
             q = request.GET.get("query")
             for p in participants:
-                name = p.LinkedPerson.Name.lower() or p.LinkedCompany.Name.lower()
+                linked = p.LinkedPerson or p.LinkedCompany
+                name = linked.Name.lower()
                 if q.lower() in name:
                     filteredParticipants.append(p)
             context['participants'] = filteredParticipants
@@ -1884,9 +1920,7 @@ def registers(request, company_id=None):
                 for m in _managers:
                     m.StartDate = m.StartDate.strftime("%Y-%m-%d")
                     if m.EndDate is not None:
-                        print("HIT================================")
                         m.EndDate = m.EndDate.strftime("%Y-%m-%d")
-                        print(m.EndDate)
                 context['managers'] = _managers
                 context['plural'] = plural_name
                 context['title'] = r.Title
