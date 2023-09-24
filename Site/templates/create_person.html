@@ -12,32 +12,46 @@
 
 {% if edit %}
 <form  method ="POST" action="/entities/" />
-{% else %}
-<form  method ="POST" />
-{% endif %}
-    <div class="row">
-        <input type="hidden" name="entity_id" value="{{entity.pk}}">
-        <input type="hidden" name="type" value="{{type}}">
-        {% csrf_token %}
-        <div class="col-sm-6" style="margin: 0px;">
-            <div class="input-group">
-                <span class="input-group-text">Name</span>
-                <input type="text" autocomplete="off" class="form-control" name = "Name" id = "Name" value="{{entity}}" placeholder="Name of Person">
+    {% else %}
+    <form  method ="POST" />
+        {% endif %}
+        <div class="row">
+            <input type="hidden" name="entity_id" value="{{entity.pk}}">
+            <input type="hidden" name="type" value="{{type}}">
+            {% csrf_token %}
+            <div class="col-sm-6" >
+                <div class="input-group">
+                    <span class="input-group-text">Name</span>
+                    <input type="text" autocomplete="off" class="form-control" name = "Name" id = "Name" value="{{entity}}" placeholder="Name of Person">
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="input-group addressHolder">
+                    <span class="input-group-text">Address</span>
+                    <input type="text" autocomplete="off" class="form-control" name = "Address" id = "Name" value="{{entity.Address}}" placeholder="Address">
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <span class="input-group-btn">
+                    <button class="btn btn-success browse-btn-fix" 
+                            style="margin-top: 20px;" type="submit">Submit</button>
+                    <a class="btn btn-warning" style="margin-top: 20px;"href="/entities/"  >Cancel</a>
+                </span>
             </div>
         </div>
-        <div class="col-sm-6">
-            <div class="input-group">
-                <span class="input-group-text">Address</span>
-                <input type="text" autocomplete="off" class="form-control" name = "Address" id = "Name" value="{{entity.Address}}" placeholder="Address">
-            </div>
-        </div>
-        <div class="col-sm-12">
-            <span class="input-group-btn">
-                <button class="btn btn-success browse-btn-fix" 
-                    style="margin-top: 20px;" type="submit">Submit</button>
-                                    <a class="btn btn-warning" style="margin-top: 20px;"href="/entities/"  >Cancel</a>
-            </span>
-        </div>
-    </div>
-</form>
-{% endblock main %}
+    </form>
+    {% endblock main %}
+    {% block scripts %}
+    <script type = "text/javascript">
+
+        $(document).ready(function() {
+            var screenWidth = $(window).width(); // window height
+            alert(screenWidth);
+            if (screenWidth < 574) {
+                $(".addressHolder").css("margin-top", "15px");
+            }
+
+        });
+    </script>
+    {% endblock scripts %}
+

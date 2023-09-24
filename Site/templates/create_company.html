@@ -2,82 +2,88 @@
 {% extends 'base.html' %}
 {% load extras %}
 {% block main %}
-            <h1>Create A New Company</h1>
+<h1>Create A New Company</h1>
 
-            <div class="row">
+<div class="row">
 
-                <div class="col-sm-12">
-                    <a href="/" >Home</a> / <a href="/entities/" >Entities</a> / Create a company
+    <div class="col-sm-12">
+        <a href="/" >Home</a> / <a href="/entities/" >Entities</a> / Create a company
+        <hr>
+
+    </div>
+</div>
+
+{% if alert %}
+<div class="row">
+    <div class="col-sm-5">
+
+        <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
+
+            {{alert}}
+
+        </div>
+    </div>
+    <div class="col-sm-7">
+        <button type="button" class="btn btn-danger close alert-button">Close</button>
+
+    </div>
+</div>
+{% endif %}
+{% if edit == True %}
+<form  method ="POST" action="/entities/" />
+    {% else %}
+    <form  method ="POST"/>
+        {% endif %}
+        <input type="hidden" name="entity_id" value="{{entity.pk}}">
+        <input type="hidden" name="type" value="{{type}}">
+
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="input-group">
+                    <span class="input-group-text">Name</span>
+                    <input type="text" autocomplete="off" class="form-control" name = "Name" id = "Name" value="{{entity.Name}}" placeholder="Name of Company">
+
                 </div>
             </div>
+            <div class="col-sm-6">
+                <div class="input-group dateHolder">
+                    <span class="input-group-text">Incorporation Date</span> 
+                    <input type="date" class="form-control" value="{{entity.Date}}" name="date" id=""/> 
+                    <input type="time" class="form-control" value="{{entity.Time}}" name="time" 
+                                                                                    step="1" id=""/> 
+                </div>
 
-            {% if alert %}
+            </div></div>
             <div class="row">
-                <div class="col-sm-5">
+                <div class="col-sm-12" style="padding-top: 20px;">
+                    <div class="input-group">
 
-                    <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
-
-                        {{alert}}
-
+                        <span class="input-group-text">Address</span>
+                        <input type="text" autocomplete="off" class="form-control" name = "Address" id = "Name" value="{{entity.Address}}" placeholder="Company address">
                     </div>
+                </div></div>
+                <div class="col-sm-12">
+                    <button class="btn btn-success" type="submit" style="margin-top: 20px;">Submit</button>
+                    <a class="btn btn-warning" style="margin-top: 20px;"href="/entities/"  >Cancel</a>
                 </div>
-                <div class="col-sm-7">
-                    <button type="button" class="btn btn-danger close alert-button">Close</button>
-
-                </div>
-            </div>
-            {% endif %}
-                    {% if edit == True %}
-                    <form  method ="POST" action="/entities/" />
-                    {% else %}
-                    <form  method ="POST"/>
-                    {% endif %}
-                        <input type="hidden" name="entity_id" value="{{entity.pk}}">
-                        <input type="hidden" name="type" value="{{type}}">
-            <div class="row">
-
-                        {% csrf_token %}
-                        <div class="row">
-<div class="col-sm-6">
-                            <br />
-                            <div class="input-group">
-                                <span class="input-group-text">Name</span>
-                                <input type="text" autocomplete="off" class="form-control" name = "Name" id = "Name" value="{{entity.Name}}" placeholder="Name of Company">
-                                
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <br />
-                            <div class="input-group">
-                                <span class="input-group-text">Incorporation Date</span> 
-                                <input type="date" class="form-control" value="{{entity.Date}}" name="date" id=""/> 
-                                <input type="time" class="form-control" value="{{entity.Time}}" name="time" 
-                                step="1" id=""/> 
-                            </div>
-
-                        </div></div>
-                        <div class="row">
-<div class="col-sm-12" style="padding-top: 20px;">
-                            <div class="input-group">
-
-                                <span class="input-group-text">Address</span>
-                                <input type="text" autocomplete="off" class="form-control" name = "Address" id = "Name" value="{{entity.Address}}" placeholder="Company address">
-                            </div>
-                        </div></div>
-                        <div class="col-sm-12">
-                            <button class="btn btn-success" type="submit" style="margin-top: 20px;">Submit</button>
-                                    <a class="btn btn-warning" style="margin-top: 20px;"href="/entities/"  >Cancel</a>
-                        </div>
-            </div>
-                    </form>
+    </form>
 
 
-                    {% endblock main %}
-                    {% block scripts %}
-        <script type = "text/javascript">
-            $(".close").click(function(){
-                $(".alert").hide();
-                $(".alert-button").hide();
+    {% endblock main %}
+    {% block scripts %}
+    <script type = "text/javascript">
+
+$(document).ready(function() {
+                var screenWidth = $(window).width(); // window height
+                if (screenWidth < 570) {
+                    $(".dateHolder").css("margin-top", "15px");
+                }
+
             });
-        </script>
-        {% endblock scripts %}
+        $(".close").click(function(){
+            $(".alert").hide();
+            $(".alert-button").hide();
+        });
+    </script>
+    {% endblock scripts %}

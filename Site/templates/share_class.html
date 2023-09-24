@@ -7,8 +7,8 @@
         <a href="/" >Home</a> / Share Classes
     </div>
     {% if alert %}
-    <div class="row">
-        <div class="col-sm-5" style="padding-top: 20px">
+    <div class="row alertHolder">
+        <div class="col-sm-5 col-9" style="padding-top: 20px">
 
             <div class="alert alert-{{ alert_type }} alert-dismissible fade show" style="margin-bottom: 0px" role="alert">
 
@@ -16,14 +16,14 @@
 
             </div>
         </div>
-        <div class="col-sm-7" style="padding-top: 20px">
+        <div class="col-sm-7 col-3" style="padding-top: 20px">
             <button type="button" class="btn btn-danger close alert-button">Close</button>
 
         </div>
     </div>
     {% endif %}
 
-    <div class="col-sm-12" style="padding-top: 20px;">
+    <div class="col-sm-12" >
         <hr>
     </div>
 </div>
@@ -89,6 +89,10 @@
     $(".close").click(function(){
         $(".alert").hide();
         $(".alert-button").hide();
+        $(".alertHolder").remove();
+
     });
+
+window.history.pushState(null, '', '/shareClass/');
 </script>
 {% endblock scripts %}

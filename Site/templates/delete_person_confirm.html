@@ -18,6 +18,9 @@ div.transferContainer>div:nth-of-type(odd) {
     <div class="col-sm-12">
         <hr>
         <h3>These Transfers Will be Deleted</h3>
+        {% if not transfers %}
+        <p>No transfers to be deleted.</p>
+        {% endif %}
 
     </div> 
 </div>

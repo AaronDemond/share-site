@@ -32,8 +32,8 @@ body {
                 </div>
             </div>
             {% if alert %}
-            <div class="row" style="padding-top: 20px;">
-                <div class="col-sm-5">
+            <div class="row alertHolder" style="padding-top: 20px;">
+                <div class="col-sm-5 col-9">
 
                     <div class="alert alert-{{ error_type }} alert-dismissible fade show" role="alert">
 
@@ -41,7 +41,7 @@ body {
 
                     </div>
                 </div>
-                <div class="col-sm-7">
+                <div class="col-sm-7 col-3">
                     <button type="button" class="btn btn-danger close alert-button">Close</button>
 
                 </div>
@@ -197,6 +197,7 @@ $(document).ready(function() {
             $(".close").click(function(){
                 $(".alert").hide();
                 $(".alert-button").hide();
+                $(".alertHolder").remove();
             });
             $("#appendFileHolder").hide();
             $("#authorizeSharesHolder").hide();

@@ -1903,36 +1903,37 @@ def registers(request, company_id=None):
 
 def share_class(request):
     if request.user.is_authenticated:
+
         share_classes = ShareClass.objects.all().order_by("Name")
         context={'share_classes': share_classes}
+        context["alert_type"] = None
+        context["alert"] = None
         delete = request.GET.get("delete")
         if delete:
             try:
                 to_delete = ShareClass.objects.get(pk=delete)
                 to_delete.delete()
-                context["alert_type"] = "success"
-                context["alert"] = "Share Class Deleted"
+                return HttpResponseRedirect("/shareClass/?alert=" + \
+                            "Share Class Deleted&alertType=success")
             except Exception as e:
-                context["alert_type"] = "danger"
-                context["alert"] = str(e)
+                return HttpResponseRedirect("/shareClass/?alert=" + \
+                        "ERROR: " + str(e) + "&alertType=danger")
         if request.method == "POST":
             try:
                 name = request.POST.get("name")
                 existing = ShareClass.objects.filter(Name__iexact=name)
                 if len(existing) > 0:
-                    context["alert_type"] = "danger"
-                    context["alert"] = "Already Exists"
+                    raise Exception("Already Exists")
                 elif name == "":
-                    context["alert_type"] = "danger"
-                    context["alert"] = "Cannot be blank"
+                    raise Exception("Cannot be Blank")
                 else:
                     share_class = ShareClass(Name=name)
                     share_class.save()
-                    context["alert_type"] = "success"
-                    context["alert"] = "Share class created"
+                    return HttpResponseRedirect("/shareClass/?alert=" + \
+                            "Share Class Created&alertType=success")
             except Exception as e:
-                context["alert_type"] = "danger"
-                context["alert"] = str(e)
+                return HttpResponseRedirect("/shareClass/?alert=" + \
+                        "ERROR: " + str(e) + "&alertType=danger")
 
         if request.GET.get("page"):
             page = int(request.GET.get("page"))
@@ -1946,6 +1947,9 @@ def share_class(request):
         else:
             context["hasNextPage"] = False
 
+        if request.GET.get("alert"):
+            context["alert"] = request.GET.get("alert")
+            context["alert_type"] = request.GET.get("alertType")
         context['share_classes'] = context['share_classes'][start:end]
 
         context['page'] = page
