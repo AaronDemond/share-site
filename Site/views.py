@@ -640,7 +640,7 @@ def create_company(request):
                 new_company = Company(Name=name,
                         IncorporationDate=date, Address=address,
                         Modified=modified)
-                others = Company.objects.filter(Name=name)
+                others = Company.objects.filter(Name__iexact=name)
                 if len(others) > 0:
                     return HttpResponseRedirect("/entities/" + \
                         "?alert=Company%20Exists&alertType=danger")
@@ -663,7 +663,7 @@ def create_person(request):
         if request.method == "POST":
             try:
                 name = request.POST.get("Name")
-                others = Person.objects.filter(Name=name)
+                others = Person.objects.filter(Name__iexact=name)
                 if len(others) > 0:
                     raise Exception("Name already in use")
                 address = request.POST.get("Address")
