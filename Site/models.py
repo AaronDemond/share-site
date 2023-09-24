@@ -94,7 +94,12 @@ class AuthorizedShares(models.Model):
     def __str__(self):
         dt = self.Date - datetime.timedelta(hours=3)
         dt = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return str(self.Ammount) + " authorized of " + str(self.ShareClass) + " for " + str(self.Company) + " on " + dt
+        if self.Ammount.is_integer():
+            ammount = int(self.Ammount)
+        else:
+            ammount = self.Ammount
+        ammount_formatted = f'{ammount:,}'
+        return str(ammount_formatted) + " authorized of " + str(self.ShareClass) + " for " + str(self.Company) + " on " + dt
 
     class Meta:
         verbose_name_plural = "AuthorizedShares"
@@ -155,9 +160,10 @@ class Transfer(models.Model):
             ammount = int(self.Ammount)
         else:
             ammount = self.Ammount
+        ammount_formatted = f'{ammount:,}'
         dt = self.Date - datetime.timedelta(hours=3)
         dt = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return str(ammount) + " " + str(self.ShareClass) +" "+ str(self.Company) + " shares from " + _from.Name + " to " + _to.Name + " on (" + dt + ")"
+        return str(ammount_formatted) + " " + str(self.ShareClass) +" "+ str(self.Company) + " shares from " + _from.Name + " to " + _to.Name + " on (" + dt + ")"
 
 
 class ShareCertificate(models.Model):
@@ -194,6 +200,7 @@ class ShareCertificate(models.Model):
             ammount = int(self.Ammount)
         else:
             ammount = self.Ammount
+        ammount = f'{ammount:,}'
         return str(ammount) + " " + str(self.ShareClass) + " shares from " \
                 +str(_from) + " to " + str(_to)
     

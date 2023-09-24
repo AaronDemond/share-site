@@ -453,18 +453,22 @@ def issue_shares(request, company_id=None):
             if value[0] != 0:
                 if value[0].is_integer():
                     v = int(value[0])
+                    v = f'{v:,}'
                     share_classes_authorized[key][0] = v
             if value[2] != 0:
                 if value[2].is_integer():
                     v = int(value[2])
+                    v = f'{v:,}'
                     share_classes_authorized[key][2] = v
             if value[3] != 0:
                 if value[3].is_integer():
                     v = int(value[3])
+                    v = f'{v:,}'
                     share_classes_authorized[key][3] = v
             if value[4] != 0:
                 if value[4].is_integer():
                     v = int(value[4])
+                    v = f'{v:,}'
                     share_classes_authorized[key][4] = v
 
 
@@ -681,7 +685,20 @@ def getToBeDeletedTransfers(_transfers, company):
 def authorized(request, company_id=None, context={}):
     company = Company.objects.get(pk=company_id)
     authorizedShares = AuthorizedShares.objects.filter(Company=company).order_by("-Date")
+    if request.GET.get("query"):
+        query = request.GET.get("query")
+        authorizedShares = [x for x in authorizedShares if query.lower() in x.__str__().lower()]
+        context["query"] = query
     context["authorizedShares"] = authorizedShares
+    for a in context["authorizedShares"]:
+        if a.Ammount.is_integer():
+            ammount = int(a.Ammount)
+        else:
+            ammount = a.Ammount
+        ammount = f'{ammount:,}'
+        a.ammountFormatted = ammount
+        a.dateFormatted = a.Date.strftime("%Y-%m-%d %H:%M:%S")
+
     context["company"] = company
 
     context["error_type"] = None
@@ -780,6 +797,15 @@ def transfers(request, company_id=None, transfer_id=None,context={}):
                     s += char
             t.str = s
             context["transfers"].append(t)
+        for t in context["transfers"]:
+            t.From = t.FromCompany or t.FromPerson
+            t.To = t.ToPerson or t.ToCompany
+            t.D = t.Date.strftime("%Y-%m-%d %H:%M:%S")
+            if t.Ammount.is_integer():
+                ammount = int(t.Ammount)
+            else:
+                ammount = t.Ammount
+            t.ammountFormatted = f'{ammount:,}'
 
         tt=[]
         if request.GET.get("query"):
@@ -1110,6 +1136,7 @@ def share_certificate(request, company_id = None):
 
             if cert.Ammount.is_integer():
                 cert.Ammount = int(cert.Ammount)
+            cert.Ammount = f'{cert.Ammount:,}'
             context = {"cert" : cert, 'to': to, 'date': date, 'from': _from}
             context["company"] = company
             context["type"] = request.GET.get("type")

@@ -46,25 +46,32 @@
     <input type="hidden" value="" name="selectedTransfer" id="selectedTransfer"/>
     <input type="hidden" value="" name="selectedShareType" id="selectedShareType"/>
     {% csrf_token %}
-    <div class="row">
-        <div class="row itemListContainer" id="transferContainer">
-            {% for auth in authorizedShares %}
-
-            <div class="row listItem">
-
-                <div class="col-sm-9 col-9 itemInList">
-                    {{auth}}
-
-                </div>
-                <div class="col-sm-3 col-3 buttonsInList btnsFloatRightContainer">
-                    <a class="btn btn-danger" href="/companies/{{company.id}}/authorized?delete=True&auth_id={{auth.pk}}" >Delete</a>
-                </div>
-
-            </div> 
-            {% endfor %}
+<div class="row" id="transferContainer">
+<div class="col-sm-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Quantity</th>
+                            <th>Class</th>
+                            <th>Date</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in authorizedShares %}
+                        <tr>
+                            <td>{{a.ammountFormatted}}</td>
+                            <td>{{a.ShareClass}}</td>
+                            <td>{{a.dateFormatted}}</td>
+                            <td> 
+                    <a class="btn btn-danger" href="/companies/{{company.id}}/authorized?delete=True&auth_id={{a.pk}}" >Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
 
         </div>
-    </div>	
     <div class="row" id="pagenationHolder">
         <div class="col-sm-3">
             {% if page > 1 %}
@@ -86,6 +93,9 @@
 {% block scripts %}
 <script type = "text/javascript">
 
+            $("table tr:even").css("background", "#faf9ed");
+            $("table tr:odd").css("background", "white");
+
             $(".close").click(function(){
                 //$(".alert").hide();
                 //$(".alert-button").hide();
@@ -97,5 +107,16 @@
                 $(".alert").css("color", "black");
             }, 7000);
 window.history.pushState(null, '', '/companies/{{company.pk}}/authorized/');
+function search(page) {
+    search_txt = $("#search_string").val();
+    if (search_txt) {
+        href = "/companies/{{company.id}}/authorized/?page="+page+"&query="+search_txt;
+    } else {
+        href = "/companies/{{company.id}}/authorized/?page="+page;
+    }
+    console.log(href);
+    window.location = href;
+}
+
 </script>
 {% endblock scripts %}
