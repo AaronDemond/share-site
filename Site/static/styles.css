@@ -15,20 +15,30 @@ div.itemListContainer>div:nth-of-type(even) {
 
 
 .listItem {
-    margin-left: 10px;
+    margin-left: 13px;
     padding-left: 0px;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
+    border-radius: 15px;
+}
+
+input[name="query"] {
     border-radius: 15px;
 }
 
 .itemInList {
+    /*
     padding-top: 15px;
-    padding-bottom: 15px;
+    padding-bottom: 15px; */
+
+    padding-top: 5px;
+    padding-bottom: 0px;
+
 }
 
 .buttonsInList {
-    padding-top: 10px;
-    padding-bottom: 10px;
+/*    padding-top: 10px;
+    padding-bottom: 10px; */
+    padding: 5px;
 }
 
 table {
@@ -71,12 +81,22 @@ tr.boldBottom:last-child > td { border-bottom: 2px solid black; }
     margin-left: 10px;
 }
 
-/*
-.btn {
+
+.buttonsInList > .btn {
     padding-top: 0px;
     padding-bottom: 0px;
 }
-*/
+
+.deleteBtnTable {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+/*.input-group-btn > .btn {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}*/
+
 
 
 .alert {

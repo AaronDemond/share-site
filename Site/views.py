@@ -427,7 +427,6 @@ def issue_shares(request, company_id=None):
 
         #initalize issued and remaining
         transfers = Transfer.objects.filter(Company=company)
-        #for t in authorized:
         for sc in shareClassSet:
             share_classes_authorized[str(sc)].append(0)
             share_classes_authorized[str(sc)].append(0)
@@ -439,6 +438,7 @@ def issue_shares(request, company_id=None):
             if t.ToCompany == company:
                 share_classes_authorized[str(t.ShareClass)][2] -= t.Ammount
 
+
         #calculate remaining
         for shareClass in shareClassSet:
             share_classes_authorized[str(shareClass)][3] = \
@@ -446,30 +446,60 @@ def issue_shares(request, company_id=None):
                     share_classes_authorized[str(shareClass)][2]
 
         for sc in shareClassSet:
-            auth = AuthorizedShares.objects.filter(ShareClass = sc, Company = company)[0]
+            auth = AuthorizedShares.objects.filter(ShareClass = \
+                    sc, Company = company).latest("Date")
             share_classes_authorized[str(sc)].append(auth.Value)
 
+
+        #Truncate trailing zeros
         for key, value in share_classes_authorized.items():
-            if value[0] != 0:
-                if value[0].is_integer():
-                    v = int(value[0])
+            try:
+                v = float(value[0])
+                if v.is_integer():
+                    v = int(v)
                     v = f'{v:,}'
                     share_classes_authorized[key][0] = v
-            if value[2] != 0:
-                if value[2].is_integer():
-                    v = int(value[2])
+                else:
+                    share_classes_authorized[key][0] = v
+            except:
+                v = value[0]
+                share_classes_authorized[key][0] = v
+
+            try:
+                v = float(value[2])
+                if v.is_integer():
+                    v = int(v)
                     v = f'{v:,}'
                     share_classes_authorized[key][2] = v
-            if value[3] != 0:
-                if value[3].is_integer():
-                    v = int(value[3])
+                else:
+                    share_classes_authorized[key][2] = v
+            except:
+                v = value[2]
+                share_classes_authorized[key][2] = v
+
+            try:
+                v = float(value[3])
+                if v.is_integer():
+                    v = int(v)
                     v = f'{v:,}'
                     share_classes_authorized[key][3] = v
-            if value[4] != 0:
-                if value[4].is_integer():
-                    v = int(value[4])
+                else:
+                    share_classes_authorized[key][3] = v
+            except:
+                v = value[3]
+                share_classes_authorized[key][3] = v
+
+            try:
+                v = float(value[4])
+                if v.is_integer():
+                    v = int(v)
                     v = f'{v:,}'
                     share_classes_authorized[key][4] = v
+                else:
+                    share_classes_authorized[key][4] = v
+            except:
+                v = value[4]
+                share_classes_authorized[key][4] = v
 
 
                 
@@ -1143,52 +1173,55 @@ def share_certificate(request, company_id = None):
             context["id"] = request.GET.get("id")
             context["shareClassId"] = request.GET.get("shareClassId")
 
-            auth_shares = AuthorizedShares.objects.filter(Company=company)
+            auth_shares = AuthorizedShares.objects.filter(Company=company).order_by("Date")
             auth_types = set([x.ShareClass for x in auth_shares])
             auth_types_value = {}
 
             #Returns a dict of type {(ShareClass,Value):Ammount)}
-            for a in auth_types:
-                auth_types_value[a] = set()
+            auth_types_value = dict()
             for a in auth_shares:
-                auth_types_value[a.ShareClass].add(a.Value)
+                try:
+                    v = float(a.Value)
+                    if v.is_integer():
+                        v = int(v)
+                except:
+                    v = a.Value
+                auth_types_value[a.ShareClass] = v
             auth_totals = {}
             for a in auth_types:
-                for value in auth_types_value[a]:
-                    auth_totals[(a,value)] = 0
-                    for auth in auth_shares:
-                        if auth.ShareClass == a and auth.Value == value:
-                            auth_totals[(a,value)] += auth.Ammount
+                value = auth_types_value[a]
+                auth_totals[(a,value)] = 0
+                for auth in auth_shares:
+                    if auth.ShareClass == a:
+                        auth_totals[(a,value)] += auth.Ammount
+            print(auth_totals)
 
             #Removes bought back shares from the dict created above
             for auth_type in auth_types:
                 all_tran = Transfer.objects.filter(Company=company,
                         ShareClass=auth_type,ToCompany=company).order_by("Date")
-                all_auth = AuthorizedShares.objects.filter(Company=company,
-                        ShareClass=auth_type).order_by("Date")
+                latestAuth = AuthorizedShares.objects.filter(Company=company,
+                        ShareClass=auth_type).latest("Date")
+                parValue = latestAuth.Value
+                try:
+                    v = float(parValue)
+                    if v.is_integer():
+                        v = int(v)
+                except:
+                    v = parValue
+
                 for tran in all_tran:
-                    for index, auth in enumerate(all_auth):
-                        if auth.Date > tran.Date:
-                            toDecrease = all_auth[index-1]
-                            auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
-                            break
-                        if index == len(all_auth) - 1:
-                            toDecrease = all_auth[index]
-                            auth_totals[(toDecrease.ShareClass,toDecrease.Value)] -= tran.Ammount
-                            break
+                    auth_totals[auth_type, v] -= tran.Ammount
 
             #Remove trailing zeros
             auth_totals_truncated = {}
             for key, value in auth_totals.items():
+                print(value)
                 if value.is_integer():
                     v = int(value)
                 else:
                     v = value
-                if key[1].is_integer():
-                    k1 = int(key[1])
-                else:
-                    k1 = key[1]
-                auth_totals_truncated[(key[0],k1)] = v
+                auth_totals_truncated[(key[0],key[1])] = v
 
 
             context["no_of_auth_types"] = len(auth_totals)

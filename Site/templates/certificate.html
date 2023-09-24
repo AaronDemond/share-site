@@ -125,7 +125,7 @@ body {
         AUTHORIZED SHARE CAPITAL: 
         {% for key, value in auth_totals.items %}
         {{value}} {{key.0}} shares 
-        {% if key.1 == None %} 
+        {% if key.1 == "npv" or key.1 == "NPV" %} 
         having no par value{% if forloop.counter < no_of_auth_types and forloop.counter != no_of_auth_types|changeValue:'-1' %},{% elif forloop.counter == no_of_auth_types|changeValue:'-1' %} and{% endif %}{% else %} each having a par value of ${{key.1}}{% if forloop.counter < no_of_auth_types and forloop.counter != no_of_auth_types|changeValue:'-1' %},{% elif forloop.counter == no_of_auth_types|changeValue:'-1' %} and{% endif %}{% endif %}{% endfor %}; and the aforementioned shares each have respective terms and conditions as set out in the applicable constating documents of the Company including the Memorandum of Association of the company.
     </div> 
 

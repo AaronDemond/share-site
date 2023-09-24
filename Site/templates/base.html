@@ -68,6 +68,11 @@ body {
                 } else {
                     $("body").css("height", height);
                 }
+                $('.listItem').not(':has(.buttonsInList)').children('.itemInList').css("padding-top", "0px");
+            });
+            $("a").click(function(){
+                $('.listItem').not(':has(.buttonsInList)').children('.itemInList').css("padding-top", "0px");
+
             });
 
                 </script>

@@ -82,7 +82,7 @@ class AuthorizedShares(models.Model):
     ShareClass = models.ForeignKey(ShareClass, on_delete=models.CASCADE,
             related_name="AuthorizedShares")
     Date = models.DateTimeField()
-    Value = models.FloatField(null = True, blank = True)
+    Value = models.CharField(max_length=200, null=True, blank=True)
     Document = models.FileField(null=True, blank=True)
 
     def save(self, *args, **kwargs):

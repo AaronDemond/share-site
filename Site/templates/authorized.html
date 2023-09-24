@@ -64,7 +64,7 @@
                             <td>{{a.ShareClass}}</td>
                             <td>{{a.dateFormatted}}</td>
                             <td> 
-                    <a class="btn btn-primary" href="/companies/{{company.id}}/authorized?delete=True&auth_id={{a.pk}}" >Delete</a>
+                    <a class="btn btn-primary deleteBtnTable" href="/companies/{{company.id}}/authorized?delete=True&auth_id={{a.pk}}" >Delete</a>
                             </td>
                         </tr>
                         {% endfor %}

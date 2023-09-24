@@ -26,7 +26,8 @@
                 <div class="row listItem">
 <div class="col-sm-12">
                     <h3>Authorized to be Deleted</h3>
-                </div></div>
+                </div>
+                </div>
             <div class="row listItem">
                 <div class="col-sm-12 itemInList">
                     {{authorizedToDelete}}
@@ -39,6 +40,7 @@
                 <div class="row listItem">
 <div class="col-sm-12">
                     <h3>Transfers to be Deleted</h3>
+                    
                 </div></div>
             {% endif %}
             {% for item in toDelete %}
@@ -77,5 +79,7 @@
 {% block scripts %}
 <script type = "text/javascript">
     $("#selectHolder").hide();
+    $('.listItem').not(':has(.buttonsInList)').children('.itemInList').css("padding-top", "0px");
+    $("h3").css("margin", "0px");
 </script>
 {% endblock scripts %}
