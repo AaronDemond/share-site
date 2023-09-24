@@ -86,7 +86,7 @@ class AuthorizedShares(models.Model):
     Document = models.FileField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if int(self.Ammount) < 0:
+        if self.Ammount < 0:
             raise Exception("Must be above zero")
         else:
             super(AuthorizedShares, self).save(*args, **kwargs)

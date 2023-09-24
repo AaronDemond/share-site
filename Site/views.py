@@ -539,11 +539,11 @@ def issue_shares(request, company_id=None):
                     #date = pytz.timezone("America/Halifax").localize(date)
                     if _file:
                         authorized_shares = AuthorizedShares(Company=company,
-                                Ammount=ammount, ShareClass=share_class,
+                                Ammount=float(ammount), ShareClass=share_class,
                                 Date=date, Value=value, Document=_file)
                     else:
                         authorized_shares = AuthorizedShares(Company=company,
-                                Ammount=ammount, ShareClass=share_class,
+                                Ammount=float(ammount), ShareClass=share_class,
                                 Date=date, Value=value)
                     if company.IncorporationDate > date:
                         raise Exception("Company not yet incorporated")
@@ -1600,6 +1600,10 @@ def shareholders_ledger(request, company_id=None):
                     #Truncate floats that are ints
                     if tt['acquired'].is_integer():
                         tt['acquired'] = int(tt['acquired'])
+                    #Format with commas
+                    acquired = tt['acquired']
+                    acquiredFormatted = f'{acquired:,}'
+                    tt['acquired'] = acquiredFormatted
                 else:
                     total -= t.Ammount
                     tt['total'] -= t.Ammount
@@ -1607,9 +1611,18 @@ def shareholders_ledger(request, company_id=None):
                     #Truncate floats that are ints
                     if tt['transferred'].is_integer():
                         tt['transferred'] = int(tt['transferred'])
+                    #Format with commas
+                    transferred = tt['transferred']
+                    transferredFormatted = f'{transferred:,}'
+                    tt['transferred'] = transferredFormatted
 
                 if tt['total'].is_integer():
                     tt['total'] = int(tt['total'])
+                
+                _total = tt['total']
+                totalFormatted = f'{_total:,}'
+                tt['totalFormatted'] = totalFormatted
+                print(tt['totalFormatted'])
 
                 tt['transfer']=t
                 tt['date'] = t.Date.strftime("%Y-%m-%d")
@@ -1914,10 +1927,17 @@ def registers(request, company_id=None):
                     truncatedDecimalEntityShareClass[entry[0]] = \
                             [entry[1][0], entry[1][1]]
 
+            #Format with commas
+            formattedTruncatedEntityShareClass = {}
+            for entry in truncatedDecimalEntityShareClass.items():
+                quantity = entry[1][0]
+                quantityFormatted = f'{quantity:,}'
+                formattedTruncatedEntityShareClass[entry[0]] = \
+                        [quantityFormatted, entry[1][1]]
 
             context["entities"] = entities
             #context["entityShareClass"] = entityShareClass
-            context["entityShareClass"] = truncatedDecimalEntityShareClass
+            context["entityShareClass"] = formattedTruncatedEntityShareClass
             context["company"] = company
 
             #Specific register
