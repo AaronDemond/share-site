@@ -106,7 +106,7 @@ body {
                                 </div>
                             </div>
                             <div class="col-sm-8">
-                                <div class="input-group">
+                                <div class="input-group fileInp">
                                     <input type="file" name="appendedFile" 
                                         class="form-control" id="uploadedFile" value="">
                                 </div>
@@ -151,7 +151,7 @@ body {
                             </div>
 
                             <div class="col-sm-6">
-                                <div class="input-group">
+                                <div class="input-group quantityInp">
                                     <span class="input-group-text">Quantity</span>
                                     <input type="text" autocomplete="off" class="form-control" 
                                         name = "Ammount" id = "search_string" value="" 
@@ -185,6 +185,15 @@ body {
             {% endblock main %}
             {% block scripts %}
         <script type = "text/javascript">
+
+$(document).ready(function() {
+                var screenWidth = $(window).width(); // window height
+                if (screenWidth < 570) {
+                    $(".quantityInp").css("margin-top", "15px");
+                    $(".fileInp").css("margin-top", "15px");
+                }
+
+            });
             $(".close").click(function(){
                 $(".alert").hide();
                 $(".alert-button").hide();

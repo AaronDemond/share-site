@@ -60,14 +60,14 @@
                             {% if e.1 == "person" %}
                                 <a class="btn btn-danger"  role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=person&delete=true">Delete</a>
-                                <a class="btn btn-primary" role="button" 
+                                <a class="btn btn-primary editBtn" role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=person&edit=true">Edit</a>
                                 <a class="btn btn-primary linkBtn" role="button" 
                                     href="/link/{{e.0.id}}/?type=person">Link to Company</a>
                             {% else %}
                                 <a class="btn btn-danger"  role="button" 
                                     href="/entities/?entity_id={{e.0.pk}}&type=company&delete=true">Delete</a>
-                                <a class="btn btn-primary" role="button" 
+                                <a class="btn btn-primary editBtn" role="button" 
                                     href="/entities/?entity_id={{e.0.id}}&type=company&edit=true">Edit</a>
                                 <a class="btn btn-primary linkBtn" role="button"
                                     href="/link/{{e.0.id}}/?type=company">Link to Company</a>
@@ -112,6 +112,7 @@ $(document).ready(function() {
                 var screenWidth = $(window).width(); // window height
                 if (screenWidth < 910) {
                     $(".linkBtn").css("margin-top", "15px");
+                    $(".editBtn").css("margin-top", "15px");
                 }
 
             });
