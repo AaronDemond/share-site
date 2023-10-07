@@ -17,7 +17,9 @@ div.transferContainer>div:nth-of-type(odd) {
 <div class="row">
     <div class="col-sm-12">
         <hr>
-        <h3>These Transfers Will be Deleted</h3>
+        <h3>The Following Entity Will be Deleted</h3>
+        <div class="row itemListContainer"><div class="row listItem" style="width: fit-content"><div class = "col-sm-12 itemInList"> {{ entity }}</div></div></div>
+        <h3>The Following Transfer(s) Will be Deleted</h3>
         {% if not transfers %}
         <p>No transfers to be deleted.</p>
         {% endif %}
@@ -31,11 +33,9 @@ div.transferContainer>div:nth-of-type(odd) {
 
         <div class="row listItem">
 
-            <div class="col-sm-9 itemInList">
+            <div class="col-sm-12 itemInList">
                 {{transfer}}
 
-            </div>
-            <div class="col-sm-3" style="padding-bottom: 10px;">
             </div>
 
         </div>
@@ -77,6 +77,9 @@ div.transferContainer>div:nth-of-type(odd) {
         $("#transferContainer").html(txt);
     }
 $("#formHolder").toggle()
+
+$('.listItem').not(':has(.buttonsInList)').children('.itemInList').css("padding-top", "0px");
+    $('.listItem').css("padding-right" , "0px");
 
 </script>
 {% endblock scripts %}

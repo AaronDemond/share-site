@@ -40,5 +40,8 @@
             var linkedId = $(this).attr("linkedId");
             var linkedManager = $(this).attr("linkedManager");
             selectDeletion(linkedId, linkedManager);
+
+                $('.listItem').not(':has(.buttonsInList)').children('.itemInList').css("padding-top", "0px");
+                $('.listItem').not(':has(.buttonsInList)').css("padding-right", "0px");
         });
             </script>

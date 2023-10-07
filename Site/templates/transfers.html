@@ -112,6 +112,7 @@
     });
 
 $(".deleteBtn").click(function(e) {
+    $("#alertHolder").remove();
     var transfer = $(this).attr("transfer");
     var transferId = $(this).attr("transferId");
     var transferShareClassId = $(this).attr("transferShareClassId");

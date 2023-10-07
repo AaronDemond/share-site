@@ -123,3 +123,5 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR + '/Site/uploads'
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None

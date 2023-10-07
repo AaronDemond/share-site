@@ -399,8 +399,9 @@ def issue_shares(request, company_id=None):
                 if a.Document is not None:
                     a.Document = None
                     a.save()
-                    return HttpResponseRedirect("/companies/" + str(company.pk)  + \
-                    "/issue/?alert=Document Deleted&alertType=success")
+
+            return HttpResponseRedirect("/companies/" + str(company.pk)  + \
+            "/issue/?alert=Document Deleted&alertType=success")
 
         current_url = resolve(request.path_info).url_name
         share_classes = ShareClass.objects.all().order_by("Name")

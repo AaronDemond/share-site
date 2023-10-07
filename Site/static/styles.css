@@ -25,6 +25,10 @@ input[name="query"] {
     border-radius: 15px;
 }
 
+input[name="query2"] {
+    border-radius: 15px;
+}
+
 .itemInList {
     /*
     padding-top: 15px;

@@ -45,5 +45,8 @@
             var linkedPerson = $(this).attr("linkedPerson");
             var type = $(this).attr("_type");
             selectPerson(linkedId, linkedPerson, type);
+             $('.listItem').not(':has(.buttonsInList)').children('.itemInList').css("padding-top", "0px");
+            $('.listItem').not(':has(.buttonsInList)').css("padding-right", "0px");
+
         });
     </script>
