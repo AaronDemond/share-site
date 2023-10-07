@@ -467,6 +467,15 @@ def issue_shares(request, company_id=None):
             share_classes_authorized[str(sc)].append(auth.Value)
 
 
+        
+        #Remove entries that are all zero
+        toDel = []
+        for key, value in share_classes_authorized.items():
+            if value[0] == 0 and value[2] == 0 and value[3] == 0:
+                toDel.append(key)
+        for key in toDel:
+            del share_classes_authorized[key]
+
         #Truncate trailing zeros and format
         for key, value in share_classes_authorized.items():
             try:
@@ -518,7 +527,7 @@ def issue_shares(request, company_id=None):
                 share_classes_authorized[key][4] = v
 
 
-
+        print(share_classes_authorized)
         context['share_classes'] = share_classes
         context['share_classes_authorized'] = share_classes_authorized
 
