@@ -527,13 +527,14 @@ def issue_shares(request, company_id=None):
                 share_classes_authorized[key][4] = v
 
 
-        print(share_classes_authorized)
         context['share_classes'] = share_classes
         context['share_classes_authorized'] = share_classes_authorized
 
-        _all_auth = AuthorizedShares.objects.filter(Company = company)
-        context['authorized_classes'] = set([x.ShareClass for x in _all_auth])
-
+        _all_good_auth = []
+        for key, value in share_classes_authorized.items():
+            sc = ShareClass.objects.get(Name = key)
+            _all_good_auth.append(sc)
+        context['authorized_classes'] = _all_good_auth
 
         #Either a share issue request or a file upload
         if request.method == "POST":
